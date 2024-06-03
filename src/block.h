@@ -12,7 +12,7 @@
 */
 
 typedef struct Block {
-
+    Point position;
     int structure; // Mask representing positions within a 4x4 grid using 16 bits
 } Block;
 
