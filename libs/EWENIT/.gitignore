@@ -1,9 +1,0 @@
-bin/*
-include/*
-*_bin
-*.o
-*.a
-.vscode
-*.exe
-todo.txt
-
