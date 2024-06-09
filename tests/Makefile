@@ -3,7 +3,13 @@
 CC = gcc
 CFLAGS = -Wall --std=gnu99
 
+### Edit this to manually add testing .c files ###
+### NOTE: I could just search for any ".c" file in this directory,
+### but something about this feels nicer
 TEST_SUITES = test_block.c
+######
+
+
 TEST_OBJS = $(patsubst %.c, %.o, $(TEST_SUITES))
 TEST_BINS = $(patsubst %.c, %_bin, $(TEST_SUITES))
 
@@ -23,6 +29,7 @@ $(TEST_OBJS): %.o: %.c
 $(TEST_BINS): %_bin: %.o $(LIB)/lib.a
 	$(CC) $(CFLAGS) -o $@ $< -L$(LIB) -l:libEWENIT.a -l:lib.a
 	./$@
+	@echo "Tests Complete"
 
 
 $(LIB)/lib.a:
