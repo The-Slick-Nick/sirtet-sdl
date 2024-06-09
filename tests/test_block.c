@@ -72,6 +72,6 @@ void testContentRotationProperties() {
 int main() {
     EWENIT_START;
     ADD_CASE(testContentRotationProperties);
-    EWENIT_END_COMPACT;
+    EWENIT_END;
     return 0;
 }
