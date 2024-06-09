@@ -1,14 +1,14 @@
 #include "block.h"
 
 
-/* Bit representation per block
+/* Bit representation per block (for a 4-sizer)
 * [00] [01] [02] [03]
 * [04] [05] [06] [07]
 * [08] [09] [10] [11]
 * [12] [13] [14] [15]
 */
 
-Block Block_rotateCw90(Block block) {
+
    /* represent in quadrants  in the complex plane
     * (-i + 1) | ( i + 1)
     * ---------------------
@@ -22,9 +22,6 @@ Block Block_rotateCw90(Block block) {
     *  around the overall center, than performing that
     *  same rotation within each 2x2.
     */
-
-    return block;
-    
-}
-Block Block_rotateCcw90(Block block);
-Block Block_rotate180(Block block);
+long rotateBlockContentsCw90(long contents, int blockSize) { return 0; }
+long rotateBlockContentsCcw90(long contents, int blockSize) { return 0; }
+long rotateBlockContents180(long contents, int blockSize) { return 0; }

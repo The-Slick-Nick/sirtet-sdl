@@ -1,3 +1,6 @@
+# For my own reference: a makefile cheat sheet
+# https://devhints.io/makefile
+#
 CC = gcc
 CFLAGS = -Wall --std=gnu99
 INCL = src
