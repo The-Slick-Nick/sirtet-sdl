@@ -212,10 +212,92 @@ void testContentBitToPoint() {
 }
 
 
+void testPointToContentBit() {
+    
+    int expected;
+    int actual;
+
+    INFO("blockSize 2");
+    expected = 1;
+    actual = pointToContentBit((Point){1, 1}, 2);
+    ASSERT_EQUAL_INT(expected, actual);
+    
+    expected = 3;
+    actual = pointToContentBit((Point){1, -1}, 2);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 2;
+    actual = pointToContentBit((Point){-1, -1}, 2);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 0;
+    actual = pointToContentBit((Point){-1, 1}, 2);
+    ASSERT_EQUAL_INT(expected, actual);
+
+
+    INFO("blockSize 3");
+
+    expected = 2;
+    actual = pointToContentBit((Point){1, 1}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 8;
+    actual = pointToContentBit((Point){1, -1}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 6;
+    actual = pointToContentBit((Point){-1, -1}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 0;
+    actual = pointToContentBit((Point){-1, 1}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    // check 0 coords
+    expected = 1;
+    actual = pointToContentBit((Point){0, 1}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 5;
+    actual = pointToContentBit((Point){1, 0}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 7;
+    actual = pointToContentBit((Point){0, -1}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 3;
+    actual = pointToContentBit((Point){-1, 0}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+}
+
+
+void testContentBitConversionProperties() {
+    /* Tests using
+     * contentBitToPoint and pointToContentBit in tandem
+     */
+    int output;
+
+    for (int blockSize = 2; blockSize <= 8; blockSize++) {
+        for (int bitNum = 0; bitNum < blockSize * blockSize; bitNum++) {
+            output = pointToContentBit(
+                contentBitToPoint(bitNum, blockSize),
+                blockSize
+            );
+
+            ASSERT_EQUAL_INT(output, bitNum);
+        }
+    }
+
+}
+
 int main() {
     EWENIT_START;
     ADD_CASE(testContentRotationProperties);
     ADD_CASE(testContentBitToPoint);
-    EWENIT_END;
+    ADD_CASE(testPointToContentBit);
+    ADD_CASE(testContentBitConversionProperties);
+    // EWENIT_END;
+    EWENIT_END_COMPACT;
     return 0;
 }

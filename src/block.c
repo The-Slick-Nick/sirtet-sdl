@@ -53,3 +53,5 @@ Point contentBitToPoint(int bitNum, int blockSize) {
     };
 
 }
+
+int pointToContentBit(Point point, int blockSize) { return 0; }

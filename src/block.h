@@ -36,5 +36,7 @@ long rotateBlockContents180(long contents, int blockSize);
 // be (2, 2) (see diagram above)
 Point contentBitToPoint(int bitNum, int blockSize);
 
+int pointToContentBit(Point point, int blockSize); 
+
 #endif
 
