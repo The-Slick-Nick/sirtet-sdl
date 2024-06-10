@@ -4,7 +4,6 @@
 
 void testContentRotationProperties() {
     /* Test the properties of clockwise rotation across all block sizes */
-    long outputContents;
     long inputContents;
 
     for (int blockSize = 1; blockSize <= 8; blockSize++) {
@@ -68,10 +67,113 @@ void testContentRotationProperties() {
 }
 
 
+void testContentBitToPoint() {
+    Point expected;
+    Point actual;
+
+    // ----------------------------------------
+    INFO("blockSize 2");
+
+    expected = (Point){1, 1};
+    actual = contentBitToPoint(1, 2);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){1, -1};
+    actual = contentBitToPoint(3, 2);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, -1};
+    actual = contentBitToPoint(2, 2);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, 1};
+    actual = contentBitToPoint(3, 2);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    // ----------------------------------------
+    INFO("blockSize 3");
+
+    expected = (Point){1, 1};
+    actual = contentBitToPoint(2, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){1, -1};
+    actual = contentBitToPoint(8, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, -1};
+    actual = contentBitToPoint(6, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, 1};
+    actual = contentBitToPoint(0, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+
+    // ----------------------------------------
+    INFO("blockSize 4");
+
+    expected = (Point){1, 1};
+    actual = contentBitToPoint(6, 4);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){1, -1};
+    actual = contentBitToPoint(10, 4);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, -1};
+    actual = contentBitToPoint(9, 4);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, 1};
+    actual = contentBitToPoint(5, 4);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    // ----------------------------------------
+    INFO("blockSize 5");
+
+    expected = (Point){1, 1};
+    actual = contentBitToPoint(8, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){1, -1};
+    actual = contentBitToPoint(18, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, -1};
+    actual = contentBitToPoint(16, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, 1};
+    actual = contentBitToPoint(6, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    // NOTE: I've only tested up to size 5, as the general pattern
+    // is pretty well established once these succeed
+
+}
+
 
 int main() {
     EWENIT_START;
     ADD_CASE(testContentRotationProperties);
+    ADD_CASE(testContentBitToPoint);
     EWENIT_END;
     return 0;
 }

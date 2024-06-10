@@ -4,7 +4,7 @@
 
 #include "coordinates.h"
 
-/* For a standard 
+/* For a standard size 4 block
 * [00] [01] [02] [03]
 * [04] [05] [06] [07]
 * [08] [09] [10] [11]
@@ -29,4 +29,12 @@ long rotateBlockContentsCw90(long contents, int blockSize);
 long rotateBlockContentsCcw90(long contents, int blockSize);
 long rotateBlockContents180(long contents, int blockSize);
 
+
+// Convert a bit number representing a position with a block's contents to its 
+// relative coordinates to the center
+// i.e. for bitNum = 3 and blockSize = 4, the corrseponding coordinates would
+// be (2, 2) (see diagram above)
+Point contentBitToPoint(int bitNum, int blockSize);
+
 #endif
+

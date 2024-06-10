@@ -1,4 +1,5 @@
 #include "block.h"
+#include "coordinates.h"
 
 
 /* Bit representation per block (for a 4-sizer)
@@ -25,3 +26,8 @@
 long rotateBlockContentsCw90(long contents, int blockSize) { return 0; }
 long rotateBlockContentsCcw90(long contents, int blockSize) { return 0; }
 long rotateBlockContents180(long contents, int blockSize) { return 0; }
+
+
+// Convert a bit number representing a position with a block's contents to its 
+// relative coordinates to the center
+Point contentBitToPoint(int bitNum, int blockSize) { return (Point){.x=0, .y=0}; }
