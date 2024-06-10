@@ -30,4 +30,26 @@ long rotateBlockContents180(long contents, int blockSize) { return 0; }
 
 // Convert a bit number representing a position with a block's contents to its 
 // relative coordinates to the center
-Point contentBitToPoint(int bitNum, int blockSize) { return (Point){.x=0, .y=0}; }
+Point contentBitToPoint(int bitNum, int blockSize) {
+
+    int halfSize = blockSize / 2;
+    int rowNum = bitNum / blockSize;
+    int colNum = bitNum % blockSize;
+
+    if ((blockSize & 1) == 0) {
+
+        if (rowNum >= halfSize) {
+            rowNum++;
+        }
+
+        if (colNum >= halfSize) {
+            colNum++;
+        }
+    }
+
+    return (Point) {
+        .x = colNum - halfSize,
+        .y = halfSize - rowNum
+    };
+
+}
