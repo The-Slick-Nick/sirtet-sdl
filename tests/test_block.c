@@ -297,7 +297,7 @@ int main() {
     ADD_CASE(testContentBitToPoint);
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);
-    // EWENIT_END;
-    EWENIT_END_COMPACT;
+    EWENIT_END;
+    // EWENIT_END_COMPACT;
     return 0;
 }

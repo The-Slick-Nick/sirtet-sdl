@@ -36,6 +36,7 @@ Point contentBitToPoint(int bitNum, int blockSize) {
     int rowNum = bitNum / blockSize;
     int colNum = bitNum % blockSize;
 
+    // For even block sizes, the center is on a corner, so we adjust here
     if ((blockSize & 1) == 0) {
 
         if (rowNum >= halfSize) {
@@ -54,4 +55,25 @@ Point contentBitToPoint(int bitNum, int blockSize) {
 
 }
 
-int pointToContentBit(Point point, int blockSize) { return 0; }
+// Convert a set of center-relative coordinates to its bit
+// number representation 
+int pointToContentBit(Point point, int blockSize) {
+    
+    int halfSize = blockSize / 2;
+
+    int col = point.x + halfSize;
+    int row = halfSize - point.y;
+
+    // For even block sizes, the center is on a corner, so we adjust here
+    if ((blockSize & 1) == 0) {
+        if (point.x > 0) {
+            col--;
+        }
+
+        if (point.y < 0) {
+            row--;
+        }
+    }
+
+    return blockSize * row + col;
+}
