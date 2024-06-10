@@ -6,7 +6,7 @@ CFLAGS = -Wall --std=gnu99
 ### Edit this to manually add testing .c files ###
 ### NOTE: I could just search for any ".c" file in this directory,
 ### but something about this feels nicer
-TEST_SUITES = test_block.c
+TEST_SUITES = test_block.c test_coordinates.c
 ######
 
 
