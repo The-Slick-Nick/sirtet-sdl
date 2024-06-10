@@ -90,7 +90,7 @@ void testContentBitToPoint() {
     ASSERT_EQUAL_INT(expected.y, actual.y);
 
     expected = (Point){-1, 1};
-    actual = contentBitToPoint(3, 2);
+    actual = contentBitToPoint(0, 2);
     ASSERT_EQUAL_INT(expected.x, actual.x);
     ASSERT_EQUAL_INT(expected.y, actual.y);
 
@@ -117,6 +117,26 @@ void testContentBitToPoint() {
     ASSERT_EQUAL_INT(expected.x, actual.x);
     ASSERT_EQUAL_INT(expected.y, actual.y);
 
+    // check 0 coords
+    expected = (Point){0, 1};
+    actual = contentBitToPoint(1, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){1, 0};
+    actual = contentBitToPoint(5, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){0, -1};
+    actual = contentBitToPoint(7, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-1, 0};
+    actual = contentBitToPoint(3, 3);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
 
     // ----------------------------------------
     INFO("blockSize 4");
@@ -163,6 +183,28 @@ void testContentBitToPoint() {
     actual = contentBitToPoint(6, 5);
     ASSERT_EQUAL_INT(expected.x, actual.x);
     ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    // check 0 coords
+    expected = (Point){0, 2};
+    actual = contentBitToPoint(2, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){2, 0};
+    actual = contentBitToPoint(14, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){0, -2};
+    actual = contentBitToPoint(22, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){-2, 0};
+    actual = contentBitToPoint(10, 5);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
 
     // NOTE: I've only tested up to size 5, as the general pattern
     // is pretty well established once these succeed
