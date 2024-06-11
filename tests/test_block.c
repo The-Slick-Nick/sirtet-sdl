@@ -42,25 +42,36 @@ void testContentRotationProperties() {
 
             INFO("Checking rotational properties");
             // four rotations of any given type should come back to origin
-            for (int rotationsDone = 0; rotationsDone < 4; rotationsDone++) {
-                INFO_FMT("Rotation %d", rotationsDone + 1);
-                if (rotationsDone > 0) {
-                    ASSERT_NOT_EQUAL_LONG(inputCcw90, outputCcw90);
-                    ASSERT_NOT_EQUAL_LONG(inputCw90, outputCw90);
-                    if (rotationsDone == 2) {
-                        ASSERT_EQUAL_LONG(input180, output180);
-                    }
-                    else {
-                        ASSERT_NOT_EQUAL_LONG(input180, output180);
-                    }
-                }
+            for (int rotationNum = 1; rotationNum <= 3; rotationNum++) {
+                INFO_FMT("Rotation %d", rotationNum);
+
                 outputCcw90 = rotateBlockContentsCcw90(outputCcw90, blockSize);
                 outputCw90 = rotateBlockContentsCw90(outputCw90, blockSize);
                 output180 = rotateBlockContents180(output180, blockSize);
+
+                // absolute center on an odd-numbered block size
+                if (((blockSize & 1) == 1) && (bitNum == ((blockSize * blockSize) / 2))) {
+                    continue;
+                }
+
+                if (rotationNum == 4) {
+                    ASSERT_EQUAL_LONG(inputCcw90, outputCcw90);
+                    ASSERT_EQUAL_LONG(inputCw90, outputCw90);
+                    ASSERT_EQUAL_LONG(input180, output180);
+                }
+                else {
+                    ASSERT_NOT_EQUAL_LONG(inputCcw90, outputCcw90);
+                    ASSERT_NOT_EQUAL_LONG(inputCw90, outputCw90);
+                }
+
+
+                if (rotationNum == 2) {
+                    ASSERT_EQUAL_LONG(input180, output180);
+                }
+                else {
+                    ASSERT_NOT_EQUAL_LONG(input180, output180);
+                }
             }
-            ASSERT_EQUAL_LONG(inputCcw90, outputCcw90);
-            ASSERT_EQUAL_LONG(inputCw90, outputCw90);
-            ASSERT_EQUAL_LONG(input180, output180);
 
             /* Certain rotations reverse one another */
             inputContents = 1 << bitNum;
@@ -236,8 +247,28 @@ void testContentBitToPoint() {
     ASSERT_EQUAL_INT(expected.y, actual.y);
 
 
-    // NOTE: I've only tested up to size 5, as the general pattern
-    // is pretty well established once these succeed
+
+    INFO("Block size 7");
+
+    expected = (Point){0, 0};
+    actual = contentBitToPoint(24, 7);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+    expected = (Point){0, 1};
+    actual = contentBitToPoint(17, 7);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+
+    expected = (Point){1, 0};
+    actual = contentBitToPoint(25, 7);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+
+
+
     INFO("Block size 8"); 
 
     expected = (Point){-4, 4};
@@ -313,6 +344,22 @@ void testPointToContentBit() {
 
     /* Below are more examples I'm testing for test cases that have
      * been known to fail */
+
+
+    expected = 24;
+    actual = pointToContentBit((Point){0, 0}, 7);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 17;
+    actual = pointToContentBit((Point){0, 1}, 7);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 25;
+    actual = pointToContentBit((Point){1, 0}, 7);
+    ASSERT_EQUAL_INT(expected, actual);
+
+
+
     expected = 0;
     actual = pointToContentBit((Point){-4, 4}, 8);
     ASSERT_EQUAL_INT(expected, actual);
@@ -324,6 +371,7 @@ void testPointToContentBit() {
     expected = 7;
     actual = pointToContentBit((Point){4, 4}, 8);
     ASSERT_EQUAL_INT(expected, actual);
+
 }
 
 
