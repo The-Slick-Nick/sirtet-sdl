@@ -82,6 +82,20 @@ void testContentRotationProperties() {
     }
 }
 
+void testContentRotationManual() {
+    /* Test manually input examples */
+
+    long inputContents;
+
+    inputContents = 1L << 63;
+    ASSERT_EQUAL_LONG(rotateBlockContentsCcw90(inputContents, 8), (1L << 7));
+    ASSERT_EQUAL_LONG(
+        rotateBlockContentsCcw90(rotateBlockContentsCcw90(inputContents, 8), 8),
+        (1L << 0)
+    );
+
+}
+
 
 void testContentBitToPoint() {
     Point expected;
@@ -225,12 +239,16 @@ void testContentBitToPoint() {
     // NOTE: I've only tested up to size 5, as the general pattern
     // is pretty well established once these succeed
     INFO("Block size 8"); 
+
     expected = (Point){-4, 4};
     actual = contentBitToPoint(0, 8);
     ASSERT_EQUAL_INT(expected.x, actual.x);
     ASSERT_EQUAL_INT(expected.y, actual.y);
 
-
+    expected = (Point){4, -4};
+    actual = contentBitToPoint(63, 8);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
 
 }
 
@@ -298,6 +316,14 @@ void testPointToContentBit() {
     expected = 0;
     actual = pointToContentBit((Point){-4, 4}, 8);
     ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 56;
+    actual = pointToContentBit((Point){-4, -4}, 8);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    expected = 7;
+    actual = pointToContentBit((Point){4, 4}, 8);
+    ASSERT_EQUAL_INT(expected, actual);
 }
 
 
@@ -323,6 +349,7 @@ void testContentBitConversionProperties() {
 int main() {
     EWENIT_START;
     ADD_CASE(testContentRotationProperties);
+    ADD_CASE(testContentRotationManual);
     ADD_CASE(testContentBitToPoint);
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);

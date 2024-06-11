@@ -48,6 +48,10 @@ void testPointTransform() {
     ASSERT_EQUAL_INT(result.x, 4);
     ASSERT_EQUAL_INT(result.y, -4);
 
+    result = Point_transform((Point){4, -4}, (Point){0, 1});
+    ASSERT_EQUAL_INT(result.x, 4);
+    ASSERT_EQUAL_INT(result.y, 4);
+
 }
 
 
