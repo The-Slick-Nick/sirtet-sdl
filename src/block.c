@@ -23,9 +23,6 @@
     *  around the overall center, than performing that
     *  same rotation within each 2x2.
     */
-long rotateBlockContentsCw90(long contents, int blockSize) { return 0; }
-long rotateBlockContentsCcw90(long contents, int blockSize) { return 0; }
-long rotateBlockContents180(long contents, int blockSize) { return 0; }
 
 
 // Convert a bit number representing a position with a block's contents to its 
@@ -76,4 +73,39 @@ int pointToContentBit(Point point, int blockSize) {
     }
 
     return blockSize * row + col;
+}
+
+
+long _transformBlockContents(long contents, int blockSize, Point transform) {
+    long newContents = 0;
+    Point originalPoint;
+    Point newPoint;
+    int newBit;
+
+    for (int bitNum = 0; bitNum < blockSize * blockSize; bitNum++) {
+
+        if (((1L << bitNum) & contents) == 0) {
+            continue;
+        }
+
+        originalPoint = contentBitToPoint(bitNum, blockSize);
+        newPoint = Point_transform(originalPoint, transform);
+        newBit = pointToContentBit(newPoint, blockSize);
+        newContents |= (1L << newBit);
+    }
+
+    return newContents;
+}
+
+long rotateBlockContentsCw90(long contents, int blockSize) {
+    return _transformBlockContents(contents, blockSize, (Point){0, -1});
+}
+
+long rotateBlockContentsCcw90(long contents, int blockSize) {
+    return _transformBlockContents(contents, blockSize, (Point){0, 1});
+}
+
+
+long rotateBlockContents180(long contents, int blockSize) {
+    return _transformBlockContents(contents, blockSize, (Point){-1, 0});
 }
