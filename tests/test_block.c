@@ -30,6 +30,8 @@ void testContentRotationProperties() {
         ASSERT_EQUAL_LONG(0L, rotateBlockContents180(0L, blockSize));
 
         for (int bitNum = 0; bitNum < blockSize * blockSize; bitNum++) {
+            INFO_FMT("bit number %d", bitNum);
+
             long inputCcw90 = 1 << bitNum;
             long inputCw90 = 1 << bitNum;
             long input180 = 1 << bitNum;
@@ -38,8 +40,10 @@ void testContentRotationProperties() {
             long outputCw90 = inputCw90; 
             long output180 = input180;
 
+            INFO("Checking rotational properties");
             // four rotations of any given type should come back to origin
             for (int rotationsDone = 0; rotationsDone < 4; rotationsDone++) {
+                INFO_FMT("Rotation %d", rotationsDone + 1);
                 if (rotationsDone > 0) {
                     ASSERT_NOT_EQUAL_LONG(inputCcw90, outputCcw90);
                     ASSERT_NOT_EQUAL_LONG(inputCw90, outputCw90);
@@ -220,6 +224,13 @@ void testContentBitToPoint() {
 
     // NOTE: I've only tested up to size 5, as the general pattern
     // is pretty well established once these succeed
+    INFO("Block size 8"); 
+    expected = (Point){-4, 4};
+    actual = contentBitToPoint(0, 8);
+    ASSERT_EQUAL_INT(expected.x, actual.x);
+    ASSERT_EQUAL_INT(expected.y, actual.y);
+
+
 
 }
 
@@ -280,6 +291,12 @@ void testPointToContentBit() {
 
     expected = 3;
     actual = pointToContentBit((Point){-1, 0}, 3);
+    ASSERT_EQUAL_INT(expected, actual);
+
+    /* Below are more examples I'm testing for test cases that have
+     * been known to fail */
+    expected = 0;
+    actual = pointToContentBit((Point){-4, 4}, 8);
     ASSERT_EQUAL_INT(expected, actual);
 }
 

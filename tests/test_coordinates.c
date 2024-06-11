@@ -34,6 +34,19 @@ void testPointTransform() {
     ASSERT_EQUAL_INT(result.x, 0);
     ASSERT_EQUAL_INT(result.y, 2);
 
+    /* Below are extra examples I've discovered of things
+     * needing testing from actual things I've found */
+    result = Point_transform((Point){-4, 4}, (Point){0, 1});
+    ASSERT_EQUAL_INT(result.x, -4);
+    ASSERT_EQUAL_INT(result.y, -4);
+
+    result = Point_transform((Point){-4, -4}, (Point){0, 1});
+    ASSERT_EQUAL_INT(result.x, 4);
+    ASSERT_EQUAL_INT(result.y, -4);
+
+    result = Point_transform((Point){-4, 4}, (Point){-1, 0});
+    ASSERT_EQUAL_INT(result.x, 4);
+    ASSERT_EQUAL_INT(result.y, -4);
 
 }
 
