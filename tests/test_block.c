@@ -32,9 +32,9 @@ void testContentRotationProperties() {
         for (int bitNum = 0; bitNum < blockSize * blockSize; bitNum++) {
             INFO_FMT("bit number %d", bitNum);
 
-            long inputCcw90 = 1 << bitNum;
-            long inputCw90 = 1 << bitNum;
-            long input180 = 1 << bitNum;
+            long inputCcw90 = 1L << bitNum;
+            long inputCw90 = 1L << bitNum;
+            long input180 = 1L << bitNum;
 
             long outputCcw90 = inputCcw90;
             long outputCw90 = inputCw90; 
@@ -42,7 +42,7 @@ void testContentRotationProperties() {
 
             INFO("Checking rotational properties");
             // four rotations of any given type should come back to origin
-            for (int rotationNum = 1; rotationNum <= 3; rotationNum++) {
+            for (int rotationNum = 1; rotationNum <= 4; rotationNum++) {
                 INFO_FMT("Rotation %d", rotationNum);
 
                 outputCcw90 = rotateBlockContentsCcw90(outputCcw90, blockSize);
@@ -62,19 +62,20 @@ void testContentRotationProperties() {
                 else {
                     ASSERT_NOT_EQUAL_LONG(inputCcw90, outputCcw90);
                     ASSERT_NOT_EQUAL_LONG(inputCw90, outputCw90);
+
+                    if (rotationNum == 2) {
+                        ASSERT_EQUAL_LONG(input180, output180);
+                    }
+                    else {
+                        ASSERT_NOT_EQUAL_LONG(input180, output180);
+                    }
                 }
 
 
-                if (rotationNum == 2) {
-                    ASSERT_EQUAL_LONG(input180, output180);
-                }
-                else {
-                    ASSERT_NOT_EQUAL_LONG(input180, output180);
-                }
             }
 
             /* Certain rotations reverse one another */
-            inputContents = 1 << bitNum;
+            inputContents = 1L << bitNum;
             ASSERT_EQUAL_LONG(
                 inputContents,
                 rotateBlockContentsCcw90(rotateBlockContentsCw90(inputContents, blockSize), blockSize)
