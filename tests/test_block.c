@@ -7,12 +7,24 @@ void testContentRotationProperties() {
     long inputContents;
 
     for (int blockSize = 1; blockSize <= 8; blockSize++) {
+        INFO("-------------------------------");
         INFO_FMT("blockSize = %d", blockSize);
 
-        ASSERT_EQUAL_LONG(1L, rotateBlockContentsCw90(1L, blockSize));
-        ASSERT_EQUAL_LONG(1L, rotateBlockContentsCcw90(1L, blockSize));
-        ASSERT_EQUAL_LONG(1L, rotateBlockContents180(1L, blockSize));
+        // Note that we don't care about bits of higher order than are needed 
+        // for the blockSize
+        long allSet = 0L;
+        for (int i = 0; i < blockSize * blockSize; i++) {
+            allSet <<= 1;
+            allSet |= 1;
+        }
 
+        INFO_FMT("allSet for blockSize %d is %ld", blockSize, allSet);
+        INFO("Checking rotation of all set bits");
+        ASSERT_EQUAL_LONG(allSet, rotateBlockContentsCw90(allSet, blockSize));
+        ASSERT_EQUAL_LONG(allSet, rotateBlockContentsCcw90(allSet, blockSize));
+        ASSERT_EQUAL_LONG(allSet, rotateBlockContents180(allSet, blockSize));
+
+        INFO("Checking rotation of no set bits");
         ASSERT_EQUAL_LONG(0L, rotateBlockContentsCw90(0L, blockSize));
         ASSERT_EQUAL_LONG(0L, rotateBlockContentsCcw90(0L, blockSize));
         ASSERT_EQUAL_LONG(0L, rotateBlockContents180(0L, blockSize));
