@@ -12,7 +12,14 @@ OBJS ?= $(patsubst $(INCL)%.c, $(DEST)%.o, $(SOURCES))
 
 all: build
 
-build: $(DEST)/$(TARGET)
+run: build
+	./main.bin
+
+clean:
+	rm -f *.bin
+
+build: $(DEST)/$(TARGET) main.c
+	$(CC) $(CFLAGS) -I$(INCL) main.c -o main.bin -L $(DEST) -l:lib.a
 
 $(DEST)/$(TARGET): $(OBJS)
 	@ar rvs $@ $^
