@@ -19,7 +19,7 @@ clean:
 	rm -f *.bin
 
 build: $(DEST)/$(TARGET) main.c
-	$(CC) $(CFLAGS) -I$(INCL) main.c -o main.bin -L $(DEST) -l:lib.a
+	$(CC) $(CFLAGS) -I$(INCL) main.c -o main.bin -L $(DEST) -l:lib.a -lSDL2
 
 $(DEST)/$(TARGET): $(OBJS)
 	@ar rvs $@ $^
