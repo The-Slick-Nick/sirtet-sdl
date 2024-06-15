@@ -395,6 +395,31 @@ void testContentBitConversionProperties() {
 
 }
 
+void testSetupNewBlock() {
+    /* Tests on setting up new blocks */
+
+    BlockIds my_ids = {.head = 0};
+
+    int new_id;
+    for (int i = 0; i < MAX_BLOCK_COUNT; i++) {
+        new_id = provisionBlockId(&my_ids, 4);
+
+        // PROPERTY: values stored are number of "cells" per block
+        ASSERT_EQUAL_INT(my_ids.id_array[new_id], 4);
+        // PROPERTY: valid ids are positive
+        ASSERT_GREATER_THAN_INT(new_id, -1);
+    }
+   
+    // PROPERTY: -1 should be an invalid id, returned when we couldn't provision an id
+    new_id = provisionBlockId(&my_ids, 4);
+    ASSERT_EQUAL_INT(new_id, -1);
+
+    // PROPERTY: 0 should be a valid id
+    removeBlockId(&my_ids, 0);
+    new_id = provisionBlockId(&my_ids, 4);
+    ASSERT_GREATER_THAN_INT(new_id, -1);
+}
+
 int main() {
     EWENIT_START;
     ADD_CASE(testContentRotationProperties);
@@ -402,6 +427,7 @@ int main() {
     ADD_CASE(testContentBitToPoint);
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);
+    ADD_CASE(testSetupNewBlock);
     EWENIT_END;
     // EWENIT_END_COMPACT;
     return 0;
