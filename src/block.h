@@ -34,7 +34,6 @@ typedef struct Block {
 
 // Struct to manage & track how block ids are assigned
 typedef struct {
-
     int id_array[MAX_BLOCK_COUNT];
     int head;
 

@@ -105,7 +105,37 @@ long rotateBlockContentsCcw90(long contents, int blockSize) {
     return _transformBlockContents(contents, blockSize, (Point){0, 1});
 }
 
-
 long rotateBlockContents180(long contents, int blockSize) {
     return _transformBlockContents(contents, blockSize, (Point){-1, 0});
 }
+
+
+
+// Get and assign a block_id from the given BlockIds struct for a block
+// of provided size, returning the new id. If no ids are available,
+// returns -1
+int provisionBlockId(BlockIds *ids, int blockSize) {
+
+    for (int idsChecked = 0; idsChecked < MAX_BLOCK_COUNT; idsChecked++) {
+        if ((ids->id_array)[ids->head] == 0) {
+            (ids->id_array)[ids->head] += blockSize;
+            return ids->head;
+        }
+
+        ids->head = (ids->head + 1) % MAX_BLOCK_COUNT;
+    }
+    return -1;
+}
+
+
+
+// remove the contents at a particular id
+int removeBlockId(BlockIds *ids, int toRemove) {
+
+    (ids->id_array)[toRemove] = 0;
+    return 0;
+}
+
+
+
+
