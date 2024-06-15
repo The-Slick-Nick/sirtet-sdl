@@ -10,7 +10,6 @@
 * [08] [09] [10] [11]
 * [12] [13] [14] [15]
 */
-
 typedef struct Block {
     Point position; // Coordinates representing the center point.
                     // If blockSize is odd, this is the center of a square.

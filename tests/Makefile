@@ -33,7 +33,7 @@ $(TEST_BINS): %_bin: %.o $(LIB)/lib.a
 
 
 $(LIB)/lib.a:
-	@make -C ..
+	@make build_lib -C ..
 
 
 
