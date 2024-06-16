@@ -399,16 +399,20 @@ void testContentBitConversionProperties() {
 void testSetupNewBlock() {
     /* Tests on setting up new blocks */
 
-    BlockIds my_ids = {.head = 0};
+    const int max_blocks = 128;
+    int id_arr[128] = {0};
+
+    BlockIds my_ids = {.head = 0, .id_array = id_arr, .max_ids = 128};
 
     int new_id;
-    for (int i = 0; i < MAX_BLOCK_COUNT; i++) {
+    for (int i = 0; i < max_blocks; i++) {
         new_id = provisionBlockId(&my_ids, 4);
+
+        // PROPERTY: valid ids are positive
+        ASSERT_GREATER_THAN_INT(new_id, -1);
 
         // PROPERTY: values stored are number of "cells" per block
         ASSERT_EQUAL_INT(my_ids.id_array[new_id], 4);
-        // PROPERTY: valid ids are positive
-        ASSERT_GREATER_THAN_INT(new_id, -1);
     }
    
     // PROPERTY: -1 should be an invalid id, returned when we couldn't provision an id
@@ -463,6 +467,7 @@ int main() {
     ADD_CASE(testContentRotationManual);
     ADD_CASE(testContentBitToPoint);
     ADD_CASE(testPointToContentBit);
+    printf("hello");
     ADD_CASE(testContentBitConversionProperties);
     ADD_CASE(testSetupNewBlock);
     ADD_CASE(testTransformBlock);

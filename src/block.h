@@ -33,10 +33,11 @@ typedef struct Block {
 } Block;
 
 // Struct to manage & track how block ids are assigned
+// TODO Don't hard-code a macroed size, value, have the struct contain the array & a size
 typedef struct {
-    int id_array[MAX_BLOCK_COUNT];
-    int head;
-
+    int max_ids;   // Maximum number of ids that can be provisioned
+    int *id_array; // Array counting number of cells per id (by index)
+    int head;      // Pointer to current highest id provisioned so far
 } BlockIds;
 
 // transformation on the integer representation of a block's contents
@@ -44,6 +45,7 @@ long transformBlockContents(long contents, int blockSize, Point transform);
 
 // in-place transformation of a block
 void transformBlock(Block* block, Point transform);
+// void Block_transform(Block* block, Point transform); // TODO uncomment
 
 // in-place translateion of a block
 void translateBlock(Block* block, Point translation);

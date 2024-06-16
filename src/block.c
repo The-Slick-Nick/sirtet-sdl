@@ -129,13 +129,16 @@ void translateBlock(Block* block, Point translation) {
 // returns -1
 int provisionBlockId(BlockIds *ids, int block_size) {
 
-    for (int idsChecked = 0; idsChecked < MAX_BLOCK_COUNT; idsChecked++) {
-        if ((ids->id_array)[ids->head] == 0) {
-            (ids->id_array)[ids->head] += block_size;
+    const int block_count = ids->max_ids;
+
+    for (int ids_checked = 0; ids_checked < block_count; ids_checked++) {
+ 
+        if (0 == *(ids->id_array + ids->head)) {
+            *(ids->id_array + ids->head) = *(ids->id_array + ids->head) + block_size;
             return ids->head;
         }
 
-        ids->head = (ids->head + 1) % MAX_BLOCK_COUNT;
+        ids->head = (ids->head + 1) % block_count;
     }
     return -1;
 }

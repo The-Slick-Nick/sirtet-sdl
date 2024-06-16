@@ -11,7 +11,7 @@ TEST_SUITES = test_block.c test_coordinates.c
 
 
 TEST_OBJS = $(patsubst %.c, %.o, $(TEST_SUITES))
-TEST_BINS = $(patsubst %.c, %_bin, $(TEST_SUITES))
+TEST_BINS = $(patsubst %.c, %.bin, $(TEST_SUITES))
 
 INCL = ../src  # Where to find headers
 LIB = ../build # Where to find compiled library
@@ -19,17 +19,18 @@ LIB = ../build # Where to find compiled library
 all: run_tests clean
 
 
-run_tests: $(TEST_BINS)
+run_tests: build_tests  
+	for x in *.bin; do ./$$x; done
+	@echo "Tests Complete"
 
+build_tests: $(TEST_BINS)
 
 $(TEST_OBJS): %.o: %.c
 	$(CC) $(CFLAGS) -I $(INCL) -c $< -o $@
 
 # Make and run
-$(TEST_BINS): %_bin: %.o $(LIB)/lib.a
+$(TEST_BINS): %.bin: %.o $(LIB)/lib.a
 	$(CC) $(CFLAGS) -o $@ $< -L$(LIB) -l:libEWENIT.a -l:lib.a
-	./$@
-	@echo "Tests Complete"
 
 
 $(LIB)/lib.a:
@@ -39,6 +40,6 @@ $(LIB)/lib.a:
 
 clean:
 	@rm -f *.o
-	@rm -f *_bin
+	@rm -f *.bin
 	@rm -f *.a
 
