@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "block.h"
 #include "coordinates.h"
 
@@ -151,7 +152,37 @@ int BlockIds_removeId(BlockIds *self, int to_remove) {
 }
 
 
-int BlockIds_decrementId(BlockIds* ids, int to_decrement, int by) { return 0; }
-int BlockIds_incrementId(BlockIds* ids, int to_decrement, int by) { return 0; }
+// Decrease the number of instances of an id recorded
+int BlockIds_decrementId(BlockIds* ids, int to_decrement, int by) {
+
+    if (to_decrement < 0 || to_decrement >= ids->max_ids) {
+        return -1;
+    }
+
+    if (ids->id_array[to_decrement] < by) {
+        return -1;
+    }
+
+    if (by < 0) {
+        return -1;
+    }
+
+    ids->id_array[to_decrement] = ids->id_array[to_decrement] - by;
+    return 0;
+}
+
+// Increase the number of instances of an id recorded
+int BlockIds_incrementId(BlockIds* ids, int to_increment, int by) {
 
 
+    if (to_increment < 0 || to_increment >= ids->max_ids) {
+        return -1;
+    }
+
+    if (by < 0) {
+        return -1;
+    }
+
+    ids->id_array[to_increment] = ids->id_array[to_increment] + by;
+    return 0;
+}

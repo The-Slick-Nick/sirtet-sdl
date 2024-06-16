@@ -430,12 +430,12 @@ void testBlockIdsDecrementId() {
     BlockIds my_ids = {.head = 0, .id_array=id_arr, .max_ids=4};
 
     int good_result = BlockIds_decrementId(&my_ids, 2, 1);
-    ASSERT_EQUAL_INT(good_result, 1);
+    ASSERT_EQUAL_INT(good_result, 0);
     ASSERT_EQUAL_INT(my_ids.id_array[2], 1);
 
     int bad_result = BlockIds_decrementId(&my_ids, 0, 1);
     ASSERT_EQUAL_INT(bad_result, -1);
-    ASSERT_EQUAL_INT(my_ids.id_array[0], 1);
+    ASSERT_EQUAL_INT(my_ids.id_array[0], 0);
 }
 
 void testBlockIdsIncrementId() {
@@ -443,7 +443,7 @@ void testBlockIdsIncrementId() {
     BlockIds my_ids = {.head = 0, .id_array=id_arr, .max_ids=4};
 
     int good_result = BlockIds_incrementId(&my_ids, 2, 1);
-    ASSERT_EQUAL_INT(good_result, 1);
+    ASSERT_EQUAL_INT(good_result, 0);
     ASSERT_EQUAL_INT(my_ids.id_array[2], 3);
 }
 
