@@ -39,7 +39,6 @@ bool GameGrid_canBlockInfoExist(
     GameGrid *self, int block_size, long block_contents, Point block_position
 ) {
 
-
     for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
 
         if ((block_contents & (1L << bit_num)) == 0) {
@@ -57,7 +56,8 @@ bool GameGrid_canBlockInfoExist(
         }
 
         // occupied
-        int gridarr_idx = grid_coords.x + (self->width * grid_coords.y); // 2d access
+        // 2d access
+        int gridarr_idx = grid_coords.x + (self->width * grid_coords.y); 
         if (*(self->contents + gridarr_idx) >= 0) {
             return false;
         }
@@ -66,11 +66,33 @@ bool GameGrid_canBlockInfoExist(
     return true;
 }
 
-// add a block's cells to the grid. ModifyModifies  provided grid and block in place
+// Add a block's cells to the grid.
+// Modify provided grid and block in place
+// return -1 on failure, 0 on success
 int GameGrid_commitBlock(GameGrid* self, Block* block) {
-    return -1;
+
+    if ( !GameGrid_canBlockExist(self, block) ) {
+        return -1;
+    }
+
+    for (int bit_num = 0; bit_num < block->size * block->size; bit_num++) {
+        if ( 0 == (block->contents & (1L << bit_num)) ) {
+            continue;
+        }
+
+        Point grid_coords = blockContentBitToGridCoords(
+            bit_num, block->size, block->position);
+
+        // 2d access
+        int grid_idx = grid_coords.x + (self->width * grid_coords.y);
+        self->contents[grid_idx] = block->id;
+    }
+
+    block->contents = 0L;
+    return 0;
 }
 
+// TODO Convert below to return an integer status code
 // Reset all of a grid's contents
 void GameGrid_clear(GameGrid* grid) {
     for (int idx = 0; idx < grid->width * grid->height; idx++) {
