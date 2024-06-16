@@ -8,6 +8,7 @@
 #define GRID_H
 
 #include "block.h"
+#include <stdbool.h>
 
 
 // 10 wide, 20 tall is standard tetris
@@ -15,29 +16,35 @@
 #define GRID_HEIGHT 20
 #define GRID_WIDTH 10
 
-#ifndef ARR_2D
-#define ARR_2D(row, col, width)  ((row) * (width)) + (col)
-#endif
-
 
 typedef struct {
 
+    int width;
+    int height;
+
     // stores identifying numbers (block ids) that have 
-    // landed in the grid
-    int grid_contents[GRID_HEIGHT * GRID_WIDTH];
+    int *contents;
 
 } GameGrid;
 
 
 
-bool GameGrid_canBlockMove(GameGrid* grid, 
+// Identify if the given block
+bool GameGrid_canBlockExist(GameGrid *self, Block *block);
 
-// add a block's cells to the grid
-void GameGrid_commitBlock(GameGrid* grid, Block* block);
+// Identify if the provided block data is compatible with current grid
+bool GameGrid_canBlockInfoExist(
+    GameGrid *self, int block_size, long block_contents, Point block_position
+);
 
-void GameGrid_clear(GameGrid* grid);  // reset all a grid's contents
-void GameGrid_reset(GameGrid* grid, BlockIds* ids);  // reset a grid's contents,
-// accounting for block ids
+// add a block's cells to the grid. Modifies provided grid and block in place
+void GameGrid_commitBlock(GameGrid* self, Block* block);
+
+// Reset all of a grid's contents
+void GameGrid_clear(GameGrid* grid);  
+
+// Reset a grid's contents, clearing encountered blocks
+void GameGrid_reset(GameGrid* grid, BlockIds* ids);  
 
 // clears full rows of committed blocks
 int GameGrid_resolveRows(GameGrid* grid, BlockIds* ids);

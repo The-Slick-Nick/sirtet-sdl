@@ -427,7 +427,7 @@ void testSetupNewBlock() {
 
 
 void testTransformBlock() {
-    Block my_block = {.block_size = 2, .contents = 0b0011};
+    Block my_block = {.size = 2, .contents = 0b0011};
 
     Block_transform(&my_block, (Point){0, 1});
     ASSERT_EQUAL_INT(my_block.contents, 0b0101);

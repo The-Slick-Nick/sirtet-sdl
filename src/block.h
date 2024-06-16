@@ -17,7 +17,7 @@
 * [12] [13] [14] [15]
 */
 typedef struct Block {
-    int block_id;   // Uniquely identifying number of this block
+    int id; // Uniquely identifying number of this block
 
     Point position; // Coordinates representing the center point.
                     // If blockSize is odd, this is the center of a square.
@@ -27,7 +27,7 @@ typedef struct Block {
     long contents;  // Mask representing positions of individual block "cells"
                     // within a grid using bits - supports up to 8-tiled blocks.
 
-    int block_size; // Dimension of block-placement grid.
+    int size;       // Dimension of block-placement grid.
                     // Does not necessarily indicate the number of squares
                     // used for this block, but the maximum supported
 } Block;
