@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include "grid.h"
 #include "block.h"
 
@@ -102,9 +103,69 @@ void GameGrid_clear(GameGrid* grid) {
 
 // Reset a grid's contents, clearing encountered blocks
 void GameGrid_reset(GameGrid* grid, BlockIds* ids) {
+
+    for (int grid_idx = 0; grid_idx < grid->width * grid->height; grid_idx++) {
+        if (grid->contents[grid_idx] < 0) {
+            continue;
+        }
+
+        BlockIds_decrementId(ids, grid->contents[grid_idx], 1);
+        grid->contents[grid_idx] = -1;
+    }
 }  
 
 // clears full rows of committed blocks
-int GameGrid_resolveRows(GameGrid* grid, BlockIds* ids) {
-    return 0;
+int GameGrid_resolveRows(GameGrid* self, BlockIds* ids) {
+
+    int read_ptr = self->height - 1;
+    int num_full_rows = 0;
+    for (int write_ptr = self->height - 1; write_ptr >= 0; write_ptr--) {
+
+        bool row_full = true;
+        while (read_ptr >= 0 && row_full) {
+
+            row_full = true;
+            for (int x = 0; x < self->width; x++) {
+
+                int grid_idx = x + (self->width * read_ptr);
+                if (self->contents[grid_idx] < 0) {
+                    row_full = false;
+                    break;
+                }
+            }
+
+            if (row_full) {
+
+                // must adjust BlockIds now, but only now since
+                // we did not previously know this row was full
+                for (int x = 0; x < self->width; x++) {
+                    int grid_idx = x + (self->width * read_ptr);
+                    int grid_cell_val = self->contents[grid_idx];
+                    BlockIds_decrementId(ids, grid_cell_val, 1);
+                }
+                read_ptr--;
+                num_full_rows++;
+            }
+        }
+
+        for (int x = 0; x < self->width; x++) {
+            // row pointers to actual indices
+            int write_idx = x + (self->width * write_ptr);
+            int read_idx;
+
+            if (read_ptr < 0) {
+                self->contents[write_idx] = -1;
+            }
+            else {
+                read_idx = x + (self->width * read_ptr);
+                self->contents[write_idx] = self->contents[read_idx];
+            }
+        }
+
+        // both read and writes move
+        if (read_ptr >= 0) {
+            read_ptr--;
+        }
+    }
+    return num_full_rows;
 }

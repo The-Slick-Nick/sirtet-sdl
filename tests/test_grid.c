@@ -173,17 +173,35 @@ void testGameGridResolveRows() {
 
     int result = GameGrid_resolveRows(&grid, &ids);
 
-    ASSERT_EQUAL_INT(result, 1);
+    ASSERT_EQUAL_INT(result, 1); // one row resolved
     ASSERT_EQUAL_INT(ids.id_array[0], 2);
     ASSERT_EQUAL_INT(ids.id_array[1], 2);
 
-    /* final should be
+    /* final should be as below.
+     * Notice the floating 0s - this is an official tetris quirk
         -1, -1, -1, -1, 
         -1, -1, -1, -1, 
-        -1, -1, -1, -1, 
-        -1, -1, -1, -1, 
-         0,  0,  1,  1
+         0,  0, -1, -1, 
+        -1, -1,  1,  1
     */
+
+    for (int grid_y = 0; grid_y < height; grid_y++) {
+        for (int grid_x = 0; grid_x < width; grid_x++) {
+            INFO_FMT("(%d, %d)", grid_x, grid_y);
+            int grid_idx = grid_x + (grid_y * width);
+            int grid_cell_val = grid.contents[grid_idx];
+
+            if (8 == grid_idx || 9 == grid_idx) {
+                ASSERT_EQUAL_INT(grid_cell_val, 0);
+            }
+            else if (14 == grid_idx || 15 == grid_idx) {
+                ASSERT_EQUAL_INT(grid_cell_val, 1);
+            }
+            else {
+                ASSERT_GREATER_THAN_INT(0, grid_cell_val);  // invalid id
+            }
+        }
+    }
 }
 
 
