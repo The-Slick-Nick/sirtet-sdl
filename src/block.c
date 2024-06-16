@@ -76,7 +76,7 @@ int pointToContentBit(Point point, int blockSize) {
 }
 
 
-long _transformBlockContents(long contents, int blockSize, Point transform) {
+long transformBlockContents(long contents, int blockSize, Point transform) {
     long newContents = 0;
     Point originalPoint;
     Point newPoint;
@@ -97,16 +97,29 @@ long _transformBlockContents(long contents, int blockSize, Point transform) {
     return newContents;
 }
 
+
+
 long rotateBlockContentsCw90(long contents, int blockSize) {
-    return _transformBlockContents(contents, blockSize, (Point){0, -1});
+    return transformBlockContents(contents, blockSize, (Point){0, -1});
 }
 
 long rotateBlockContentsCcw90(long contents, int blockSize) {
-    return _transformBlockContents(contents, blockSize, (Point){0, 1});
+    return transformBlockContents(contents, blockSize, (Point){0, 1});
 }
 
 long rotateBlockContents180(long contents, int blockSize) {
-    return _transformBlockContents(contents, blockSize, (Point){-1, 0});
+    return transformBlockContents(contents, blockSize, (Point){-1, 0});
+}
+
+
+// Transform a block in place, by the given transformation vector (point)
+void transformBlock(Block* block, Point transform) {
+    block->contents = transformBlockContents(block->contents, block->block_size, transform);
+}
+
+// translate a block in place, by the given translation vector (point)
+void translateBlock(Block* block, Point translation) {
+    block->position = Point_translate(block->position, translation);
 }
 
 
@@ -114,11 +127,11 @@ long rotateBlockContents180(long contents, int blockSize) {
 // Get and assign a block_id from the given BlockIds struct for a block
 // of provided size, returning the new id. If no ids are available,
 // returns -1
-int provisionBlockId(BlockIds *ids, int blockSize) {
+int provisionBlockId(BlockIds *ids, int block_size) {
 
     for (int idsChecked = 0; idsChecked < MAX_BLOCK_COUNT; idsChecked++) {
         if ((ids->id_array)[ids->head] == 0) {
-            (ids->id_array)[ids->head] += blockSize;
+            (ids->id_array)[ids->head] += block_size;
             return ids->head;
         }
 
@@ -128,11 +141,10 @@ int provisionBlockId(BlockIds *ids, int blockSize) {
 }
 
 
-
 // remove the contents at a particular id
-int removeBlockId(BlockIds *ids, int toRemove) {
+int removeBlockId(BlockIds *ids, int to_remove) {
 
-    (ids->id_array)[toRemove] = 0;
+    (ids->id_array)[to_remove] = 0;
     return 0;
 }
 

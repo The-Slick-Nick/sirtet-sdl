@@ -1,4 +1,5 @@
-#include "../src/block.h"
+#include "block.h"
+#include "coordinates.h"
 #include "EWENIT.h"
 
 
@@ -420,6 +421,42 @@ void testSetupNewBlock() {
     ASSERT_GREATER_THAN_INT(new_id, -1);
 }
 
+
+void testTransformBlock() {
+    Block my_block = {.block_size = 2, .contents = 0b0011};
+
+    transformBlock(&my_block, (Point){0, 1});
+    ASSERT_EQUAL_INT(my_block.contents, 0b0101);
+
+    transformBlock(&my_block, (Point){-1, 0});
+    ASSERT_EQUAL_INT(my_block.contents, 0b1010);
+}
+
+void testTranslateBlock() {
+    Block my_block;
+    
+    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
+    translateBlock(&my_block, (Point){1, 0});
+    ASSERT_EQUAL_INT(my_block.position.x , 3);
+    ASSERT_EQUAL_INT(my_block.position.y , 2);
+
+    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
+    translateBlock(&my_block, (Point){0, 1});
+    ASSERT_EQUAL_INT(my_block.position.x , 2);
+    ASSERT_EQUAL_INT(my_block.position.y , 3);
+
+    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
+    translateBlock(&my_block, (Point){-1, 0});
+    ASSERT_EQUAL_INT(my_block.position.x , 1);
+    ASSERT_EQUAL_INT(my_block.position.y , 2);
+
+    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
+    translateBlock(&my_block, (Point){0, -1});
+    ASSERT_EQUAL_INT(my_block.position.x , 2);
+    ASSERT_EQUAL_INT(my_block.position.y , 1);
+}
+
+
 int main() {
     EWENIT_START;
     ADD_CASE(testContentRotationProperties);
@@ -428,6 +465,8 @@ int main() {
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);
     ADD_CASE(testSetupNewBlock);
+    ADD_CASE(testTransformBlock);
+    ADD_CASE(testTranslateBlock);
     EWENIT_END;
     // EWENIT_END_COMPACT;
     return 0;

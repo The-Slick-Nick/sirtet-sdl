@@ -10,6 +10,15 @@ Point Point_transform(Point basis, Point transformation) {
         .x = (basis.x * transformation.x) - (basis.y * transformation.y),
         .y = (basis.x * transformation.y) + (basis.y * transformation.x)
     };
-        
+
+    return returnVal;
+}
+
+Point Point_translate(Point basis, Point translation) {
+    Point returnVal = {
+        .x = (basis.x + translation.x),
+        .y = (basis.y + translation.y)
+    };
+    
     return returnVal;
 }

@@ -27,7 +27,7 @@ typedef struct Block {
     long contents;  // Mask representing positions of individual block "cells"
                     // within a grid using bits - supports up to 8-tiled blocks.
 
-    int blockSize;  // Dimension of block-placement grid.
+    int block_size; // Dimension of block-placement grid.
                     // Does not necessarily indicate the number of squares
                     // used for this block, but the maximum supported
 } Block;
@@ -38,6 +38,15 @@ typedef struct {
     int head;
 
 } BlockIds;
+
+// transformation on the integer representation of a block's contents
+long transformBlockContents(long contents, int blockSize, Point transform);
+
+// in-place transformation of a block
+void transformBlock(Block* block, Point transform);
+
+// in-place translateion of a block
+void translateBlock(Block* block, Point translation);
 
 long rotateBlockContentsCw90(long contents, int blockSize);
 long rotateBlockContentsCcw90(long contents, int blockSize);

@@ -13,8 +13,8 @@ typedef struct {
 } Point;
 
 
-// Rotate a Point about the origin by using a specified rotation point
 Point Point_transform(Point basis, Point transformation);
+Point Point_translate(Point basis, Point translation);
 
 
 
