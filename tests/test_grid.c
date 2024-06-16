@@ -85,16 +85,10 @@ void testGameGridCanBlockInfoExist() {
 
     // center
     INFO("Center");
-    printf("Center\n");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=2, .y=2});
-    if (result) {
-        printf("CENTER RETURNED TRUE\n");
-        INFO_FMT("Result is %d", result);
-    }
     ASSERT_TRUE(result);
 
     // nw corner, overall block scope can overlap but actualized content doesn't
-    printf("NW but good\n");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=1, .y=1});
     ASSERT_TRUE(result);
 
@@ -202,6 +196,12 @@ void testGameGridCommitBlock() {
 
     GameGrid_clear(&grid);
 
+    /*
+     * 0 0 0 0
+     * 0 1 1 0
+     * 0 1 1 0
+     * 0 0 0 0
+     */
     long block_contents = ( 1L << 5 | 1L << 6 | 1L << 9 | 1L << 10 );
 
     int goodblock_id = 1;
@@ -227,6 +227,7 @@ void testGameGridCommitBlock() {
     ASSERT_EQUAL_INT(grid.contents[6], goodblock_id);
     ASSERT_EQUAL_INT(grid.contents[9], goodblock_id);
     ASSERT_EQUAL_INT(grid.contents[10], goodblock_id);
+    ASSERT_EQUAL_LONG(good_block.contents, 0L);  // Committed blocks have no more contents
 
     GameGrid_clear(&grid);
 
@@ -236,7 +237,9 @@ void testGameGridCommitBlock() {
         // Id should be negative (though exact number doesn't matter)
         ASSERT_GREATER_THAN_INT(0, grid.contents[grid_cell]);
     }
+    ASSERT_EQUAL_LONG(bad_block.contents, block_contents); // no change
 }
+
 
 int main() {
     EWENIT_START;
