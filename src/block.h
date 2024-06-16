@@ -56,6 +56,8 @@ long rotateBlockContents180(long contents, int blockSize);
 
 int BlockIds_provisionId(BlockIds *self, int block_size);
 int BlockIds_removeId(BlockIds *ids, int to_remove);
+int BlockIds_decrementId(BlockIds* ids, int to_decrement, int by);
+int BlockIds_incrementId(BlockIds* ids, int to_decrement, int by);
 
 
 

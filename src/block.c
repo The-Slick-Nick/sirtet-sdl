@@ -76,7 +76,7 @@ int pointToContentBit(Point point, int blockSize) {
 }
 
 
-long Contents(long contents, int blockSize, Point transform) {
+long transformBlockContents(long contents, int blockSize, Point transform) {
     long newContents = 0;
     Point originalPoint;
     Point newPoint;
@@ -100,21 +100,21 @@ long Contents(long contents, int blockSize, Point transform) {
 
 
 long rotateBlockContentsCw90(long contents, int blockSize) {
-    return Contents(contents, blockSize, (Point){0, -1});
+    return transformBlockContents(contents, blockSize, (Point){0, -1});
 }
 
 long rotateBlockContentsCcw90(long contents, int blockSize) {
-    return Contents(contents, blockSize, (Point){0, 1});
+    return transformBlockContents(contents, blockSize, (Point){0, 1});
 }
 
 long rotateBlockContents180(long contents, int blockSize) {
-    return Contents(contents, blockSize, (Point){-1, 0});
+    return transformBlockContents(contents, blockSize, (Point){-1, 0});
 }
 
 
 // Transform a block in place, by the given transformation vector (point)
 void Block_transform(Block* self, Point transform) {
-    self->contents = Contents(self->contents, self->block_size, transform);
+    self->contents = transformBlockContents(self->contents, self->size, transform);
 }
 
 // translate a block in place, by the given translation vector (point)
@@ -146,11 +146,12 @@ int BlockIds_provisionId(BlockIds *self, int block_size) {
 
 // remove the contents at a particular id
 int BlockIds_removeId(BlockIds *self, int to_remove) {
-
     (self->id_array)[to_remove] = 0;
     return 0;
 }
 
 
+int BlockIds_decrementId(BlockIds* ids, int to_decrement, int by) { return 0; }
+int BlockIds_incrementId(BlockIds* ids, int to_decrement, int by) { return 0; }
 
 

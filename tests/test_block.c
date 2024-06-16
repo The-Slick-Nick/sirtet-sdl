@@ -425,6 +425,28 @@ void testSetupNewBlock() {
     ASSERT_GREATER_THAN_INT(new_id, -1);
 }
 
+void testBlockIdsDecrementId() {
+    int id_arr[4] = {0, 0, 2, 0};
+    BlockIds my_ids = {.head = 0, .id_array=id_arr, .max_ids=4};
+
+    int good_result = BlockIds_decrementId(&my_ids, 2, 1);
+    ASSERT_EQUAL_INT(good_result, 1);
+    ASSERT_EQUAL_INT(my_ids.id_array[2], 1);
+
+    int bad_result = BlockIds_decrementId(&my_ids, 0, 1);
+    ASSERT_EQUAL_INT(bad_result, -1);
+    ASSERT_EQUAL_INT(my_ids.id_array[0], 1);
+}
+
+void testBlockIdsIncrementId() {
+    int id_arr[4] = {0, 0, 2, 0};
+    BlockIds my_ids = {.head = 0, .id_array=id_arr, .max_ids=4};
+
+    int good_result = BlockIds_incrementId(&my_ids, 2, 1);
+    ASSERT_EQUAL_INT(good_result, 1);
+    ASSERT_EQUAL_INT(my_ids.id_array[2], 3);
+}
+
 
 void testTransformBlock() {
     Block my_block = {.size = 2, .contents = 0b0011};
@@ -469,8 +491,11 @@ int main() {
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);
     ADD_CASE(testSetupNewBlock);
+    ADD_CASE(testBlockIdsDecrementId);
+    ADD_CASE(testBlockIdsIncrementId);
     ADD_CASE(testTransformBlock);
     ADD_CASE(testTranslateBlock);
+
     EWENIT_END;
     // EWENIT_END_COMPACT;
     return 0;
