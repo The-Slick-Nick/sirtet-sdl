@@ -28,6 +28,8 @@ typedef struct {
 } GameGrid;
 
 
+// Convert a block's content bit to grid coordaintes
+Point blockContentBitToGridCoords(int content_bit, int block_size, Point block_position);
 
 // Identify if the given block
 bool GameGrid_canBlockExist(GameGrid *self, Block *block);
