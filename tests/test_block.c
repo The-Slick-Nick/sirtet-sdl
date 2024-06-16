@@ -406,7 +406,7 @@ void testSetupNewBlock() {
 
     int new_id;
     for (int i = 0; i < max_blocks; i++) {
-        new_id = provisionBlockId(&my_ids, 4);
+        new_id = BlockIds_provisionId(&my_ids, 4);
 
         // PROPERTY: valid ids are positive
         ASSERT_GREATER_THAN_INT(new_id, -1);
@@ -416,12 +416,12 @@ void testSetupNewBlock() {
     }
    
     // PROPERTY: -1 should be an invalid id, returned when we couldn't provision an id
-    new_id = provisionBlockId(&my_ids, 4);
+    new_id = BlockIds_provisionId(&my_ids, 4);
     ASSERT_EQUAL_INT(new_id, -1);
 
     // PROPERTY: 0 should be a valid id
-    removeBlockId(&my_ids, 0);
-    new_id = provisionBlockId(&my_ids, 4);
+    BlockIds_removeId(&my_ids, 0);
+    new_id = BlockIds_provisionId(&my_ids, 4);
     ASSERT_GREATER_THAN_INT(new_id, -1);
 }
 
@@ -429,10 +429,10 @@ void testSetupNewBlock() {
 void testTransformBlock() {
     Block my_block = {.block_size = 2, .contents = 0b0011};
 
-    transformBlock(&my_block, (Point){0, 1});
+    Block_transform(&my_block, (Point){0, 1});
     ASSERT_EQUAL_INT(my_block.contents, 0b0101);
 
-    transformBlock(&my_block, (Point){-1, 0});
+    Block_transform(&my_block, (Point){-1, 0});
     ASSERT_EQUAL_INT(my_block.contents, 0b1010);
 }
 
@@ -440,22 +440,22 @@ void testTranslateBlock() {
     Block my_block;
     
     my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    translateBlock(&my_block, (Point){1, 0});
+    Block_translate(&my_block, (Point){1, 0});
     ASSERT_EQUAL_INT(my_block.position.x , 3);
     ASSERT_EQUAL_INT(my_block.position.y , 2);
 
     my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    translateBlock(&my_block, (Point){0, 1});
+    Block_translate(&my_block, (Point){0, 1});
     ASSERT_EQUAL_INT(my_block.position.x , 2);
     ASSERT_EQUAL_INT(my_block.position.y , 3);
 
     my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    translateBlock(&my_block, (Point){-1, 0});
+    Block_translate(&my_block, (Point){-1, 0});
     ASSERT_EQUAL_INT(my_block.position.x , 1);
     ASSERT_EQUAL_INT(my_block.position.y , 2);
 
     my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    translateBlock(&my_block, (Point){0, -1});
+    Block_translate(&my_block, (Point){0, -1});
     ASSERT_EQUAL_INT(my_block.position.x , 2);
     ASSERT_EQUAL_INT(my_block.position.y , 1);
 }
@@ -467,7 +467,6 @@ int main() {
     ADD_CASE(testContentRotationManual);
     ADD_CASE(testContentBitToPoint);
     ADD_CASE(testPointToContentBit);
-    printf("hello");
     ADD_CASE(testContentBitConversionProperties);
     ADD_CASE(testSetupNewBlock);
     ADD_CASE(testTransformBlock);

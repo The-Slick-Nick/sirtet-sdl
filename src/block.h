@@ -44,19 +44,20 @@ typedef struct {
 long transformBlockContents(long contents, int blockSize, Point transform);
 
 // in-place transformation of a block
-void transformBlock(Block* block, Point transform);
-// void Block_transform(Block* block, Point transform); // TODO uncomment
+void Block_transform(Block* block, Point transform); 
 
-// in-place translateion of a block
-void translateBlock(Block* block, Point translation);
+// in-place translation of a block
+void Block_translate(Block* self, Point translation);
 
 long rotateBlockContentsCw90(long contents, int blockSize);
 long rotateBlockContentsCcw90(long contents, int blockSize);
 long rotateBlockContents180(long contents, int blockSize);
 
 
-int provisionBlockId(BlockIds *ids, int blockSize);
-int removeBlockId(BlockIds *ids, int toRemove);  // remove the contents at a particular id
+int BlockIds_provisionId(BlockIds *self, int block_size);
+int BlockIds_removeId(BlockIds *ids, int to_remove);
+
+
 
 // Convert a bit number representing a position with a block's contents to its 
 // relative coordinates to the center

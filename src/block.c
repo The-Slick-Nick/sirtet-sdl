@@ -76,7 +76,7 @@ int pointToContentBit(Point point, int blockSize) {
 }
 
 
-long transformBlockContents(long contents, int blockSize, Point transform) {
+long Contents(long contents, int blockSize, Point transform) {
     long newContents = 0;
     Point originalPoint;
     Point newPoint;
@@ -100,26 +100,26 @@ long transformBlockContents(long contents, int blockSize, Point transform) {
 
 
 long rotateBlockContentsCw90(long contents, int blockSize) {
-    return transformBlockContents(contents, blockSize, (Point){0, -1});
+    return Contents(contents, blockSize, (Point){0, -1});
 }
 
 long rotateBlockContentsCcw90(long contents, int blockSize) {
-    return transformBlockContents(contents, blockSize, (Point){0, 1});
+    return Contents(contents, blockSize, (Point){0, 1});
 }
 
 long rotateBlockContents180(long contents, int blockSize) {
-    return transformBlockContents(contents, blockSize, (Point){-1, 0});
+    return Contents(contents, blockSize, (Point){-1, 0});
 }
 
 
 // Transform a block in place, by the given transformation vector (point)
-void transformBlock(Block* block, Point transform) {
-    block->contents = transformBlockContents(block->contents, block->block_size, transform);
+void Block_transform(Block* self, Point transform) {
+    self->contents = Contents(self->contents, self->block_size, transform);
 }
 
 // translate a block in place, by the given translation vector (point)
-void translateBlock(Block* block, Point translation) {
-    block->position = Point_translate(block->position, translation);
+void Block_translate(Block* self, Point translation) {
+    self->position = Point_translate(self->position, translation);
 }
 
 
@@ -127,27 +127,27 @@ void translateBlock(Block* block, Point translation) {
 // Get and assign a block_id from the given BlockIds struct for a block
 // of provided size, returning the new id. If no ids are available,
 // returns -1
-int provisionBlockId(BlockIds *ids, int block_size) {
+int BlockIds_provisionId(BlockIds *self, int block_size) {
 
-    const int block_count = ids->max_ids;
+    const int block_count = self->max_ids;
 
-    for (int ids_checked = 0; ids_checked < block_count; ids_checked++) {
+    for (int self_checked = 0; self_checked < block_count; self_checked++) {
  
-        if (0 == *(ids->id_array + ids->head)) {
-            *(ids->id_array + ids->head) = *(ids->id_array + ids->head) + block_size;
-            return ids->head;
+        if (0 == *(self->id_array + self->head)) {
+            *(self->id_array + self->head) = *(self->id_array + self->head) + block_size;
+            return self->head;
         }
 
-        ids->head = (ids->head + 1) % block_count;
+        self->head = (self->head + 1) % block_count;
     }
     return -1;
 }
 
 
 // remove the contents at a particular id
-int removeBlockId(BlockIds *ids, int to_remove) {
+int BlockIds_removeId(BlockIds *self, int to_remove) {
 
-    (ids->id_array)[to_remove] = 0;
+    (self->id_array)[to_remove] = 0;
     return 0;
 }
 
