@@ -58,32 +58,43 @@ void testGameGridCanBlockInfoExist() {
 
     int block_size = 4;
     // center of 4 = 5, 6, 9, 10
-    int block_contents = ( 1 << 5 | 1 << 6 | 1 << 9 | 1 << 10 );
+    long block_contents = ( 1L << 5 | 1L << 6 | 1L << 9 | 1L << 10 );
     bool result;
 
     // even sized grid
 
     // nw corner
+    INFO("NW");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=0, .y=0});
     ASSERT_FALSE(result);
 
     // ne corner
+    INFO("NE");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=4, .y=0});
     ASSERT_FALSE(result);
 
     // sw corner
+    INFO("SW");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=0, .y=4});
     ASSERT_FALSE(result);
 
     // s3 corner
+    INFO("SE");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=4, .y=4});
     ASSERT_FALSE(result);
 
     // center
+    INFO("Center");
+    printf("Center\n");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=2, .y=2});
+    if (result) {
+        printf("CENTER RETURNED TRUE\n");
+        INFO_FMT("Result is %d", result);
+    }
     ASSERT_TRUE(result);
 
     // nw corner, overall block scope can overlap but actualized content doesn't
+    printf("NW but good\n");
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=1, .y=1});
     ASSERT_TRUE(result);
 
@@ -113,31 +124,37 @@ void testGameGridCanBlockExist() {
     // even sized grid
 
     // nw corner
+    INFO("NW");
     block.position = (Point){.x=0, .y=0};
     result = GameGrid_canBlockExist(&grid, &block);
     ASSERT_FALSE(result);
 
     // ne corner
+    INFO("NE");
     block.position = (Point){.x=4, .y=0};
     result = GameGrid_canBlockExist(&grid, &block);
     ASSERT_FALSE(result);
 
     // sw corner
+    INFO("SW");
     block.position = (Point){.x=0, .y=4};
     result = GameGrid_canBlockExist(&grid, &block);
     ASSERT_FALSE(result);
 
     // s3 corner
+    INFO("SE");
     block.position = (Point){.x=4, .y=4};
     result = GameGrid_canBlockExist(&grid, &block);
     ASSERT_FALSE(result);
 
     // center
+    INFO("Center");
     block.position = (Point){.x=2, .y=2};
     result = GameGrid_canBlockExist(&grid, &block);
     ASSERT_TRUE(result);
 
     // overlap
+    INFO("Overlapping");
     grid.contents[5] = 1;
     block.position = (Point){.x=2, .y=2};
     result = GameGrid_canBlockExist(&grid, &block);
