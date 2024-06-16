@@ -15,8 +15,8 @@ void testGameGridClear() {
     GameGrid_clear(&grid);
 
     // IDs stored should be made invalid
-    ASSERT_EQUAL_INT(grid.contents[0], 0);
-    ASSERT_EQUAL_INT(grid.contents[1], 0);
+    ASSERT_GREATER_THAN_INT(0, grid.contents[0]);
+    ASSERT_GREATER_THAN_INT(0, grid.contents[1]);
 }
 
 void testGameGridReset() {
@@ -81,6 +81,10 @@ void testGameGridCanBlockInfoExist() {
 
     // center
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=2, .y=2});
+    ASSERT_TRUE(result);
+
+    // nw corner, overall block scope can overlap but actualized content doesn't
+    result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=1, .y=1});
     ASSERT_TRUE(result);
 
     // overlap
@@ -174,6 +178,7 @@ void testGameGridResolveRows() {
 int main() {
     EWENIT_START;
     ADD_CASE(testGameGridReset);
+    ADD_CASE(testGameGridClear);
     ADD_CASE(testGameGridCanBlockInfoExist);
     ADD_CASE(testGameGridCanBlockExist);
     ADD_CASE(testGameGridResolveRows);

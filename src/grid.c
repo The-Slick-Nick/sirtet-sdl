@@ -22,6 +22,9 @@ void GameGrid_commitBlock(GameGrid* self, Block* block) {
 
 // Reset all of a grid's contents
 void GameGrid_clear(GameGrid* grid) {
+    for (int idx = 0; idx < grid->width * grid->height; idx++) {
+         grid->contents[idx] = -1;
+    };
 }  
 
 // Reset a grid's contents, clearing encountered blocks
