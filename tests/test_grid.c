@@ -175,6 +175,52 @@ void testGameGridResolveRows() {
     */
 }
 
+
+void testGameGridCommitBlock() {
+
+    const int width = 4;
+    const int height = 4;
+    int grid_contents[16] = {-1};
+    GameGrid grid = {.width=width, .height=height, .contents=grid_contents};
+
+    GameGrid_clear(&grid);
+
+    long block_contents = ( 1L << 5 | 1L << 6 | 1L << 9 | 1L << 10 );
+
+    int goodblock_id = 1;
+    int badblock_id = 2;
+
+    Block good_block = {
+        .contents=block_contents,
+        .id=goodblock_id,
+        .size=4,
+        .position=(Point){.x=2, .y=2}
+    };
+
+    Block bad_block = {
+        .contents=block_contents,
+        .id=badblock_id,
+        .size=4,
+        .position=(Point){.x=0, .y=0}
+    };
+
+    int good_result = GameGrid_commitBlock(&grid, &good_block);
+    ASSERT_EQUAL_INT(good_result, 0);
+    ASSERT_EQUAL_INT(grid.contents[5], goodblock_id);
+    ASSERT_EQUAL_INT(grid.contents[6], goodblock_id);
+    ASSERT_EQUAL_INT(grid.contents[9], goodblock_id);
+    ASSERT_EQUAL_INT(grid.contents[10], goodblock_id);
+
+    GameGrid_clear(&grid);
+
+    int bad_result = GameGrid_commitBlock(&grid, &bad_block);
+    ASSERT_EQUAL_INT(bad_result, -1);
+    for (int grid_cell = 0; grid_cell < 16; grid_cell++) {
+        // Id should be negative (though exact number doesn't matter)
+        ASSERT_GREATER_THAN_INT(0, grid.contents[grid_cell]);
+    }
+}
+
 int main() {
     EWENIT_START;
     ADD_CASE(testGameGridReset);
@@ -182,6 +228,7 @@ int main() {
     ADD_CASE(testGameGridCanBlockInfoExist);
     ADD_CASE(testGameGridCanBlockExist);
     ADD_CASE(testGameGridResolveRows);
+    ADD_CASE(testGameGridCommitBlock);
     EWENIT_END;
     // EWENIT_END_COMPACT;
     return 0;

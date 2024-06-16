@@ -17,7 +17,7 @@ bool GameGrid_canBlockInfoExist(
 }
 
 // add a block's cells to the grid. Modifies provided grid and block in place
-void GameGrid_commitBlock(GameGrid* self, Block* block) {
+int GameGrid_commitBlock(GameGrid* self, Block* block) {
 }
 
 // Reset all of a grid's contents
