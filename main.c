@@ -1,4 +1,5 @@
 #include "block.h"
+#include "component_drawing.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
@@ -34,13 +35,18 @@ int main(int argc, char* argv[]) {
     const Uint64 ten_seconds_ms = 10 * 1000;
     while (SDL_GetTicks64() - start_time < ten_seconds_ms) {
 
-        // Uint64 elapsed = SDL_GetTicks64() - start_time;
 
         SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
         SDL_RenderClear(rend);
 
-        primary_block_contents = rotateBlockContentsCw90(primary_block_contents, primary_block_size);
 
+        drawBlockCell(
+            rend,
+            (Point){.x=10, .y=10},
+            100, 100,
+            (SDL_Color){.r=100, .g=0, .b=0, .a=0},
+            (SDL_Color){.r=0, .g=0, .b=100, .a=0}
+        );
 
         SDL_RenderPresent(rend);
     }
