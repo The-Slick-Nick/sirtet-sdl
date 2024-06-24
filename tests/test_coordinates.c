@@ -1,7 +1,6 @@
 #include "EWENIT.h"
-#include "../src/block.h"
-#include "../src/coordinates.h"
-
+#include "block.h"
+#include "coordinates.h"
 
 void testPointTransform() {
     

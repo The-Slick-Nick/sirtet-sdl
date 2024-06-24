@@ -1,13 +1,10 @@
+############################################################
+# Edit this to manually add testing .c files ###
+# NOTE: I could just search for any ".c" file in this directory,
+# but something about this feels nicer
 
-
-CC = gcc
-CFLAGS = -Wall --std=gnu99
-
-### Edit this to manually add testing .c files ###
-### NOTE: I could just search for any ".c" file in this directory,
-### but something about this feels nicer
 TEST_SUITES = test_block.c test_coordinates.c test_grid.c
-######
+############################################################
 
 
 TEST_OBJS = $(patsubst %.c, %.o, $(TEST_SUITES))
@@ -15,6 +12,15 @@ TEST_BINS = $(patsubst %.c, %.bin, $(TEST_SUITES))
 
 INCL = ../src  # Where to find headers
 LIB = ../build # Where to find compiled library
+
+SRC_DIRS = ../src
+
+INC_DIRS := $(shell find $(SRC_DIRS) -type d)
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
+CC = gcc
+# Use the compiler to help identify header file depdencies
+CFLAGS = -Wall --std=gnu99 $(INC_FLAGS) -MMD -MP
 
 all: run_tests clean
 
@@ -26,7 +32,7 @@ run_tests: build_tests
 build_tests: $(TEST_BINS)
 
 $(TEST_OBJS): %.o: %.c
-	$(CC) $(CFLAGS) -I $(INCL) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Make and run
 $(TEST_BINS): %.bin: %.o $(LIB)/lib.a
@@ -42,4 +48,11 @@ clean:
 	@rm -f *.o
 	@rm -f *.bin
 	@rm -f *.a
+
+
+
+# Include the .d makefiles. The - at the front suppresses the errors of missing
+# Makefiles. Initially, all the .d files will be missing, and we don't want those
+# errors to show up.
+-include $(DEPS)
 
