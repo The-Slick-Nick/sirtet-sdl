@@ -31,7 +31,7 @@ typedef struct {
 // Convert a block's content bit to grid coordaintes
 Point blockContentBitToGridCoords(int content_bit, int block_size, Point block_position);
 
-// Identify if the given block
+// Identify if the given block is compatible with current grid
 bool GameGrid_canBlockExist(GameGrid *self, Block *block);
 
 // Identify if the provided block data is compatible with current grid

@@ -123,6 +123,11 @@ void Block_translate(Block* self, Point translation) {
     self->position = Point_translate(self->position, translation);
 }
 
+// identify if given content bit is set (shorthand for bit magic)
+bool Block_isContentBitSet(Block* self, int content_bit) {
+    return 0 != (self->contents & (1L << content_bit));
+}
+
 
 
 // Get and assign a block_id from the given BlockIds struct for a block

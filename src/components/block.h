@@ -1,8 +1,9 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
-
+#include <stdbool.h>
 #include "coordinates.h"
+
 
 
 
@@ -48,6 +49,9 @@ void Block_transform(Block* block, Point transform);
 
 // in-place translation of a block
 void Block_translate(Block* self, Point translation);
+
+// identify if given content bit is set (shorthand for bit magic)
+bool Block_isContentBitSet(Block* self, int content_bit);
 
 long rotateBlockContentsCw90(long contents, int blockSize);
 long rotateBlockContentsCcw90(long contents, int blockSize);

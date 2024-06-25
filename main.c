@@ -27,9 +27,28 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    long primary_block_contents = 0b1111000000000000;
-    int primary_block_size = 4;
-    // Point primary_block_position = {.x=0, .y=0};
+    Block primary_block = {
+        .id=1,
+        .position=(Point){.x=2, .y=2},
+        .contents=0b0000011001100000,
+        .size=4
+    };
+
+    SDL_Rect draw_window = {
+        .x=10,
+        .y=10,
+        .w=400,
+        .h=400
+    };
+
+
+    int grid_contents[36] = {-1};
+    GameGrid ref_grid = {
+        .width=6,
+        .height=6,
+        .contents=grid_contents
+    };
+
 
     Uint64 start_time = SDL_GetTicks64();
     const Uint64 ten_seconds_ms = 10 * 1000;
@@ -40,13 +59,16 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(rend);
 
 
-        drawBlockCell(
-            rend,
-            (Point){.x=10, .y=10},
-            100, 100,
-            (SDL_Color){.r=100, .g=0, .b=0, .a=0},
-            (SDL_Color){.r=0, .g=0, .b=100, .a=0}
-        );
+        // drawBlock(SDL_Renderer *rend, SDL_Rect display_window, Block *block, GameGrid *ref_grid)
+        drawBlock(rend, draw_window, &primary_block, &ref_grid);
+
+        // drawBlockCell(
+        //     rend,
+        //     (Point){.x=10, .y=10},
+        //     100, 100,
+        //     (SDL_Color){.r=100, .g=0, .b=0, .a=0},
+        //     (SDL_Color){.r=0, .g=0, .b=100, .a=0}
+        // );
 
         SDL_RenderPresent(rend);
     }

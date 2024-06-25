@@ -15,6 +15,8 @@
 #include "grid.h"
 #include "draw_config.h"
 
+
+
 // Lowest-level unit of "draw game component"
 int drawBlockCell(
     SDL_Renderer *rend,
@@ -73,6 +75,48 @@ int drawGrid(
                 getCellColorById(cell_id) // TODO Introduce some kind of scaling later
             );
          }
+    }
+
+    return 0;
+}
+
+
+int drawBlock(
+    SDL_Renderer *rend,
+    SDL_Rect display_window,
+    Block *block,
+    GameGrid *ref_grid
+) {
+
+    int cell_width = display_window.w / ref_grid->width;
+    int cell_height = display_window.h / ref_grid->height;
+
+    SDL_Color block_color = getCellColorById(block->id);
+    SDL_Color rim_color = (SDL_Color) {
+        .r=(8 * block_color.r) / 10,
+        .g=(8 * block_color.g) / 10,
+        .b=(8 * block_color.b) / 10,
+        .a=255
+    };
+
+    for (int bit_num = 0; bit_num < (block->size * block->size); bit_num++) {
+        if (Block_isContentBitSet(block, bit_num)) {
+
+            Point block_coords = blockContentBitToGridCoords(bit_num, block->size, block->position);
+
+            drawBlockCell(
+                rend,
+                (Point){
+                     .x=display_window.x + (cell_width * block_coords.x),
+                     .y=display_window.y + (cell_height * block_coords.y)
+                },
+                cell_width,
+                cell_height,
+                block_color,
+                rim_color 
+            );
+
+        }
     }
 
     return 0;

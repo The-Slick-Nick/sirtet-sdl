@@ -9,12 +9,28 @@
 #define COMPONENT_DRAWING_H
 
 #include <SDL2/SDL.h>
-#include "../components/coordinates.h"
+#include "grid.h"
+#include "coordinates.h"
 
 
 int drawBlockCell(
     SDL_Renderer *rend,
     Point location, int width, int height, SDL_Color body_color, SDL_Color rim_color
+);
+
+
+int drawGrid(
+    SDL_Renderer *rend,
+    SDL_Rect display_window,
+    GameGrid *grid
+);
+
+
+int drawBlock(
+    SDL_Renderer *rend,
+    SDL_Rect display_window,
+    Block *block,
+    GameGrid *ref_grid
 );
 
 
