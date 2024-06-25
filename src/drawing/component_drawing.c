@@ -11,8 +11,8 @@
 #include <SDL2/SDL.h>
 
 #include "../components/block.h"
-#include "../components/coordinates.h"
-#include "../components/grid.h"
+#include "coordinates.h"
+#include "grid.h"
 #include "draw_config.h"
 
 // Lowest-level unit of "draw game component"

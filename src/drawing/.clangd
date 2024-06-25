@@ -1,6 +1,0 @@
-CompileFlags:
-  Add:
-    - "-Isrc"
-    - "I../components"
-    - "I../drawing"
-    - "I.."
