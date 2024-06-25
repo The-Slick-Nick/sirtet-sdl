@@ -154,6 +154,34 @@ void testGameGridCanBlockExist() {
     result = GameGrid_canBlockExist(&grid, &block);
     ASSERT_FALSE(result);
 
+
+    /* MANUAL EXAMPLES OF THINGS THAT FAILED BUT SHOULDNT HAVE */
+    Block primary_block = {
+        .id=1,
+        .position=(Point){.x=5, .y=5},
+        .contents=block_contents,
+        .size=4
+    };
+
+    int new_grid_contents[100] = {-1};
+    GameGrid ref_grid = {
+        .width=10,
+        .height=10,
+        .contents=new_grid_contents
+    };
+    GameGrid_clear(&ref_grid);
+
+    Block projected_block;
+    projected_block = (Block){
+        .size=primary_block.size,
+        .contents=primary_block.contents,
+        .id=-1,
+        .position=(Point){.x=primary_block.position.x, .y=primary_block.position.y + 1}
+    };
+
+    result = GameGrid_canBlockExist(&ref_grid, &projected_block);
+    ASSERT_TRUE(result);
+
 }
 
 void testGameGridResolveRows() {
@@ -267,7 +295,7 @@ int main() {
     ADD_CASE(testGameGridCanBlockExist);
     ADD_CASE(testGameGridResolveRows);
     ADD_CASE(testGameGridCommitBlock);
-    EWENIT_END;
+    EWENIT_END_VERBOSE;
     // EWENIT_END_COMPACT;
     return 0;
 }

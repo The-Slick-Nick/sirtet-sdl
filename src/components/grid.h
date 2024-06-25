@@ -23,12 +23,14 @@ typedef struct {
     int height;
 
     // stores identifying numbers (block ids) that have 
+    // Negative numbers (usually -1) indicate an invalid/unprovisioned
+    // block ID (and thus that "cell" is empty)
     int *contents;
 
 } GameGrid;
 
 
-// Convert a block's content bit to grid coordaintes
+// Convert a block's content bit to grid coordinates
 Point blockContentBitToGridCoords(int content_bit, int block_size, Point block_position);
 
 // Identify if the given block is compatible with current grid

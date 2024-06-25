@@ -56,6 +56,10 @@ int drawGrid(
     int cell_width = display_window.w / grid->width;
     int cell_height = display_window.h / grid->height;
 
+    SDL_Color body_color;
+    SDL_Color rim_color;
+
+
     for (int row = 0; row < grid->height; row++) {
         for (int col = 0; col < grid->width; col++) {
 
@@ -66,13 +70,22 @@ int drawGrid(
             if (cell_id < 0) {
                 continue;
             }
+
+            body_color = getCellColorById(cell_id);
+            rim_color = (SDL_Color) {
+                .r=(8 * body_color.r) / 10,
+                .g=(8 * body_color.g) / 10,
+                .b=(8 * body_color.b) / 10,
+                .a=255
+            };
+
             drawBlockCell(
                 rend, 
                 (Point){.x=display_window.x + (col * cell_width), .y=display_window.y + (row * cell_height) },
                 cell_width,
                 cell_height,
-                getCellColorById(cell_id),
-                getCellColorById(cell_id) // TODO Introduce some kind of scaling later
+                body_color,
+                rim_color
             );
          }
     }
@@ -81,6 +94,7 @@ int drawGrid(
 }
 
 
+// Draw a given block to the appropriate renderer.
 int drawBlock(
     SDL_Renderer *rend,
     SDL_Rect display_window,
@@ -91,11 +105,11 @@ int drawBlock(
     int cell_width = display_window.w / ref_grid->width;
     int cell_height = display_window.h / ref_grid->height;
 
-    SDL_Color block_color = getCellColorById(block->id);
+    SDL_Color body_color = getCellColorById(block->id);
     SDL_Color rim_color = (SDL_Color) {
-        .r=(8 * block_color.r) / 10,
-        .g=(8 * block_color.g) / 10,
-        .b=(8 * block_color.b) / 10,
+        .r=(8 * body_color.r) / 10,
+        .g=(8 * body_color.g) / 10,
+        .b=(8 * body_color.b) / 10,
         .a=255
     };
 
@@ -112,7 +126,7 @@ int drawBlock(
                 },
                 cell_width,
                 cell_height,
-                block_color,
+                body_color,
                 rim_color 
             );
 
