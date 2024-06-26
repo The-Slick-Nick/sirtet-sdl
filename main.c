@@ -1,141 +1,65 @@
 #include "run_game.h"
+#include <SDL2/SDL_scancode.h>
+#include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_keycode.h>
+#include <time.h>
+#include <limits.h>
 
+#include "inputs.h"
+
+
+// https://www.libsdl.org/release/SDL-1.2.15/docs.html/sdlkey.html
 
 int main(int argc, char* argv[]) {
-    printf("SDLK_BACKSPACE is %d\n", SDLK_BACKSPACE);
-    printf("SDLK_TAB is %d\n", SDLK_TAB);
-    printf("SDLK_CLEAR is %d\n", SDLK_CLEAR);
-    printf("SDLK_RETURN is %d\n", SDLK_RETURN);
-    printf("SDLK_PAUSE is %d\n", SDLK_PAUSE);
-    printf("SDLK_ESCAPE is %d\n", SDLK_ESCAPE);
-    printf("SDLK_SPACE is %d\n", SDLK_SPACE);
-    printf("SDLK_EXCLAIM is %d\n", SDLK_EXCLAIM);
-    printf("SDLK_QUOTEDBL is %d\n", SDLK_QUOTEDBL);
-    printf("SDLK_HASH is %d\n", SDLK_HASH);
-    printf("SDLK_DOLLAR is %d\n", SDLK_DOLLAR);
-    printf("SDLK_AMPERSAND is %d\n", SDLK_AMPERSAND);
-    printf("SDLK_QUOTE is %d\n", SDLK_QUOTE);
-    printf("SDLK_LEFTPAREN is %d\n", SDLK_LEFTPAREN);
-    printf("SDLK_RIGHTPAREN is %d\n", SDLK_RIGHTPAREN);
-    printf("SDLK_ASTERISK is %d\n", SDLK_ASTERISK);
-    printf("SDLK_PLUS is %d\n", SDLK_PLUS);
-    printf("SDLK_COMMA is %d\n", SDLK_COMMA);
-    printf("SDLK_MINUS is %d\n", SDLK_MINUS);
-    printf("SDLK_PERIOD is %d\n", SDLK_PERIOD);
-    printf("SDLK_SLASH is %d\n", SDLK_SLASH);
-    printf("SDLK_0 is %d\n", SDLK_0);
-    printf("SDLK_1 is %d\n", SDLK_1);
-    printf("SDLK_2 is %d\n", SDLK_2);
-    printf("SDLK_3 is %d\n", SDLK_3);
-    printf("SDLK_4 is %d\n", SDLK_4);
-    printf("SDLK_5 is %d\n", SDLK_5);
-    printf("SDLK_6 is %d\n", SDLK_6);
-    printf("SDLK_7 is %d\n", SDLK_7);
-    printf("SDLK_8 is %d\n", SDLK_8);
-    printf("SDLK_9 is %d\n", SDLK_9);
-    printf("SDLK_COLON is %d\n", SDLK_COLON);
-    printf("SDLK_SEMICOLON is %d\n", SDLK_SEMICOLON);
-    printf("SDLK_LESS is %d\n", SDLK_LESS);
-    printf("SDLK_EQUALS is %d\n", SDLK_EQUALS);
-    printf("SDLK_GREATER is %d\n", SDLK_GREATER);
-    printf("SDLK_QUESTION is %d\n", SDLK_QUESTION);
-    printf("SDLK_AT is %d\n", SDLK_AT);
-    printf("SDLK_LEFTBRACKET is %d\n", SDLK_LEFTBRACKET);
-    printf("SDLK_BACKSLASH is %d\n", SDLK_BACKSLASH);
-    printf("SDLK_RIGHTBRACKET is %d\n", SDLK_RIGHTBRACKET);
-    printf("SDLK_CARET is %d\n", SDLK_CARET);
-    printf("SDLK_UNDERSCORE is %d\n", SDLK_UNDERSCORE);
-    printf("SDLK_BACKQUOTE is %d\n", SDLK_BACKQUOTE);
-    printf("SDLK_a is %d\n", SDLK_a);
-    printf("SDLK_b is %d\n", SDLK_b);
-    printf("SDLK_c is %d\n", SDLK_c);
-    printf("SDLK_d is %d\n", SDLK_d);
-    printf("SDLK_e is %d\n", SDLK_e);
-    printf("SDLK_f is %d\n", SDLK_f);
-    printf("SDLK_g is %d\n", SDLK_g);
-    printf("SDLK_h is %d\n", SDLK_h);
-    printf("SDLK_i is %d\n", SDLK_i);
-    printf("SDLK_j is %d\n", SDLK_j);
-    printf("SDLK_k is %d\n", SDLK_k);
-    printf("SDLK_l is %d\n", SDLK_l);
-    printf("SDLK_m is %d\n", SDLK_m);
-    printf("SDLK_n is %d\n", SDLK_n);
-    printf("SDLK_o is %d\n", SDLK_o);
-    printf("SDLK_p is %d\n", SDLK_p);
-    printf("SDLK_q is %d\n", SDLK_q);
-    printf("SDLK_r is %d\n", SDLK_r);
-    printf("SDLK_s is %d\n", SDLK_s);
-    printf("SDLK_t is %d\n", SDLK_t);
-    printf("SDLK_u is %d\n", SDLK_u);
-    printf("SDLK_v is %d\n", SDLK_v);
-    printf("SDLK_w is %d\n", SDLK_w);
-    printf("SDLK_x is %d\n", SDLK_x);
-    printf("SDLK_y is %d\n", SDLK_y);
-    printf("SDLK_z is %d\n", SDLK_z);
-    printf("SDLK_DELETE is %d\n", SDLK_DELETE);
-    printf("SDLK_KP_0 is %d\n", SDLK_KP_0);
-    printf("SDLK_KP_1 is %d\n", SDLK_KP_1);
-    printf("SDLK_KP_2 is %d\n", SDLK_KP_2);
-    printf("SDLK_KP_3 is %d\n", SDLK_KP_3);
-    printf("SDLK_KP_4 is %d\n", SDLK_KP_4);
-    printf("SDLK_KP_5 is %d\n", SDLK_KP_5);
-    printf("SDLK_KP_6 is %d\n", SDLK_KP_6);
-    printf("SDLK_KP_7 is %d\n", SDLK_KP_7);
-    printf("SDLK_KP_8 is %d\n", SDLK_KP_8);
-    printf("SDLK_KP_9 is %d\n", SDLK_KP_9);
-    printf("SDLK_KP_PERIOD is %d\n", SDLK_KP_PERIOD);
-    printf("SDLK_KP_DIVIDE is %d\n", SDLK_KP_DIVIDE);
-    printf("SDLK_KP_MULTIPLY is %d\n", SDLK_KP_MULTIPLY);
-    printf("SDLK_KP_MINUS is %d\n", SDLK_KP_MINUS);
-    printf("SDLK_KP_PLUS is %d\n", SDLK_KP_PLUS);
-    printf("SDLK_KP_ENTER is %d\n", SDLK_KP_ENTER);
-    printf("SDLK_KP_EQUALS is %d\n", SDLK_KP_EQUALS);
-    printf("SDLK_UP is %d\n", SDLK_UP);
-    printf("SDLK_DOWN is %d\n", SDLK_DOWN);
-    printf("SDLK_RIGHT is %d\n", SDLK_RIGHT);
-    printf("SDLK_LEFT is %d\n", SDLK_LEFT);
-    printf("SDLK_INSERT is %d\n", SDLK_INSERT);
-    printf("SDLK_HOME is %d\n", SDLK_HOME);
-    printf("SDLK_END is %d\n", SDLK_END);
-    printf("SDLK_PAGEUP is %d\n", SDLK_PAGEUP);
-    printf("SDLK_PAGEDOWN is %d\n", SDLK_PAGEDOWN);
-    printf("SDLK_F1 is %d\n", SDLK_F1);
-    printf("SDLK_F2 is %d\n", SDLK_F2);
-    printf("SDLK_F3 is %d\n", SDLK_F3);
-    printf("SDLK_F4 is %d\n", SDLK_F4);
-    printf("SDLK_F5 is %d\n", SDLK_F5);
-    printf("SDLK_F6 is %d\n", SDLK_F6);
-    printf("SDLK_F7 is %d\n", SDLK_F7);
-    printf("SDLK_F8 is %d\n", SDLK_F8);
-    printf("SDLK_F9 is %d\n", SDLK_F9);
-    printf("SDLK_F10 is %d\n", SDLK_F10);
-    printf("SDLK_F11 is %d\n", SDLK_F11);
-    printf("SDLK_F12 is %d\n", SDLK_F12);
-    printf("SDLK_F13 is %d\n", SDLK_F13);
-    printf("SDLK_F14 is %d\n", SDLK_F14);
-    printf("SDLK_F15 is %d\n", SDLK_F15);
-    // printf("SDLK_NUMLOCK is %d\n", SDLK_NUMLOCK);
-    printf("SDLK_CAPSLOCK is %d\n", SDLK_CAPSLOCK);
-    printf("SDLK_SCROLLOCK is %d\n", SDLK_SCROLLLOCK);
-    printf("SDLK_RSHIFT is %d\n", SDLK_RSHIFT);
-    printf("SDLK_LSHIFT is %d\n", SDLK_LSHIFT);
-    printf("SDLK_RCTRL is %d\n", SDLK_RCTRL);
-    printf("SDLK_LCTRL is %d\n", SDLK_LCTRL);
-    printf("SDLK_RALT is %d\n", SDLK_RALT);
-    printf("SDLK_LALT is %d\n", SDLK_LALT);
-    // printf("SDLK_RMETA is %d\n", SDLK_RMETA);
-    // printf("SDLK_LMETA is %d\n", SDLK_LMETA);
-    // printf("SDLK_LSUPER is %d\n", SDLK_LSUPER);
-    // printf("SDLK_RSUPER is %d\n", SDLK_RSUPER);
-    printf("SDLK_MODE is %d\n", SDLK_MODE);
-    printf("SDLK_HELP is %d\n", SDLK_HELP);
-    // printf("SDLK_PRINT is %d\n", SDLK_PRINT);
-    printf("SDLK_SYSREQ is %d\n", SDLK_SYSREQ);
-    // printf("SDLK_BREAK is %d\n", SDLK_BREAK);
-    printf("SDLK_MENU is %d\n", SDLK_MENU);
-    printf("SDLK_POWER is %d\n", SDLK_POWER);
-    // printf("SDLK_EURO is %d\n", SDLK_EURO);
+    SDL_Init(SDL_INIT_VIDEO);
+
+    SDL_Window *wind = SDL_CreateWindow(
+        "Test window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        100, 100, 0
+    );
+
+    Uint32 render_flags = SDL_RENDERER_ACCELERATED;
+    SDL_Renderer *rend = SDL_CreateRenderer(wind, -1, render_flags);
+
+    if (!wind || !rend) {
+        SDL_DestroyWindow(wind);
+        SDL_Quit();
+        return -1;
+    }
+
+
+    clock_t start_t, report_start_t;
+    double elapsed_total;
+    double elapsed_report;  // time since time was reported
+
+    start_t = clock();
+    report_start_t = clock();
+    elapsed_total = 0;
+
+
+    int hardware_states[(int)SDL_NUM_SCANCODES] = {0}; 
+    for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
+    while (elapsed_total < 20) {
+
+
+        processHardwareInputs(hardware_states);
+
+        printf(
+            "Test: num frames spacebar pressed is %d\n",
+            hardware_states[(int)SDL_SCANCODE_SPACE]
+        );
+
+        elapsed_total = (double)(clock() - start_t) / CLOCKS_PER_SEC;
+        elapsed_report = (double)(clock() - report_start_t) / CLOCKS_PER_SEC;
+
+        if (elapsed_report >= 1) {
+            printf("%f seconds elapsed_total\n", elapsed_total);
+            report_start_t = clock();
+        }
+    }
+
+
+    SDL_Quit();
     return 0;
 }
