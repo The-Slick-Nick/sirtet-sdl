@@ -5,6 +5,7 @@
 #include <SDL2/SDL_keycode.h>
 #include <time.h>
 #include <limits.h>
+#include <stdbool.h>
 
 #include "inputs.h"
 
@@ -37,18 +38,28 @@ int main(int argc, char* argv[]) {
     report_start_t = clock();
     elapsed_total = 0;
 
+    GamecodeMap keymap;
+    keymap.head = 0;
+    addKeymap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1);
 
-    int hardware_states[(int)SDL_NUM_SCANCODES] = {0}; 
+
+    int hardware_states[(int)SDL_NUM_SCANCODES] = {INT_MIN};
+    bool gamecode_states[(int)NUM_GAMECODES] = {false};
+
     for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
+    for (int i = 0; i < (int)NUM_GAMECODES; i++) { gamecode_states[i] = false; }
+
     while (elapsed_total < 20) {
 
 
         processHardwareInputs(hardware_states);
+        // processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *all_mappings)
+        processGamecodes(gamecode_states, hardware_states, &keymap);
 
-        printf(
-            "Test: num frames spacebar pressed is %d\n",
-            hardware_states[(int)SDL_SCANCODE_SPACE]
-        );
+       
+        if (gamecode_states[(int)GAMECODE_ROTATE]) {
+            printf("Rotate!\n");
+        }
 
         elapsed_total = (double)(clock() - start_t) / CLOCKS_PER_SEC;
         elapsed_report = (double)(clock() - report_start_t) / CLOCKS_PER_SEC;

@@ -3,6 +3,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_scancode.h>
 #include <limits.h>
+#include <assert.h>
+#include <stdbool.h>
 
 
 
@@ -58,6 +60,54 @@ int processHardwareInputs(int* hardware_states) {
             hardware_states[int_scancode]++;
         }
     }
+
+    return 0;
+}
+
+// Populate gamecode flag array based on key mappings and customized state of hardware
+int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *all_mappings) {
+
+
+    // preprocess
+    for (int int_gamecode = 0; int_gamecode < (int)NUM_GAMECODES; int_gamecode++) {
+        gamecode_states[int_gamecode] = false;
+    }
+
+    GamecodeMapItem mapping;
+    for (int map_i = 0; map_i < all_mappings->head; map_i++) {
+
+        mapping = all_mappings->mappings[map_i];
+
+        int frame_count = hardware_states[(int)mapping.hardware_code];
+
+        if (frame_count >= mapping.frame_start && frame_count <= mapping.frame_end) {
+            gamecode_states[(int)mapping.virtual_code] = true;
+        }
+    }
+
+    return 0;
+
+}
+
+
+// Add a mapping of hardware code to virtual code
+//
+// Acts as a blueprint to flag the virtual_code as pressed if the number of
+// frames that a hardware code has been pressed for is from frame_start
+// to frame_end, both endpoints inclusive.
+int addKeymap(GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code, int frame_start, int frame_end) {
+
+    // TODO: Return -1 instead?
+    assert(mapping->head < MAX_GAMECODE_MAPS);
+
+    *(mapping->mappings + mapping->head) = (GamecodeMapItem){
+        .virtual_code=virtual_code,
+        .hardware_code=hardware_code,
+        .frame_start=frame_start,
+        .frame_end=frame_end
+    };
+
+    mapping->head += 1;
 
     return 0;
 }
