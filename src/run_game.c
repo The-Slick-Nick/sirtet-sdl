@@ -11,7 +11,7 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL.h>
 #include <limits.h>
-#include <time.h>
+#include <assert.h>
 
 
 #define WINDOW_HEIGHT 720
@@ -60,12 +60,6 @@ int run(){
     };
 
     Block primary_block = { .id=INVALID_BLOCK_ID, .size=4 };
-        /* .id=BlockIds_provisionId(&id_repo, 4),
-        .position=(Point){.x=5, .y=5},
-        .contents=0b0100010001000100,
-        .size=4
-    }; */
-
 
     /*** Key Mapping & input code setups ***/
 
@@ -167,7 +161,6 @@ int run(){
             }
         }
 
-        bool goDown = false;
         move_counter++;
         if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || move_counter > 1000) {
             move_counter = 0;
@@ -192,7 +185,6 @@ int run(){
             }
         }
 
-        // GameGrid_resolveRows(GameGrid *grid, BlockIds *ids)
         GameGrid_resolveRows(&ref_grid, &id_repo);
 
 
@@ -200,7 +192,11 @@ int run(){
 
         SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
         SDL_RenderClear(rend);
-        drawBlock(rend, draw_window, &primary_block, &ref_grid);
+
+        if (primary_block.id != INVALID_BLOCK_ID) {
+            drawBlock(rend, draw_window, &primary_block, &ref_grid);
+        }
+
         drawGrid(rend, draw_window, &ref_grid);
 
         SDL_RenderPresent(rend);

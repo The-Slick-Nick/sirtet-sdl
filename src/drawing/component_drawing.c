@@ -9,6 +9,7 @@
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL.h>
+#include <assert.h>
 
 #include "../components/block.h"
 #include "coordinates.h"
@@ -34,17 +35,28 @@ int drawBlockCell(
         .h=(8*height) / 10
     };
 
-    SDL_SetRenderDrawColor(rend, rim_color.r, rim_color.g, rim_color.g, rim_color.a);
+    SDL_SetRenderDrawColor(rend, rim_color.r, rim_color.g, rim_color.b, rim_color.a);
+
     SDL_RenderFillRect(rend, &full_box);
 
-    SDL_SetRenderDrawColor(rend, body_color.r, body_color.g, body_color.g, body_color.a);
+    SDL_SetRenderDrawColor(rend, body_color.r, body_color.g, body_color.b, body_color.a);
     SDL_RenderFillRect(rend, &inner_box);
 
     return 0;
 }
 
 SDL_Color getCellColorById(int block_id) {
-    return (SDL_Color){.r=155, .g=0, .b=0, .a=255 };
+
+    switch (block_id % 3) {
+        case 0:
+            return (SDL_Color){.r=155, .g=0, .b=0, .a=255 };
+        case 1:
+            return (SDL_Color){.r=0, .g=155, .b=0, .a=255} ;
+        case 2:
+            return (SDL_Color){.r=0, .g=0, .b=155, .a=255 };
+        default:
+            assert(false);
+    }
 }
 
 int drawGrid(
