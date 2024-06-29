@@ -17,29 +17,75 @@
 #include "draw_config.h"
 
 
+int divround(int num, int denom) {
+
+    return num / denom;
+
+    int retval = num / denom;
+
+    if (num % denom > num / 2) {
+        return retval + 1;
+    }
+    return retval;
+}
 
 // Lowest-level unit of "draw game component"
 int drawBlockCell(
     SDL_Renderer *rend,
-    Point location, int width, int height, SDL_Color body_color, SDL_Color rim_color
+    Point location, int width, int height,
+    SDL_Color base_color
 ) {
+
 
 
     /* Draw the full box as the background color, then overwrite the middle
     * with a smaller rectange of the body color */
-    SDL_Rect full_box = {.x=location.x, .y=location.y, .w=width, .h=height};
-    SDL_Rect inner_box = {
-        .x=location.x + (width / 10),
-        .y=location.y + (height / 10),
-        .w=(8*width) / 10,
-        .h=(8*height) / 10
+
+    int offset_vertical = height / 10;
+    int offset_horizontal = width / 10;
+
+    SDL_Rect nw_box = {
+        .x=location.x,
+        .y=location.y,
+        .w=width - offset_horizontal,
+        .h=height - offset_vertical
     };
 
-    SDL_SetRenderDrawColor(rend, rim_color.r, rim_color.g, rim_color.b, rim_color.a);
+    SDL_Rect se_box = {
+        .x=location.x + offset_horizontal,
+        .y=location.y + offset_vertical,
+        .w=width - offset_horizontal,
+        .h=height - offset_vertical
+    };
 
-    SDL_RenderFillRect(rend, &full_box);
+    SDL_Rect inner_box = {
+        .x=location.x + offset_horizontal,
+        .y=location.y + offset_vertical,
+        .w=width - (2 * offset_horizontal),
+        .h=height - (2 * offset_vertical)
+    };
 
-    SDL_SetRenderDrawColor(rend, body_color.r, body_color.g, body_color.b, body_color.a);
+    SDL_Color nw_color = (SDL_Color){
+        .r=12*base_color.r / 10,
+        .g=12*base_color.g / 10,
+        .b =12* base_color.b / 10,
+        .a=255
+    };
+
+    SDL_Color se_color = (SDL_Color){
+        .r=8*base_color.r / 10,
+        .g=8*base_color.g / 10,
+        .b =8* base_color.b / 10,
+        .a=255
+    };
+
+    SDL_SetRenderDrawColor(rend, nw_color.r, nw_color.g, nw_color.b, nw_color.a);
+    SDL_RenderFillRect(rend, &nw_box);
+
+    SDL_SetRenderDrawColor(rend, se_color.r, se_color.g, se_color.b, se_color.a);
+    SDL_RenderFillRect(rend, &se_box);
+
+    SDL_SetRenderDrawColor(rend, base_color.r, base_color.g, base_color.b, base_color.a);
     SDL_RenderFillRect(rend, &inner_box);
 
     return 0;
@@ -69,8 +115,6 @@ int drawGrid(
     int cell_height = display_window.h / grid->height;
 
     SDL_Color body_color;
-    SDL_Color rim_color;
-
 
     for (int row = 0; row < grid->height; row++) {
         for (int col = 0; col < grid->width; col++) {
@@ -84,20 +128,13 @@ int drawGrid(
             }
 
             body_color = getCellColorById(cell_id);
-            rim_color = (SDL_Color) {
-                .r=(8 * body_color.r) / 10,
-                .g=(8 * body_color.g) / 10,
-                .b=(8 * body_color.b) / 10,
-                .a=255
-            };
 
             drawBlockCell(
                 rend, 
                 (Point){.x=display_window.x + (col * cell_width), .y=display_window.y + (row * cell_height) },
                 cell_width,
                 cell_height,
-                body_color,
-                rim_color
+                body_color
             );
          }
     }
@@ -117,19 +154,11 @@ int drawBlock(
     int cell_width = display_window.w / ref_grid->width;
     int cell_height = display_window.h / ref_grid->height;
 
-    SDL_Color body_color = getCellColorById(block->id);
-    SDL_Color rim_color = (SDL_Color) {
-        .r=(8 * body_color.r) / 10,
-        .g=(8 * body_color.g) / 10,
-        .b=(8 * body_color.b) / 10,
-        .a=255
-    };
-
+    SDL_Color base_color = getCellColorById(block->id);
     for (int bit_num = 0; bit_num < (block->size * block->size); bit_num++) {
         if (Block_isContentBitSet(block, bit_num)) {
 
             Point block_coords = blockContentBitToGridCoords(bit_num, block->size, block->position);
-
             drawBlockCell(
                 rend,
                 (Point){
@@ -138,8 +167,7 @@ int drawBlock(
                 },
                 cell_width,
                 cell_height,
-                body_color,
-                rim_color 
+                base_color
             );
 
         }

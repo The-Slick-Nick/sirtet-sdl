@@ -41,7 +41,7 @@ int run(){
     }
 
 
-    const int grid_draw_height = 400;
+    const int grid_draw_height = WINDOW_HEIGHT;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
 
     const int grid_draw_width = GRID_WIDTH * cell_size;
