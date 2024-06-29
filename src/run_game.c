@@ -15,8 +15,8 @@
 #define WINDOW_HEIGHT 720
 #define WINDOW_WIDTH 1080
 
-#define GRID_WIDTH 100
-#define GRID_HEIGHT 100
+#define GRID_WIDTH 10
+#define GRID_HEIGHT 10
 
 int run(){
 
@@ -166,6 +166,9 @@ int run(){
                 printf("New block id is %d\n", primary_block.id);
             }
         }
+
+        // GameGrid_resolveRows(GameGrid *grid, BlockIds *ids)
+        GameGrid_resolveRows(&ref_grid, &id_repo);
 
 
         /***** DRAW *****/
