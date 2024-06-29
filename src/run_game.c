@@ -16,7 +16,7 @@
 #define WINDOW_WIDTH 1080
 
 #define GRID_WIDTH 10
-#define GRID_HEIGHT 10
+#define GRID_HEIGHT 16
 
 int run(){
 
@@ -72,9 +72,9 @@ int run(){
     Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
     Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
     Gamecode_addMap(&keymap, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_SPEEDUP, SDL_SCANCODE_DOWN, 1, INT_MAX, 1);
     Gamecode_addMap(&keymap, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
     Gamecode_addMap(&keymap, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
+    Gamecode_addMap(&keymap, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
 
     /*** Main Loop ***/
 
@@ -90,7 +90,6 @@ int run(){
         processGamecodes(gamecode_states, hardware_states, &keymap);
 
         /***** UPDATE *****/
-
         if (Gamecode_pressed(gamecode_states, GAMECODE_QUIT)) {
             printf("Quitting...\n");
             break;
@@ -130,15 +129,9 @@ int run(){
             }
         }
 
-
-        if (Gamecode_pressed(gamecode_states, GAMECODE_SPEEDUP)) {
-            move_counter += 10;
-        } 
-        else {
-            move_counter++;
-        }
-
-        if (move_counter > 1000) {
+        bool goDown = false;
+        move_counter++;
+        if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || move_counter > 1000) {
             move_counter = 0;
 
             Point down_translation = (Point){.x=0, .y=1};
