@@ -64,9 +64,15 @@ int processHardwareInputs(int* hardware_states) {
     return 0;
 }
 
-// Populate gamecode flag array based on key mappings and customized state of hardware
-int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *all_mappings) {
 
+
+/**
+ * @brief Populate gamecode flag array based on key mappings and customized state of hardware
+ * @param gamecode_states   Pointer to flag array for gamecode states. Should be of size (int)NUM_GAMECODE_STATES
+ * @param hardware_states   Pointer to integer state array for hardware states. Should be of size (int)SDL_NUM_SCANCODES
+ * @param all_mappings      Pointer to struct of GamecodeMap type key mappings.
+*/
+int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *all_mappings) {
 
     // preprocess
     for (int int_gamecode = 0; int_gamecode < (int)NUM_GAMECODES; int_gamecode++) {
@@ -93,7 +99,6 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
     }
 
     return 0;
-
 }
 
 

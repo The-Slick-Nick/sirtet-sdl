@@ -67,9 +67,11 @@ bool GameGrid_canBlockInfoExist(
     return true;
 }
 
-// Add a block's cells to the grid.
-// Modify provided grid and block in place
-// return -1 on failure, 0 on success
+/**
+ * @brief Add a block's cells to the grid. Modifies provided grid and block in place.
+ * @param self  Pointer to the GameGrid struct in question
+ * @param block Pointer to the Block struct to commit.
+*/
 int GameGrid_commitBlock(GameGrid* self, Block* block) {
 
     if ( !GameGrid_canBlockExist(self, block) ) {

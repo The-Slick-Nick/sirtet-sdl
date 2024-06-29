@@ -11,12 +11,14 @@
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL.h>
 #include <limits.h>
+#include <time.h>
+
 
 #define WINDOW_HEIGHT 720
 #define WINDOW_WIDTH 1080
 
 #define GRID_WIDTH 10
-#define GRID_HEIGHT 16
+#define GRID_HEIGHT 24
 
 int run(){
 
@@ -37,7 +39,12 @@ int run(){
         return -1;
     }
 
-    SDL_Rect draw_window = { .x=10, .y=10, .w=400, .h=400 };
+
+    const int grid_draw_height = 400;
+    const int cell_size =  grid_draw_height / GRID_HEIGHT;
+
+    const int grid_draw_width = GRID_WIDTH * cell_size;
+    SDL_Rect draw_window = { .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height };
 
     /*** Game object initialization ***/
 
@@ -52,12 +59,12 @@ int run(){
         .id_array = all_ids
     };
 
-    Block primary_block = {
-        .id=BlockIds_provisionId(&id_repo, 4),
+    Block primary_block = { .id=INVALID_BLOCK_ID, .size=4 };
+        /* .id=BlockIds_provisionId(&id_repo, 4),
         .position=(Point){.x=5, .y=5},
         .contents=0b0100010001000100,
         .size=4
-    };
+    }; */
 
 
     /*** Key Mapping & input code setups ***/
@@ -93,6 +100,37 @@ int run(){
         if (Gamecode_pressed(gamecode_states, GAMECODE_QUIT)) {
             printf("Quitting...\n");
             break;
+        }
+
+        // new block time baby
+        if (primary_block.id == INVALID_BLOCK_ID) {
+            int new_id = BlockIds_provisionId(&id_repo, 4);
+            if (new_id == INVALID_BLOCK_ID) {
+                return -1;
+            }
+
+            // Temporary block content randomization. No need to develop
+            // a standard API for this as it is silly
+            long new_contents = 0L;
+            for (int bit_num = 0; bit_num < 4 * 4; bit_num++) {
+                new_contents <<= 1;
+                new_contents |= (rand() & 1);
+            }
+
+            primary_block = (Block){
+                .id=new_id,
+                .position=(Point){.x=5, .y=5},
+                .contents=new_contents,
+                .size=4
+            };
+
+            if (!GameGrid_canBlockExist(&ref_grid, &primary_block)) {
+                printf("Game over!\n");
+                return 0;
+            }
+
+            printf("New block id is %d\n", primary_block.id);
+            printf("New contents representation is %ld\n", new_contents);
         }
 
         if (Gamecode_pressed(gamecode_states, GAMECODE_ROTATE)) {
@@ -150,13 +188,7 @@ int run(){
             }
             else {
                 GameGrid_commitBlock(&ref_grid, &primary_block);
-                primary_block = (Block){
-                    .id=BlockIds_provisionId(&id_repo, 4),
-                    .position=(Point){.x=5, .y=5},
-                    .contents=0b0000011001100000,
-                    .size=4
-                };
-                printf("New block id is %d\n", primary_block.id);
+                primary_block.id = INVALID_BLOCK_ID;
             }
         }
 
