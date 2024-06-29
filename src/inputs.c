@@ -95,7 +95,36 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
 // Acts as a blueprint to flag the virtual_code as pressed if the number of
 // frames that a hardware code has been pressed for is from frame_start
 // to frame_end, both endpoints inclusive.
-int addKeymap(GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code, int frame_start, int frame_end) {
+// int addKeymap(
+//     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
+//     int frame_start, int frame_end
+// ) {
+//
+//     // TODO: Return -1 instead?
+//     assert(mapping->head < MAX_GAMECODE_MAPS);
+//
+//     *(mapping->mappings + mapping->head) = (GamecodeMapItem){
+//         .virtual_code=virtual_code,
+//         .hardware_code=hardware_code,
+//         .frame_start=frame_start,
+//         .frame_end=frame_end
+//     };
+//
+//     mapping->head += 1;
+//
+//     return 0;
+// }
+
+
+// Add a mapping of hardware code to virtual code
+//
+// Acts as a blueprint to flag the virtual_code as pressed if the number of
+// frames that a hardware code has been pressed for is from frame_start
+// to frame_end, both endpoints inclusive.
+int Gamecode_addMap(
+    GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
+    int frame_start, int frame_end
+) {
 
     // TODO: Return -1 instead?
     assert(mapping->head < MAX_GAMECODE_MAPS);
@@ -110,4 +139,10 @@ int addKeymap(GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware
     mapping->head += 1;
 
     return 0;
+}
+
+
+// Identify if a given gamecode is active by parsing an boolean array indexed by gamecodes
+bool Gamecode_pressed(bool *gamecode_arr, Gamecode gamecode) {
+    return gamecode_arr[(int)gamecode];
 }

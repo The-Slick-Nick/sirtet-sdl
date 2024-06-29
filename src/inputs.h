@@ -14,8 +14,13 @@
 // Enum of codes representing game (and menu?) actions
 typedef enum {
     GAMECODE_ROTATE = 0,
+    GAMECODE_SPEEDUP,
+    GAMECODE_MOVE_LEFT,
+    GAMECODE_MOVE_RIGHT,
+    GAMECODE_QUIT,
     NUM_GAMECODES
 } Gamecode;
+
 
 // Struct representing an individual mapping
 // of hardware input to game signal
@@ -24,7 +29,6 @@ typedef struct {
     SDL_Scancode hardware_code;
     int frame_start;
     int frame_end;
-
 } GamecodeMapItem;
 
 
@@ -35,10 +39,21 @@ typedef struct {
 } GamecodeMap;
 
 
-int addKeymap(GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code, int frame_start, int frame_end);
+int addKeymap(
+    GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
+    int frame_start, int frame_end
+);
+
+int Gamecode_addMap(
+    GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
+    int frame_start, int frame_end
+);
 
 int processHardwareInputs(int* hardware_states);
 int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *all_mappings);
+
+// Identify if a given gamecode is active by parsing an boolean array indexed by gamecodes
+bool Gamecode_pressed(bool *gamecode_arr, Gamecode gamecode);
 
 
 

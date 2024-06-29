@@ -13,8 +13,8 @@
 
 // 10 wide, 20 tall is standard tetris
 // TODO perhaps this should be in a global config file?
-#define GRID_HEIGHT 20
-#define GRID_WIDTH 10
+// #define GRID_HEIGHT 20
+// #define GRID_WIDTH 10
 
 
 typedef struct {
