@@ -83,7 +83,10 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
         if (
             frame_count >= mapping.frame_start
             && frame_count <= mapping.frame_end
-            && (mapping.frame_interval == 0 || frame_count % mapping.frame_interval == 0)
+            && (
+                mapping.frame_interval == 0
+                || (frame_count - mapping.frame_start) % mapping.frame_interval == 0
+            )
         ) {
             gamecode_states[(int)mapping.virtual_code] = true;
         }
