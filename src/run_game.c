@@ -69,13 +69,12 @@ int run(){
     for (int i = 0; i < (int)NUM_GAMECODES; i++) { gamecode_states[i] = false; }
 
     GamecodeMap keymap = {.head=0};
-    Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_SPEEDUP, SDL_SCANCODE_DOWN, 1, INT_MAX);
-    Gamecode_addMap(&keymap, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1000, INT_MAX);
-    Gamecode_addMap(&keymap, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX);
+    Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+    Gamecode_addMap(&keymap, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Gamecode_addMap(&keymap, GAMECODE_SPEEDUP, SDL_SCANCODE_DOWN, 1, INT_MAX, 1);
+    Gamecode_addMap(&keymap, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
+    Gamecode_addMap(&keymap, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
 
     /*** Main Loop ***/
 

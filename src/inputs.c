@@ -80,7 +80,11 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
 
         int frame_count = hardware_states[(int)mapping.hardware_code];
 
-        if (frame_count >= mapping.frame_start && frame_count <= mapping.frame_end) {
+        if (
+            frame_count >= mapping.frame_start
+            && frame_count <= mapping.frame_end
+            && (mapping.frame_interval == 0 || frame_count % mapping.frame_interval == 0)
+        ) {
             gamecode_states[(int)mapping.virtual_code] = true;
         }
     }
@@ -123,7 +127,7 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
 // to frame_end, both endpoints inclusive.
 int Gamecode_addMap(
     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
-    int frame_start, int frame_end
+    int frame_start, int frame_end, int frame_interval
 ) {
 
     // TODO: Return -1 instead?
@@ -133,7 +137,9 @@ int Gamecode_addMap(
         .virtual_code=virtual_code,
         .hardware_code=hardware_code,
         .frame_start=frame_start,
-        .frame_end=frame_end
+        .frame_end=frame_end,
+        .frame_interval=frame_interval
+
     };
 
     mapping->head += 1;

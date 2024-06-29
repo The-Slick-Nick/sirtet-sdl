@@ -29,6 +29,7 @@ typedef struct {
     SDL_Scancode hardware_code;
     int frame_start;
     int frame_end;
+    int frame_interval;
 } GamecodeMapItem;
 
 
@@ -39,14 +40,9 @@ typedef struct {
 } GamecodeMap;
 
 
-int addKeymap(
-    GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
-    int frame_start, int frame_end
-);
-
 int Gamecode_addMap(
     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
-    int frame_start, int frame_end
+    int frame_start, int frame_end, int frame_interval
 );
 
 int processHardwareInputs(int* hardware_states);
