@@ -22,6 +22,7 @@
 
 int run(){
 
+
     SDL_Init(SDL_INIT_VIDEO);
 
     /*** SDL & draw initialization ***/
@@ -47,6 +48,14 @@ int run(){
     SDL_Rect draw_window = { .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height };
 
     /*** Game object initialization ***/
+
+    const int num_presets = 4;
+    long block_presets[4] = {
+        0b0100010001000100,
+        0b0000011001100000,
+        0b0100010001100000,
+        0b0000010011100000
+    };
 
     int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
     GameGrid ref_grid = { .width=GRID_WIDTH, .height=GRID_HEIGHT, .contents=grid_contents };
@@ -99,18 +108,9 @@ int run(){
         // new block time baby
         if (primary_block.id == INVALID_BLOCK_ID) {
             int new_id = BlockIds_provisionId(&id_repo, 4);
-            if (new_id == INVALID_BLOCK_ID) {
-                return -1;
-            }
+            assert(new_id != INVALID_BLOCK_ID);
 
-            // Temporary block content randomization. No need to develop
-            // a standard API for this as it is silly
-            long new_contents = 0L;
-            for (int bit_num = 0; bit_num < 4 * 4; bit_num++) {
-                new_contents <<= 1;
-                new_contents |= (rand() & 1);
-            }
-
+            long new_contents = block_presets[(rand() + num_presets) % num_presets];
             primary_block = (Block){
                 .id=new_id,
                 .position=(Point){.x=5, .y=5},
