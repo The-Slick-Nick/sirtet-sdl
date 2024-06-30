@@ -25,20 +25,14 @@
 #define TARGET_FPS 60
 
 
-// Game updating portion of main loop
-// int updateGame(
-//     bool *gamecode_states, BlockIds *block_repo, Block *primary_block, long* block_presets, int num_presets,
-//     GameGrid *game_grid, bool *god_mode, int *move_counter
-// ) {
+int updateGame(GameState *game_state) {
 
-
-int updateGame(GameState *game_state, GameData *game_data) {
     // new block time baby
     if (game_state->primary_block.id == INVALID_BLOCK_ID) {
         int new_id = BlockIds_provisionId(&game_state->block_ids, game_state->primary_block.size);
         assert(new_id != INVALID_BLOCK_ID);
 
-        long new_contents = game_data->block_presets[(rand() + game_data->num_presets) % game_data->num_presets];
+        long new_contents = game_state->block_presets[(rand() + game_state->num_presets) % game_state->num_presets];
         game_state->primary_block = (Block){
             .id=new_id,
             .position=(Point){.x=5, .y=5},
@@ -117,12 +111,9 @@ int updateGame(GameState *game_state, GameData *game_data) {
 
     GameGrid_resolveRows(&game_state->game_grid, &game_state->block_ids);
     return 0;
-
 }
 
 int run() {
-
-
     SDL_Init(SDL_INIT_VIDEO);
 
     /*** SDL & draw initialization ***/
@@ -151,6 +142,12 @@ int run() {
 
     /*** Game object initialization ***/
 
+    // Initialize game config & state
+
+    int all_ids[256] = {0};
+    int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
+    int block_ids[256] = {0};
+
     long block_presets[7] = {
         0b0100010001000100,
         0b0000011001100000,
@@ -161,38 +158,30 @@ int run() {
         0b1100011000000000
     };
 
-    GameData game_data = {
-        .num_presets=7,
-        .block_presets=block_presets,
-        .keymaps=(GamecodeMap){.head=0}
-    };
-    Gamecode_addMap(&game_data.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(&game_data.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
-    Gamecode_addMap(&game_data.keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(&game_data.keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
-    Gamecode_addMap(&game_data.keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
-    Gamecode_addMap(&game_data.keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
-
-
-    // Initialize game state
-
-    int all_ids[256] = {0};
-    int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
-    int block_ids[256] = {0};
-
     GameState game_state = {
-        // Native types
+        // Native type
         .move_counter = 0,
         .god_mode = false,
+        .num_presets=7,
+        .block_presets=block_presets,
 
         // Structs to be pointed to
         .game_grid = (GameGrid){.width=GRID_WIDTH, .height=GRID_HEIGHT, .contents=grid_contents},
         .primary_block = (Block){.id=INVALID_BLOCK_ID, .size=4},
         .block_ids = (BlockIds){.head=0, .max_ids=256, .id_array=all_ids},
+        .keymaps=(GamecodeMap){.head=0},
+
 
         // Arrays
         .gamecode_states=gamecode_states,
     };
+
+    Gamecode_addMap(&game_state.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    Gamecode_addMap(&game_state.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+    Gamecode_addMap(&game_state.keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Gamecode_addMap(&game_state.keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
+    Gamecode_addMap(&game_state.keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
+    Gamecode_addMap(&game_state.keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
 
     GameGrid_clear(&game_state.game_grid);
 
@@ -213,7 +202,7 @@ int run() {
 
         /***** PROCESS INPUTS *****/
         processHardwareInputs(hardware_states);
-        processGamecodes(gamecode_states, hardware_states, &game_data.keymaps);
+        processGamecodes(gamecode_states, hardware_states, &game_state.keymaps);
 
         /***** UPDATE *****/
         if (Gamecode_pressed(gamecode_states, GAMECODE_QUIT)) {
@@ -226,9 +215,7 @@ int run() {
             printf("God mode toggled\n");
         }
 
-        // updateGame(GameState *game_state, GameData *game_data) {
-
-        if ( updateGame(&game_state, &game_data) != 0 ) {
+        if ( updateGame(&game_state) != 0 ) {
             return 0;
         }
 
