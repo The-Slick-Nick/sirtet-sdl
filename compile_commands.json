@@ -6,6 +6,7 @@
       "-I./src",
       "-I./src/drawing",
       "-I./src/components",
+      "-I./src/states",
       "-o",
       "main.bin",
       "main.c"
