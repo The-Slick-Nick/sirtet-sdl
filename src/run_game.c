@@ -12,6 +12,7 @@
 #include <SDL2/SDL.h>
 #include <limits.h>
 #include <assert.h>
+#include <time.h>
 
 
 #define WINDOW_HEIGHT 720
@@ -19,6 +20,8 @@
 
 #define GRID_WIDTH 10
 #define GRID_HEIGHT 24
+
+#define TARGET_FPS 60
 
 int run(){
 
@@ -41,20 +44,25 @@ int run(){
     }
 
 
-    const int grid_draw_height = WINDOW_HEIGHT;
+    /*** Game object initialization ***/
+    bool god_mode = false;
+
+    const int grid_draw_height = (3 * WINDOW_HEIGHT) / 4;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
 
     const int grid_draw_width = GRID_WIDTH * cell_size;
     SDL_Rect draw_window = { .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height };
 
-    /*** Game object initialization ***/
 
-    const int num_presets = 4;
-    long block_presets[4] = {
+    const int num_presets = 7;
+    long block_presets[7] = {
         0b0100010001000100,
         0b0000011001100000,
         0b0100010001100000,
-        0b0000010011100000
+        0b0010001001100000,
+        0b0000010011100000,
+        0b0011011000000000,
+        0b1100011000000000
     };
 
     int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
@@ -88,12 +96,11 @@ int run(){
 
     /*** Main Loop ***/
 
-    Uint64 start_time = SDL_GetTicks64();
-    const Uint64 ten_seconds_ms = 10 * 1000;
     int move_counter = 0;
+    int frames_processed = 0;
+    while (true) {
 
-    while (SDL_GetTicks64() - start_time < 60 * ten_seconds_ms) {
-
+        clock_t frame_start = clock();
 
         /***** PROCESS INPUTS *****/
         processHardwareInputs(hardware_states);
@@ -103,6 +110,12 @@ int run(){
         if (Gamecode_pressed(gamecode_states, GAMECODE_QUIT)) {
             printf("Quitting...\n");
             break;
+        }
+
+
+        if (hardware_states[SDL_SCANCODE_G] == 1) {
+            god_mode = (god_mode == false);
+            printf("God mode enabled\n");
         }
 
         // new block time baby
@@ -138,7 +151,6 @@ int run(){
         }
 
         if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_LEFT)) {
-            printf("Move left!\n");
             if (
                 GameGrid_canBlockInfoExist(
                     &ref_grid, 4, primary_block.contents,
@@ -150,7 +162,6 @@ int run(){
         }
 
         if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_RIGHT)) {
-            printf("Move right!\n");
             if (
                 GameGrid_canBlockInfoExist(
                     &ref_grid, 4, primary_block.contents,
@@ -161,8 +172,11 @@ int run(){
             }
         }
 
-        move_counter++;
-        if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || move_counter > 1000) {
+        if (!god_mode) {
+            move_counter++;
+        }
+
+        if ( Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || move_counter > 1000 ) {
             move_counter = 0;
 
             Point down_translation = (Point){.x=0, .y=1};
@@ -200,6 +214,12 @@ int run(){
         drawGrid(rend, draw_window, &ref_grid);
 
         SDL_RenderPresent(rend);
+
+        // Manual keymapping print-out here (provide as a gamecode or create separate
+        // menu gamecode structs?)
+        if (hardware_states[SDL_SCANCODE_D] > 0 && (hardware_states[SDL_SCANCODE_D] - 1) % 1000 == 0) {
+            printf("Frame time: %f seconds\n", ((double)(clock() - frame_start) / CLOCKS_PER_SEC));
+        }
     }
 
 
