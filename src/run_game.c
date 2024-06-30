@@ -2,6 +2,7 @@
 #include "run_game.h"
 #include "game_state.h"
 #include "application_state.h"
+#include "state_runner.h"
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -18,7 +19,6 @@
 #define TARGET_FPS 60
 
 
-
 /* Primary program runner */
 int run() {
 
@@ -33,6 +33,8 @@ int run() {
         return -1;
     }
 
+    StateRunner state_runner;
+
 
     /*** Main Loop ***/
     while (true) {
@@ -41,7 +43,7 @@ int run() {
         processHardwareInputs(global_state->hardware_states);
 
         /* Run game-state specific code */
-        if (runGameFrame((void*)global_state, (void*)game_state)) {
+        if (runGameFrame(&state_runner, global_state, (void*)game_state)) {
             break;
         }
     }

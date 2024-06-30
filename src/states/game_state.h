@@ -16,6 +16,9 @@
 #include "grid.h"
 #include "inputs.h"
 
+#include "state_runner.h"
+#include "application_state.h"
+
 
 #define GRID_WIDTH 10
 #define GRID_HEIGHT 24
@@ -42,16 +45,17 @@ typedef struct {
 } GameState;
 
 
-// Initialize and return a GameState pointer
-//
-// Returns as void* for compatability with state runner
+// Initialize and return a pointer for GameState
 void* GameState_init();
 
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);
 
-
+// Run the update portion of the main game loop
 int updateGame(GameState *game_state);
-int runGameFrame(void *global_state_data, void *state_data);
+
+// Run one frame of game
+// int runGameFrame(void *global_state_data, void *state_data);
+int runGameFrame(StateRunner *state_runner, ApplicationState *application_state, void *state_data);
 
 #endif
