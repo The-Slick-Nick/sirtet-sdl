@@ -4,6 +4,7 @@
 #include "coordinates.h"
 #include "grid.h"
 #include "inputs.h"
+#include "run_game.h"
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -25,96 +26,97 @@
 
 
 // Game updating portion of main loop
-int updateGame(
-    bool *gamecode_states, BlockIds *block_repo, Block *primary_block, long* block_presets, int num_presets,
-    GameGrid *game_grid, bool *god_mode, int *move_counter
-) {
+// int updateGame(
+//     bool *gamecode_states, BlockIds *block_repo, Block *primary_block, long* block_presets, int num_presets,
+//     GameGrid *game_grid, bool *god_mode, int *move_counter
+// ) {
 
 
+int updateGame(GameState *game_state, GameData *game_data) {
     // new block time baby
-    if (primary_block->id == INVALID_BLOCK_ID) {
-        int new_id = BlockIds_provisionId(block_repo, 4);
+    if (game_state->primary_block.id == INVALID_BLOCK_ID) {
+        int new_id = BlockIds_provisionId(&game_state->block_ids, game_state->primary_block.size);
         assert(new_id != INVALID_BLOCK_ID);
 
-        long new_contents = block_presets[(rand() + num_presets) % num_presets];
-        *primary_block = (Block){
+        long new_contents = game_data->block_presets[(rand() + game_data->num_presets) % game_data->num_presets];
+        game_state->primary_block = (Block){
             .id=new_id,
             .position=(Point){.x=5, .y=5},
             .contents=new_contents,
             .size=4
         };
 
-        if (!GameGrid_canBlockExist(game_grid, primary_block)) {
+
+        if (!GameGrid_canBlockExist(&game_state->game_grid, &game_state->primary_block)) {
             printf("Game over!\n");
             return -1;
         }
 
-        printf("New block id is %d\n", primary_block->id);
+        printf("New block id is %d\n", game_state->primary_block.id);
         printf("New contents representation is %ld\n", new_contents);
     }
 
-    if (Gamecode_pressed(gamecode_states, GAMECODE_ROTATE)) {
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_ROTATE)) {
         printf("Rotation!\n");
         if (GameGrid_canBlockInfoExist(
-                game_grid, 4, rotateBlockContentsCw90(primary_block->contents, 4), primary_block->position
+                &game_state->game_grid, 4, rotateBlockContentsCw90(game_state->primary_block.contents, 4), game_state->primary_block.position
         )) {
 
-            primary_block->contents = rotateBlockContentsCw90(primary_block->contents, 4);
+            game_state->primary_block.contents = rotateBlockContentsCw90(game_state->primary_block.contents, 4);
         }
     }
 
-    if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_LEFT)) {
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_LEFT)) {
         if (
             GameGrid_canBlockInfoExist(
-                game_grid, 4, primary_block->contents,
-                Point_translate(primary_block->position, (Point){.x=-1, .y=0})
+                &game_state->game_grid, 4, game_state->primary_block.contents,
+                Point_translate(game_state->primary_block.position, (Point){.x=-1, .y=0})
             )
         ) {
-            Block_translate(primary_block, (Point){.x=-1, .y=0});
+            Block_translate(&game_state->primary_block, (Point){.x=-1, .y=0});
         }
     }
 
-    if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_RIGHT)) {
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_RIGHT)) {
         if (
             GameGrid_canBlockInfoExist(
-                game_grid, 4, primary_block->contents,
-                Point_translate(primary_block->position, (Point){.x=1, .y=0})
+                &game_state->game_grid, 4, game_state->primary_block.contents,
+                Point_translate(game_state->primary_block.position, (Point){.x=1, .y=0})
             )
         ) {
-            Block_translate(primary_block, (Point){.x=1, .y=0});
+            Block_translate(&game_state->primary_block, (Point){.x=1, .y=0});
         }
     }
 
-    if (!(*god_mode)) {
-        (*move_counter)++;
+    if (game_state->god_mode) {
+        game_state->move_counter++;
     }
 
-    if ( Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || *move_counter > 1000 ) {
-        *move_counter = 0;
+    if ( Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN) || game_state->move_counter > 1000 ) {
+        game_state->move_counter = 0;
 
         Point down_translation = (Point){.x=0, .y=1};
         Point up_translation = (Point){.x=0, .y=-1};
         Block projected_block;
 
         projected_block = (Block){
-            .size=primary_block->size,
-            .contents=primary_block->contents,
+            .size=game_state->primary_block.size,
+            .contents=game_state->primary_block.contents,
             .id=-1,
-            .position=(Point){.x=primary_block->position.x, .y=primary_block->position.y + 1}
+            .position=(Point){.x=game_state->primary_block.position.x, .y=game_state->primary_block.position.y + 1}
         };
 
-        if (GameGrid_canBlockExist(game_grid, &projected_block)) {
-            Block_translate(primary_block, down_translation);
+        if (GameGrid_canBlockExist(&game_state->game_grid, &projected_block)) {
+            Block_translate(&game_state->primary_block, down_translation);
         }
         else {
-            GameGrid_commitBlock(game_grid, primary_block);
-            primary_block->id = INVALID_BLOCK_ID;
+            GameGrid_commitBlock(&game_state->game_grid, &game_state->primary_block);
+            game_state->primary_block.id = INVALID_BLOCK_ID;
         }
     }
 
-    GameGrid_resolveRows(game_grid, block_repo);
+    GameGrid_resolveRows(&game_state->game_grid, &game_state->block_ids);
     return 0;
-
 
 }
 
@@ -138,18 +140,17 @@ int run() {
         return -1;
     }
 
+    /*** Key Mapping & input code setups ***/
+
+    int hardware_states[(int)SDL_NUM_SCANCODES] = {INT_MIN};
+    bool gamecode_states[(int)NUM_GAMECODES] = {false};
+
+    for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
+    for (int i = 0; i < (int)NUM_GAMECODES; i++) { gamecode_states[i] = false; }
+
 
     /*** Game object initialization ***/
-    bool god_mode = false;
 
-    const int grid_draw_height = (3 * WINDOW_HEIGHT) / 4;
-    const int cell_size =  grid_draw_height / GRID_HEIGHT;
-
-    const int grid_draw_width = GRID_WIDTH * cell_size;
-    SDL_Rect draw_window = { .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height };
-
-
-    const int num_presets = 7;
     long block_presets[7] = {
         0b0100010001000100,
         0b0000011001100000,
@@ -160,38 +161,51 @@ int run() {
         0b1100011000000000
     };
 
-    int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
-    GameGrid ref_grid = { .width=GRID_WIDTH, .height=GRID_HEIGHT, .contents=grid_contents };
-    GameGrid_clear(&ref_grid);
+    GameData game_data = {
+        .num_presets=7,
+        .block_presets=block_presets,
+        .keymaps=(GamecodeMap){.head=0}
+    };
+    Gamecode_addMap(&game_data.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    Gamecode_addMap(&game_data.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+    Gamecode_addMap(&game_data.keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Gamecode_addMap(&game_data.keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
+    Gamecode_addMap(&game_data.keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
+    Gamecode_addMap(&game_data.keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
+
+
+    // Initialize game state
 
     int all_ids[256] = {0};
-    BlockIds id_repo = {
-        .head = 0,
-        .max_ids = 256,
-        .id_array = all_ids
+    int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
+    int block_ids[256] = {0};
+
+    GameState game_state = {
+        // Native types
+        .move_counter = 0,
+        .god_mode = false,
+
+        // Structs to be pointed to
+        .game_grid = (GameGrid){.width=GRID_WIDTH, .height=GRID_HEIGHT, .contents=grid_contents},
+        .primary_block = (Block){.id=INVALID_BLOCK_ID, .size=4},
+        .block_ids = (BlockIds){.head=0, .max_ids=256, .id_array=all_ids},
+
+        // Arrays
+        .gamecode_states=gamecode_states,
     };
 
-    Block primary_block = { .id=INVALID_BLOCK_ID, .size=4 };
+    GameGrid_clear(&game_state.game_grid);
 
-    /*** Key Mapping & input code setups ***/
+    const int grid_draw_height = (3 * WINDOW_HEIGHT) / 4;
+    const int cell_size =  grid_draw_height / GRID_HEIGHT;
 
-    int hardware_states[(int)SDL_NUM_SCANCODES] = {INT_MIN};
-    bool gamecode_states[(int)NUM_GAMECODES] = {false};
+    const int grid_draw_width = GRID_WIDTH * cell_size;
+    SDL_Rect draw_window = { .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height };
 
-    for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
-    for (int i = 0; i < (int)NUM_GAMECODES; i++) { gamecode_states[i] = false; }
 
-    GamecodeMap keymap = {.head=0};
-    Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(&keymap, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
-    Gamecode_addMap(&keymap, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
-    Gamecode_addMap(&keymap, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
 
     /*** Main Loop ***/
 
-    int move_counter = 0;
     int frames_processed = 0;
     while (true) {
 
@@ -199,7 +213,7 @@ int run() {
 
         /***** PROCESS INPUTS *****/
         processHardwareInputs(hardware_states);
-        processGamecodes(gamecode_states, hardware_states, &keymap);
+        processGamecodes(gamecode_states, hardware_states, &game_data.keymaps);
 
         /***** UPDATE *****/
         if (Gamecode_pressed(gamecode_states, GAMECODE_QUIT)) {
@@ -208,27 +222,26 @@ int run() {
         }
 
         if (hardware_states[SDL_SCANCODE_G] == 1) {
-            god_mode = (god_mode == false);
+            game_state.god_mode = (game_state.god_mode == false);
             printf("God mode toggled\n");
         }
 
-        if (
-            updateGame(gamecode_states, &id_repo, &primary_block, block_presets, num_presets, &ref_grid, &god_mode, &move_counter) != 0
-        ) {
+        // updateGame(GameState *game_state, GameData *game_data) {
+
+        if ( updateGame(&game_state, &game_data) != 0 ) {
             return 0;
         }
-
 
         /***** DRAW *****/
 
         SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
         SDL_RenderClear(rend);
 
-        if (primary_block.id != INVALID_BLOCK_ID) {
-            drawBlock(rend, draw_window, &primary_block, &ref_grid);
+        if (game_state.primary_block.id != INVALID_BLOCK_ID) {
+            drawBlock(rend, draw_window, &game_state.primary_block, &game_state.game_grid);
         }
 
-        drawGrid(rend, draw_window, &ref_grid);
+        drawGrid(rend, draw_window, &game_state.game_grid);
 
         SDL_RenderPresent(rend);
 
