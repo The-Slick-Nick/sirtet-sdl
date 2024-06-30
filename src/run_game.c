@@ -23,7 +23,102 @@
 
 #define TARGET_FPS 60
 
-int run(){
+
+// Game updating portion of main loop
+int updateGame(
+    bool *gamecode_states, BlockIds *block_repo, Block *primary_block, long* block_presets, int num_presets,
+    GameGrid *game_grid, bool *god_mode, int *move_counter
+) {
+
+
+    // new block time baby
+    if (primary_block->id == INVALID_BLOCK_ID) {
+        int new_id = BlockIds_provisionId(block_repo, 4);
+        assert(new_id != INVALID_BLOCK_ID);
+
+        long new_contents = block_presets[(rand() + num_presets) % num_presets];
+        *primary_block = (Block){
+            .id=new_id,
+            .position=(Point){.x=5, .y=5},
+            .contents=new_contents,
+            .size=4
+        };
+
+        if (!GameGrid_canBlockExist(game_grid, primary_block)) {
+            printf("Game over!\n");
+            return -1;
+        }
+
+        printf("New block id is %d\n", primary_block->id);
+        printf("New contents representation is %ld\n", new_contents);
+    }
+
+    if (Gamecode_pressed(gamecode_states, GAMECODE_ROTATE)) {
+        printf("Rotation!\n");
+        if (GameGrid_canBlockInfoExist(
+                game_grid, 4, rotateBlockContentsCw90(primary_block->contents, 4), primary_block->position
+        )) {
+
+            primary_block->contents = rotateBlockContentsCw90(primary_block->contents, 4);
+        }
+    }
+
+    if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_LEFT)) {
+        if (
+            GameGrid_canBlockInfoExist(
+                game_grid, 4, primary_block->contents,
+                Point_translate(primary_block->position, (Point){.x=-1, .y=0})
+            )
+        ) {
+            Block_translate(primary_block, (Point){.x=-1, .y=0});
+        }
+    }
+
+    if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_RIGHT)) {
+        if (
+            GameGrid_canBlockInfoExist(
+                game_grid, 4, primary_block->contents,
+                Point_translate(primary_block->position, (Point){.x=1, .y=0})
+            )
+        ) {
+            Block_translate(primary_block, (Point){.x=1, .y=0});
+        }
+    }
+
+    if (!(*god_mode)) {
+        (*move_counter)++;
+    }
+
+    if ( Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || *move_counter > 1000 ) {
+        *move_counter = 0;
+
+        Point down_translation = (Point){.x=0, .y=1};
+        Point up_translation = (Point){.x=0, .y=-1};
+        Block projected_block;
+
+        projected_block = (Block){
+            .size=primary_block->size,
+            .contents=primary_block->contents,
+            .id=-1,
+            .position=(Point){.x=primary_block->position.x, .y=primary_block->position.y + 1}
+        };
+
+        if (GameGrid_canBlockExist(game_grid, &projected_block)) {
+            Block_translate(primary_block, down_translation);
+        }
+        else {
+            GameGrid_commitBlock(game_grid, primary_block);
+            primary_block->id = INVALID_BLOCK_ID;
+        }
+    }
+
+    GameGrid_resolveRows(game_grid, block_repo);
+    return 0;
+
+
+}
+
+int run() {
 
 
     SDL_Init(SDL_INIT_VIDEO);
@@ -112,94 +207,16 @@ int run(){
             break;
         }
 
-
         if (hardware_states[SDL_SCANCODE_G] == 1) {
             god_mode = (god_mode == false);
-            printf("God mode enabled\n");
+            printf("God mode toggled\n");
         }
 
-        // new block time baby
-        if (primary_block.id == INVALID_BLOCK_ID) {
-            int new_id = BlockIds_provisionId(&id_repo, 4);
-            assert(new_id != INVALID_BLOCK_ID);
-
-            long new_contents = block_presets[(rand() + num_presets) % num_presets];
-            primary_block = (Block){
-                .id=new_id,
-                .position=(Point){.x=5, .y=5},
-                .contents=new_contents,
-                .size=4
-            };
-
-            if (!GameGrid_canBlockExist(&ref_grid, &primary_block)) {
-                printf("Game over!\n");
-                return 0;
-            }
-
-            printf("New block id is %d\n", primary_block.id);
-            printf("New contents representation is %ld\n", new_contents);
+        if (
+            updateGame(gamecode_states, &id_repo, &primary_block, block_presets, num_presets, &ref_grid, &god_mode, &move_counter) != 0
+        ) {
+            return 0;
         }
-
-        if (Gamecode_pressed(gamecode_states, GAMECODE_ROTATE)) {
-            printf("Rotation!\n");
-            if (GameGrid_canBlockInfoExist(
-                    &ref_grid, 4, rotateBlockContentsCw90(primary_block.contents, 4), primary_block.position
-            )) {
-
-                primary_block.contents = rotateBlockContentsCw90(primary_block.contents, 4);
-            }
-        }
-
-        if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_LEFT)) {
-            if (
-                GameGrid_canBlockInfoExist(
-                    &ref_grid, 4, primary_block.contents,
-                    Point_translate(primary_block.position, (Point){.x=-1, .y=0})
-                )
-            ) {
-                Block_translate(&primary_block, (Point){.x=-1, .y=0});
-            }
-        }
-
-        if (Gamecode_pressed(gamecode_states, GAMECODE_MOVE_RIGHT)) {
-            if (
-                GameGrid_canBlockInfoExist(
-                    &ref_grid, 4, primary_block.contents,
-                    Point_translate(primary_block.position, (Point){.x=1, .y=0})
-                )
-            ) {
-                Block_translate(&primary_block, (Point){.x=1, .y=0});
-            }
-        }
-
-        if (!god_mode) {
-            move_counter++;
-        }
-
-        if ( Gamecode_pressed(gamecode_states, GAMECODE_MOVE_DOWN) || move_counter > 1000 ) {
-            move_counter = 0;
-
-            Point down_translation = (Point){.x=0, .y=1};
-            Point up_translation = (Point){.x=0, .y=-1};
-            Block projected_block;
-
-            projected_block = (Block){
-                .size=primary_block.size,
-                .contents=primary_block.contents,
-                .id=-1,
-                .position=(Point){.x=primary_block.position.x, .y=primary_block.position.y + 1}
-            };
-
-            if (GameGrid_canBlockExist(&ref_grid, &projected_block)) {
-                Block_translate(&primary_block, down_translation);
-            }
-            else {
-                GameGrid_commitBlock(&ref_grid, &primary_block);
-                primary_block.id = INVALID_BLOCK_ID;
-            }
-        }
-
-        GameGrid_resolveRows(&ref_grid, &id_repo);
 
 
         /***** DRAW *****/
