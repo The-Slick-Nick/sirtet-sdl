@@ -8,11 +8,13 @@
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_shape.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL.h>
 #include <limits.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <time.h>
 
 
@@ -25,6 +27,7 @@
 #define TARGET_FPS 60
 
 
+// Update portion of main game loop
 int updateGame(GameState *game_state) {
 
     // new block time baby
@@ -82,7 +85,7 @@ int updateGame(GameState *game_state) {
         }
     }
 
-    if (game_state->god_mode) {
+    if (!game_state->god_mode) {
         game_state->move_counter++;
     }
 
@@ -113,10 +116,11 @@ int updateGame(GameState *game_state) {
     return 0;
 }
 
-int run() {
-    SDL_Init(SDL_INIT_VIDEO);
+ApplicationState* ApplicationState_init() {
 
-    /*** SDL & draw initialization ***/
+    SDL_Init(SDL_INIT_VIDEO);
+    ApplicationState *retval = (ApplicationState*)malloc(sizeof(ApplicationState));
+
     SDL_Window *wind = SDL_CreateWindow(
         "Test window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, 0
@@ -125,30 +129,44 @@ int run() {
     Uint32 render_flags = SDL_RENDERER_ACCELERATED;
     SDL_Renderer *rend = SDL_CreateRenderer(wind, -1, render_flags);
 
+    int *hardware_states = (int*)malloc((int)SDL_NUM_SCANCODES * sizeof(int));
+    for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
+
     if (!wind || !rend) {
         SDL_DestroyWindow(wind);
         SDL_Quit();
-        return -1;
+        return NULL;
     }
 
-    /*** Key Mapping & input code setups ***/
+    *(retval) = (ApplicationState){
+        .rend=rend,
+        .wind=wind,
+        .hardware_states=hardware_states
 
-    int hardware_states[(int)SDL_NUM_SCANCODES] = {INT_MIN};
-    bool gamecode_states[(int)NUM_GAMECODES] = {false};
-
-    for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
-    for (int i = 0; i < (int)NUM_GAMECODES; i++) { gamecode_states[i] = false; }
+    };
+    return retval;
+}
 
 
-    /*** Game object initialization ***/
+int ApplicationState_deconstruct(ApplicationState* self) {
 
-    // Initialize game config & state
+    SDL_DestroyWindow(self->wind);
+    free(self->hardware_states);
+    free(self);
+    return 0;
+}
 
-    int all_ids[256] = {0};
-    int grid_contents[GRID_WIDTH * GRID_HEIGHT] = {-1};
-    int block_ids[256] = {0};
 
-    long block_presets[7] = {
+// Create & initialize a GameState struct, returning
+// it as a void pointer (for state-runner compatability).
+//
+// Assumes that GameState_deconstruct() is eventually called
+// on the return value
+void* GameState_init() {
+
+
+    /*** Supplementary data ***/
+    long preset_prototypes[7] = {
         0b0100010001000100,
         0b0000011001100000,
         0b0100010001100000,
@@ -158,89 +176,150 @@ int run() {
         0b1100011000000000
     };
 
-    GameState game_state = {
-        // Native type
-        .move_counter = 0,
-        .god_mode = false,
+    long* block_presets = (long*)malloc(7 * sizeof(long));
+    memcpy(block_presets, preset_prototypes, 7 * sizeof(long));
+
+    // calloc(unsigned long, unsigned long)
+    int* all_ids = (int*)calloc(256, sizeof(long));
+
+    // TODO change this up probably later
+    const int grid_draw_height = (3 * WINDOW_HEIGHT) / 4;
+    const int cell_size =  grid_draw_height / GRID_HEIGHT;
+    const int grid_draw_width = GRID_WIDTH * cell_size;
+
+    bool *gamecode_states = (bool*)calloc((int)NUM_GAMECODES, sizeof(bool));
+    int *grid_contents = (int*)malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(int));
+
+    memset(grid_contents, -1, sizeof(int));
+
+
+    /*** Initialize struct ***/
+    GameState *retval = (GameState*)malloc(sizeof(GameState));
+    *(retval) = (GameState){
+        .move_counter=0,
+        .god_mode=false,
         .num_presets=7,
         .block_presets=block_presets,
 
-        // Structs to be pointed to
         .game_grid = (GameGrid){.width=GRID_WIDTH, .height=GRID_HEIGHT, .contents=grid_contents},
         .primary_block = (Block){.id=INVALID_BLOCK_ID, .size=4},
         .block_ids = (BlockIds){.head=0, .max_ids=256, .id_array=all_ids},
         .keymaps=(GamecodeMap){.head=0},
+        .draw_window=(SDL_Rect){ .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height },
 
-
-        // Arrays
-        .gamecode_states=gamecode_states,
+        .gamecode_states=gamecode_states
     };
 
-    Gamecode_addMap(&game_state.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(&game_state.keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
-    Gamecode_addMap(&game_state.keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(&game_state.keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
-    Gamecode_addMap(&game_state.keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
-    Gamecode_addMap(&game_state.keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
 
-    GameGrid_clear(&game_state.game_grid);
+    /*** Post-creation processing ***/
+    Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
 
-    const int grid_draw_height = (3 * WINDOW_HEIGHT) / 4;
-    const int cell_size =  grid_draw_height / GRID_HEIGHT;
-
-    const int grid_draw_width = GRID_WIDTH * cell_size;
-    SDL_Rect draw_window = { .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height };
+    GameGrid_clear(&retval->game_grid);
 
 
+    return (void*)retval;
+}
 
-    /*** Main Loop ***/
 
-    int frames_processed = 0;
-    while (true) {
+// Go through process of deconstructing a GameState struct,
+// freeing any memory allocated in _init() call
+int GameState_deconstruct(void* self) {
+    GameState *game_state = (GameState*)self;
 
-        clock_t frame_start = clock();
+    free(game_state->block_presets);
+    free(game_state->block_ids.id_array);
+    free(game_state->gamecode_states);
+    free(game_state->game_grid.contents);
 
-        /***** PROCESS INPUTS *****/
-        processHardwareInputs(hardware_states);
-        processGamecodes(gamecode_states, hardware_states, &game_state.keymaps);
+    free(self);
+    return 0;
+}
 
-        /***** UPDATE *****/
-        if (Gamecode_pressed(gamecode_states, GAMECODE_QUIT)) {
-            printf("Quitting...\n");
-            break;
-        }
 
-        if (hardware_states[SDL_SCANCODE_G] == 1) {
-            game_state.god_mode = (game_state.god_mode == false);
-            printf("God mode toggled\n");
-        }
+// Run a single frame of game
+int runGameFrame(void *global_state_data, void *state_data) {
 
-        if ( updateGame(&game_state) != 0 ) {
-            return 0;
-        }
+    /* Recasting */
+    ApplicationState *global_state = (ApplicationState*)global_state_data;
+    GameState *game_state = (GameState*)state_data;
 
-        /***** DRAW *****/
+    /* Relevant variable extraction */
+    SDL_Renderer *rend = global_state->rend;
+    int *hardware_states = global_state->hardware_states;
 
-        SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
-        SDL_RenderClear(rend);
+    SDL_Rect draw_window = game_state->draw_window;
 
-        if (game_state.primary_block.id != INVALID_BLOCK_ID) {
-            drawBlock(rend, draw_window, &game_state.primary_block, &game_state.game_grid);
-        }
 
-        drawGrid(rend, draw_window, &game_state.game_grid);
+    /***** PROCESS INPUTS *****/
+    processGamecodes(game_state->gamecode_states, hardware_states, &game_state->keymaps);
 
-        SDL_RenderPresent(rend);
+    /***** UPDATE *****/
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
+        printf("Quitting...\n");
+        return -1;
+    }
 
-        // Manual keymapping print-out here (provide as a gamecode or create separate
-        // menu gamecode structs?)
-        if (hardware_states[SDL_SCANCODE_D] > 0 && (hardware_states[SDL_SCANCODE_D] - 1) % 1000 == 0) {
-            printf("Frame time: %f seconds\n", ((double)(clock() - frame_start) / CLOCKS_PER_SEC));
-        }
+    if (hardware_states[SDL_SCANCODE_G] == 1) {
+        game_state->god_mode = (game_state->god_mode == false);
+        printf("God mode toggled\n");
+    }
+
+    if ( updateGame(game_state) != 0 ) {
+        return -1;
+    }
+
+    /***** DRAW *****/
+
+    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
+    SDL_RenderClear(rend);
+
+    if (game_state->primary_block.id != INVALID_BLOCK_ID) {
+        drawBlock(rend, draw_window, &game_state->primary_block, &game_state->game_grid);
+    }
+
+    drawGrid(rend, draw_window, &game_state->game_grid);
+
+    SDL_RenderPresent(rend);
+    return 0;
+}
+
+
+/* Primary program runner */
+int run() {
+
+    // Note: Also does all necessary SDL stuff htere
+    ApplicationState *global_state = ApplicationState_init();
+    if (global_state == NULL) {
+        return -1;
+    }
+
+    GameState *game_state = GameState_init();
+    if (game_state == NULL) {
+        return -1;
     }
 
 
-    SDL_DestroyWindow(wind);
+    /*** Main Loop ***/
+    while (true) {
+
+        /* Non-game related stuff */
+        // processHardwareInputs(hardware_states);
+        processHardwareInputs(global_state->hardware_states);
+
+
+        /* Run game-state specific code */
+        if (runGameFrame((void*)global_state, (void*)game_state)) {
+            break;
+        }
+    }
+
+    GameState_deconstruct((void*)game_state);
+    ApplicationState_deconstruct(global_state);
     SDL_Quit();
     return 0;
 }
