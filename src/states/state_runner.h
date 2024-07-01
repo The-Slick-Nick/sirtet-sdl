@@ -4,6 +4,36 @@
  *
  * The Staterunner struct represents how to handle and run different
  * application state throughout the runtime of the program.
+ *
+ * The StateRunner manages three stacks of data that pertain to different
+ * "states" of execution of the program:
+ * 1. State data
+ *      Structs of data, stored as void pointers, representing all
+ *      state-specific data for a given state. Passed to its corresponding
+ *      "runner" for processing and to its corresponding "deconstructor"
+ *      when no longer needed.
+ * 2. State "runners"
+ *      Function pointers to functions that process and do things with
+ *      state data. This function should operate a single "frame" of some
+ *      input loop. Should be implemented such that they re-cast the void
+ *      pointers passed from state data (above) to the correct type of
+ *      state struct. "typedef"'d as state_func_t and should expect three
+ *      arguments:
+ *          StateRunner* (in case the state needs to push additional states)
+ *          ApplicationState* (for access to global config, renderers, etc.)
+ *          void* (void pointer to the state's specific data)
+ *
+ *      This function should also return an integer value indicating the
+ *      status of this state post execution, returning 0 if it should keep
+ *      updating, and -1 if its execution is complete and should be popped
+ *      from the stack.
+ *
+ * 3. State "deconstructors"
+ *      Function points to functions that free up any memory and clear
+ *      the state structs from (1). Expects a void pointer, corresponding
+ *      to state, which is then recast and freed up (however needed).
+ *      This function is called after a frame-run of the function indicated
+ *      in (2) when said function returns -1.
  * 
  */
 #ifndef STATE_RUNNER_H

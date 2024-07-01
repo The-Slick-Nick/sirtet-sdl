@@ -9,6 +9,9 @@
 #define WINDOW_WIDTH 1080
 #define WINDOW_HEIGHT 720
 
+#define TARGET_FPS 60
+#define TARGET_SPF (1.0 / TARGET_FPS)
+
 #include <SDL2/SDL.h>
 
 // Higher-level status/state of hardware and such

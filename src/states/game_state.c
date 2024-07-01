@@ -75,13 +75,15 @@ void* GameState_init() {
     };
 
 
+    int move_cd = TARGET_FPS / 15;
+
     /*** Post-creation processing ***/
     Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
     Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
     Gamecode_addMap(&retval->keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, 100);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, 100);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, 100);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
 
     GameGrid_clear(&retval->game_grid);
 
@@ -136,7 +138,6 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
 
         GameState *new_state = GameState_init();
 
-        // StateRunner_addState(StateRunner *self, void *state_data, state_func_t state_runner, deconstruct_func_t state_deconstructor)
         StateRunner_addState(state_runner, (void*)new_state, runGameFrame, GameState_deconstruct);
     }
 
@@ -234,7 +235,8 @@ int updateGame(GameState *game_state) {
         game_state->move_counter++;
     }
 
-    if ( Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN) || game_state->move_counter > 1000 ) {
+    // TODO: replace `TARGET_FPS / 2` with TARGET_FPS / speed, where speed = # of moves per second
+    if ( Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN) || game_state->move_counter > TARGET_FPS / 2) {
         game_state->move_counter = 0;
 
         Point down_translation = (Point){.x=0, .y=1};

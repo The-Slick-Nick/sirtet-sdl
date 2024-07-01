@@ -16,8 +16,6 @@
 #include <time.h>
 
 
-#define TARGET_FPS 60
-
 
 /* Primary program runner */
 int run() {
@@ -64,8 +62,17 @@ int run() {
     StateRunner_addState(&state_runner, (void*)game_state, runGameFrame, GameState_deconstruct);
     StateRunner_commitBuffer(&state_runner);
 
+
+    clock_t frame_start;
+    double elapsed;
+    double raw_fps;
+    double actual_fps;
+
+
     /*** Main Loop ***/
     while (state_runner.head >= 0) {
+
+        frame_start = clock();
 
         /* Non-game related stuff */
         processHardwareInputs(global_state->hardware_states);
@@ -73,6 +80,20 @@ int run() {
         /* Run game-state specific code */
         StateRunner_runState(&state_runner, global_state);
         StateRunner_commitBuffer(&state_runner);
+
+
+        elapsed = (double)(clock() - frame_start) / CLOCKS_PER_SEC;
+        raw_fps = (1.0 / elapsed);
+
+        while (elapsed < TARGET_SPF) {
+            elapsed = (double)(clock() - frame_start) / CLOCKS_PER_SEC;
+        }
+
+        // calculate actual fps
+        elapsed = (double)(clock() - frame_start) / CLOCKS_PER_SEC;
+        actual_fps = (1.0 / elapsed);
+
+        // printf("    raw_fps %f\n    actual_fps %f\n", raw_fps, actual_fps);
     }
 
     ApplicationState_deconstruct(global_state);
