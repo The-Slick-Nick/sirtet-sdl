@@ -7,12 +7,15 @@
 * for a state-runner to run
 */
 
+#include <SDL2/SDL_scancode.h>
 #include <limits.h>
 #include <assert.h>
 
 #include "game_state.h"
 #include "application_state.h"
 #include "component_drawing.h"
+#include "inputs.h"
+#include "state_runner.h"
 
 /*=============================================================================
  State Struct creation & destruction
@@ -112,18 +115,31 @@ int GameState_deconstruct(void* self) {
 // "state-runner function" for GameState
 int runGameFrame(StateRunner *state_runner, ApplicationState *application_state, void *state_data) {
 
+
     /* Recasting */
     GameState *game_state = (GameState*)state_data;
 
     /* Relevant variable extraction */
     SDL_Renderer *rend = application_state->rend;
     int *hardware_states = application_state->hardware_states;
+    GamecodeMap *keymaps = &game_state->keymaps;
 
     SDL_Rect draw_window = game_state->draw_window;
 
 
     /***** PROCESS INPUTS *****/
-    processGamecodes(game_state->gamecode_states, hardware_states, &game_state->keymaps);
+    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
+
+    // TODO: Remove this part later, as it is currly only a very quick test
+
+    if (hardware_states[SDL_SCANCODE_TAB] == 1) {
+
+        GameState *new_state = GameState_init();
+
+        // StateRunner_addState(StateRunner *self, void *state_data, state_func_t state_runner, deconstruct_func_t state_deconstructor)
+        StateRunner_addState(state_runner, (void*)new_state, runGameFrame, GameState_deconstruct);
+    }
+
 
     /***** UPDATE *****/
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
@@ -133,7 +149,6 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
 
     if (hardware_states[SDL_SCANCODE_G] == 1) {
         game_state->god_mode = (game_state->god_mode == false);
-        printf("God mode toggled\n");
     }
 
     if ( updateGame(game_state) != 0 ) {
@@ -157,6 +172,8 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
 
 // Update portion of main game loop
 int updateGame(GameState *game_state) {
+
+
 
     // new block time baby
     if (game_state->primary_block.id == INVALID_BLOCK_ID) {

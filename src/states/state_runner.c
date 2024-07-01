@@ -8,7 +8,8 @@
 
 // Add a state to the StateRunner's buffer
 int StateRunner_addState(
-    StateRunner* self, void* state_data, state_func_t state_runner,
+    StateRunner* self, void* state_data,
+    state_func_t state_runner,
     deconstruct_func_t state_deconstructor
 ) {
 
@@ -55,13 +56,14 @@ int StateRunner_runState(StateRunner *self, ApplicationState* app_state) {
     }
 
     state_func_t top_func = self->runners[self->head];
-    deconstruct_func_t top_cdon = self->deconstructors[self->head];
+    deconstruct_func_t top_decon = self->deconstructors[self->head];
     void* top_state = self->states[self->head];
 
-    int retval = top_func(self, app_state, top_func);
+    int retval = top_func(self, app_state, top_state);
 
     // TODO: Macro to makes codes more understandable (something something semantic)
     if (retval == -1) {
+        top_decon(top_state);
         self->head--;
     }
 

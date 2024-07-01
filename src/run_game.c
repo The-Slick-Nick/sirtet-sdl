@@ -33,22 +33,48 @@ int run() {
         return -1;
     }
 
-    StateRunner state_runner;
+    // State runner uses stack memory, but others use heap
+    void *states[32];
+    void *states_buffer[16];
 
+    state_func_t runners[32];
+    state_func_t runners_buffer[16];
+
+    deconstruct_func_t deconstructors[32];
+    deconstruct_func_t deconstructors_buffer[16];
+
+    StateRunner state_runner = {
+        .head = -1,
+        .size = 32,
+
+        .buffer_head = 0,
+        .buffer_tail = 0,
+        .buffer_size = 16,
+
+        .states = states,
+        .deconstructors = deconstructors,
+        .runners = runners,
+
+        .states_buffer = states_buffer,
+        .deconstructors_buffer = deconstructors_buffer,
+        .runners_buffer = runners_buffer
+    };
+
+    // Begin with game state
+    StateRunner_addState(&state_runner, (void*)game_state, runGameFrame, GameState_deconstruct);
+    StateRunner_commitBuffer(&state_runner);
 
     /*** Main Loop ***/
-    while (true) {
+    while (state_runner.head >= 0) {
 
         /* Non-game related stuff */
         processHardwareInputs(global_state->hardware_states);
 
         /* Run game-state specific code */
-        if (runGameFrame(&state_runner, global_state, (void*)game_state)) {
-            break;
-        }
+        StateRunner_runState(&state_runner, global_state);
+        StateRunner_commitBuffer(&state_runner);
     }
 
-    GameState_deconstruct((void*)game_state);
     ApplicationState_deconstruct(global_state);
     SDL_Quit();
     return 0;
