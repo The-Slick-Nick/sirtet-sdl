@@ -3,3 +3,6 @@ sandbox/*
 *.a
 *.bin
 *.cache
+
+# Binaries
+build/*
