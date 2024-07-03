@@ -140,6 +140,8 @@ void Block_translate(Block* self, Point translation) {
 
 // identify if given content bit is set (shorthand for bit magic)
 bool Block_isContentBitSet(Block* self, int content_bit) {
+
+
     return 0 != (self->contents & (1L << content_bit));
 }
 
@@ -257,7 +259,7 @@ int BlockDb_transformBlock(BlockDb *self, int block_id, Point transform) {
 // Translate a block's position in place
 int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate) {
 
-    if (block_id <= INVALID_BLOCK_ID) {
+    if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;
     }
 
@@ -268,7 +270,7 @@ int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate) {
 
 // Determine if a block's contents has a particular bit set
 bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit) {
-    if (block_id <= INVALID_BLOCK_ID) {
+    if (!BlockDb_doesBlockExist(self, block_id)) {
         return false;
     }
     return (self->contents[block_id] & (1L << content_bit)) == 1;
@@ -291,7 +293,7 @@ int BlockDb_getBlockSize(BlockDb *self, int block_id) {
 }
 
 int BlockDb_setBlockSize(BlockDb *self, int block_id, int size) {
-    if (block_id <= INVALID_BLOCK_ID) {
+    if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;
     }
 
@@ -306,9 +308,11 @@ long BlockDb_getBlockContents(BlockDb *self, int block_id) {
 }
 
 int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents) {
-    if (block_id <= INVALID_BLOCK_ID) {
+
+    if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;
     }
+
     self->contents[block_id] = contents;
     return 0;
 }
@@ -318,7 +322,7 @@ Point BlockDb_getBlockPosition(BlockDb *self, int block_id) {
 }
 
 int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position) {
-    if (block_id <= INVALID_BLOCK_ID) {
+    if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;
     }
     self->positions[block_id] = position;
@@ -327,7 +331,7 @@ int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position) {
 
 int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by) {
 
-    if (block_id <= INVALID_BLOCK_ID || by > self->ids[block_id]) {
+    if (!BlockDb_doesBlockExist(self, block_id) || by > self->ids[block_id]) {
         return -1;
     }
 
@@ -338,7 +342,7 @@ int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by) {
 
 int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by) {
 
-    if (block_id <= INVALID_BLOCK_ID || self->ids[block_id] == 0) {
+    if (!BlockDb_doesBlockExist(self, block_id) || self->ids[block_id] == 0) {
         return -1;
     }
 
@@ -346,9 +350,10 @@ int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by) {
     return 0;
 }
 
-// Return the recorded cell count for a block
-// NOTE: Since this count can be manipulated otherwise, it will not
-// necessarily match the number of bits set in `contents` mask
+// Return the recorded cell count for a block.
+// NOTE:
+//      * Since this count can be maniuplated independently, it will not
+//        necessarily match the number of bits set in `contents` maek
 int BlockDb_getCellCount(BlockDb *self, int block_id) {
 
     if (block_id <= INVALID_BLOCK_ID) {
@@ -363,7 +368,7 @@ int BlockDb_getCellCount(BlockDb *self, int block_id) {
 // Remove the indicated block from existence
 int BlockDb_removeBlock(BlockDb *self, int block_id) {
 
-    if (block_id <= INVALID_BLOCK_ID) {
+    if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;
     }
 

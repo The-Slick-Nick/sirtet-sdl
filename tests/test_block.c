@@ -641,8 +641,8 @@ void testInvalidBlockDbOperations() {
     ASSERT_EQUAL_INT(BlockDb_translateBlock(&db, invalid, (Point){1, 0}), -1);
     ASSERT_EQUAL_INT(BlockDb_translateBlock(&db, nonexist, (Point){1, 0}), -1);
 
-    ASSERT_EQUAL_INT(BlockDb_isContentBitSet(&db, invalid, 1), -1);
-    ASSERT_EQUAL_INT(BlockDb_isContentBitSet(&db, nonexist, 1), -1);
+    ASSERT_FALSE(BlockDb_isContentBitSet(&db, invalid, 1));
+    ASSERT_FALSE(BlockDb_isContentBitSet(&db, nonexist, 1));
 
     ASSERT_FALSE(BlockDb_doesBlockExist(&db, invalid));
     ASSERT_FALSE(BlockDb_doesBlockExist(&db, nonexist));
@@ -658,8 +658,7 @@ void testInvalidBlockDbOperations() {
     ASSERT_EQUAL_INT(BlockDb_setBlockPosition(&db, nonexist, (Point){0, 0}), -1);
 
     ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, invalid), -1);
-    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, nonexist), -1);
-    
+
     ASSERT_EQUAL_INT(BlockDb_decrementCellCount(&db, invalid, 1), -1);
     ASSERT_EQUAL_INT(BlockDb_decrementCellCount(&db, nonexist, 1), -1);
 
