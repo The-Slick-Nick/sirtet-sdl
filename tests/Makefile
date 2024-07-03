@@ -37,11 +37,15 @@ CFLAGS = -Wall --std=gnu99 $(INC_FLAGS) -MMD -MP
 
 all: run_tests clean
 
-run_tests: build_tests  
+run_tests: build_src build_tests  
 	for x in *.bin; do ./$$x; done
 	@echo "Tests Complete"
 
+build_src:
+	@make build_lib -C ..
+
 build_tests: $(TEST_BINS)
+
 
 # For each test suite, .c -> .o
 $(TEST_OBJS): %.o: %.c

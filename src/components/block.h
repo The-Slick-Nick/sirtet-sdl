@@ -57,6 +57,10 @@ typedef struct {
 long transformBlockContents(long contents, int blockSize, Point transform);
 
 
+// count the number of active cells in a contents mask
+int getCellCount(long contents, int block_size);
+
+
 int BlockDb_transformBlock(BlockDb *self, int block_id, Point transform);
 int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate);
 bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit);

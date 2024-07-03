@@ -113,6 +113,20 @@ long rotateBlockContents180(long contents, int blockSize) {
     return transformBlockContents(contents, blockSize, (Point){-1, 0});
 }
 
+// Count the number of active cells in a contents mask
+int getCellCount(long contents, int block_size) {
+
+    int count = 0;
+    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
+        if ((contents & 1L) == 1) {
+            count++;
+        }
+
+        contents >>= 1;
+    }
+    return count;
+}
+
 
 // Transform a block in place, by the given transformation vector (point)
 void Block_transform(Block* self, Point transform) {
@@ -194,25 +208,144 @@ int BlockIds_incrementId(BlockIds* ids, int to_increment, int by) {
 }
 
 
+/* ============================================================================
+ * BlockDb (block refactor) section
+============================================================================ */
+
+// Provision and create a new block, returning its id
+int BlockDb_createBlock(
+    BlockDb *self, int size, long contents, Point position
+) {
+
+    int return_id = INVALID_BLOCK_ID;
+
+    if (contents == 0) {
+        return return_id;
+    }
+
+    for (int attempt = 1; attempt <= self->max_ids; attempt++) {
+
+        if (self->ids[self->head] > 0) {
+            self->head = (self->head + 1) % self->max_ids;
+            continue;
+        }
+
+        return_id = self->head;
+        self->ids[return_id] = getCellCount(contents, size);
+        self->sizes[return_id] = size;
+        self->contents[return_id] = contents;
+        self->positions[return_id] = position;
+    }
+
+    return return_id;
+}
+// Transform a block's contents in place
+int BlockDb_transformBlock(BlockDb *self, int block_id, Point transform) {
+
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
+
+    if (self->ids[block_id] <= 0) {
+        return -1;
+    }
+
+    self->contents[block_id] = transformBlockContents(self->contents[block_id], self->sizes[block_id], transform);
+    return 0;
+}
+
+// Translate a block's position in place
+int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate) {
+    Point new_pos = Point_translate(self->positions[block_id], translate);
+    self->positions[block_id] = new_pos;
+    return 0;
+}
+
+// Determine if a block's contents has a particular bit set
+bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit) {
+    return (self->contents[block_id] & (1L << content_bit)) == 1;
+}
+
+// Identify if a block id has live cells
+bool BlockDb_doesBlockExist(BlockDb *self, int block_id) {
+    return self->ids[block_id] > 0;
+}
 
 
-// void BlockDb_transformBlock(BlockDb *self, int block_id, Point transform);
-// void BlockDb_translateBlock(BlockDb *self, int block_id, Point translate);
-// bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit);
-//
-// // Provision and create a new block, returning its id
-// int BlockDb_createBlock(BlockDb *self, int size, long contents, Point position);
-//
-// // Getters & setters
-// int BlockDb_getBlockSize(BlockDb *self, int block_id);
-// int BlockDb_setBlockSize(BlockDb *self, int block_id, int size);  
-// // NOTE: Should this be allowable? Setting a block's size post-creation seems like a bad ides
-//
-// long BlockDb_getBlockContents(BlockDb *self, int block_id);
-// int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents);
-//
-// Point BlockDb_getBlockPosition(BlockDb *self, int block_id);
-// int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position);
-//
-// int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by);
-// int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by);
+/*** Property getters & setters ***/
+
+int BlockDb_getBlockSize(BlockDb *self, int block_id) {
+
+    return self->sizes[block_id];
+}
+
+int BlockDb_setBlockSize(BlockDb *self, int block_id, int size) {
+
+    self->sizes[block_id] = size;
+    return 0;
+}
+// NOTE: Should this be allowable? Setting a block's size post-creation seems like a bad ides
+
+
+long BlockDb_getBlockContents(BlockDb *self, int block_id) {
+    return self->contents[block_id];
+}
+
+int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents) {
+    self->contents[block_id] = contents;
+    return 0;
+}
+
+Point BlockDb_getBlockPosition(BlockDb *self, int block_id) {
+    return self->positions[block_id];
+}
+
+int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position) {
+    self->positions[block_id] = position;
+    return 0;
+}
+
+int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by) {
+
+    if (block_id <= INVALID_BLOCK_ID || by > self->ids[block_id]) {
+        return -1;
+    }
+
+    self->ids[block_id] -= by;
+    return 0;
+}
+
+
+int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by) {
+
+    if (block_id <= INVALID_BLOCK_ID || self->ids[block_id] == 0) {
+        return -1;
+    }
+
+    self->ids[block_id] += by;
+    return 0;
+}
+
+// Return the recorded cell count for a block
+// NOTE: Since this count can be manipulated otherwise, it will not
+// necessarily match the number of bits set in `contents` mask
+int BlockDb_getCellCount(BlockDb *self, int block_id) {
+
+    return self->ids[block_id];
+    return 0;
+}
+
+
+int BlockDb_removeBlock(BlockDb *self, int block_id) {
+
+    self->ids[block_id] = 0;
+    return 0;
+}
+
+
+
+
+
+
+
+

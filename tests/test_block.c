@@ -627,18 +627,12 @@ int main() {
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);
 
-    /**/
     ADD_CASE(testBlockCreation);
     ADD_CASE(testBlockCellManipulation);
     ADD_CASE(testTransformBlock);
     ADD_CASE(testTranslateBlock);
-
-    // ADD_CASE(testSetupNewBlock);
-    // ADD_CASE(testBlockIdsDecrementId);
-    // ADD_CASE(testBlockIdsIncrementId);
-    /**/
+    ADD_CASE(testGetCellCount);
 
     EWENIT_END;
-    // EWENIT_END_COMPACT;
     return 0;
 }
