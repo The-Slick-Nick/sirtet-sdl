@@ -533,7 +533,6 @@ void testTransformBlock() {
     retval = BlockDb_transformBlock(&db, block_id, (Point){-1, 0});
     ASSERT_EQUAL_INT(retval, 0);
     ASSERT_EQUAL_INT(BlockDb_getBlockContents(&db, block_id), 0b1010L);
-
 }
 
 void testTranslateBlock() {
@@ -593,10 +592,8 @@ void testTranslateBlock() {
     ASSERT_EQUAL_INT(new_pos.y , 1);
 }
 
-
-
 void testGetCellCount() {
-    
+
     INFO("Size 2");
     ASSERT_EQUAL_INT(getCellCount(0b1111L, 2), 4);
     ASSERT_EQUAL_INT(getCellCount(0b0000L, 2), 0);
@@ -612,6 +609,67 @@ void testGetCellCount() {
     ASSERT_EQUAL_INT(getCellCount(0b0000000000000000000000000L, 5), 0);
     ASSERT_EQUAL_INT(getCellCount(0b1111111111000000000000000L, 5), 10);
 }
+
+
+void testInvalidBlockDbOperations() {
+    // Attempt to perform BlockDb operations with a nonexisting/invalid
+    // block
+
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+    
+    int invalid = INVALID_BLOCK_ID;
+    int nonexist = 5;
+    
+    ASSERT_EQUAL_INT(BlockDb_transformBlock(&db, invalid, (Point){1, 0}), -1);
+    ASSERT_EQUAL_INT(BlockDb_transformBlock(&db, nonexist, (Point){1, 0}), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_translateBlock(&db, invalid, (Point){1, 0}), -1);
+    ASSERT_EQUAL_INT(BlockDb_translateBlock(&db, nonexist, (Point){1, 0}), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_isContentBitSet(&db, invalid, 1), -1);
+    ASSERT_EQUAL_INT(BlockDb_isContentBitSet(&db, nonexist, 1), -1);
+
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, invalid));
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, nonexist));
+
+    // Getters & setters
+    ASSERT_EQUAL_INT(BlockDb_setBlockSize(&db, invalid, 4), -1);
+    ASSERT_EQUAL_INT(BlockDb_setBlockSize(&db, nonexist, 4), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_setBlockContents(&db, invalid, 0b11111111), -1);
+    ASSERT_EQUAL_INT(BlockDb_setBlockContents(&db, nonexist, 0b11111111), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_setBlockPosition(&db, invalid, (Point){0, 0}), -1);
+    ASSERT_EQUAL_INT(BlockDb_setBlockPosition(&db, nonexist, (Point){0, 0}), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, invalid), -1);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, nonexist), -1);
+    
+    ASSERT_EQUAL_INT(BlockDb_decrementCellCount(&db, invalid, 1), -1);
+    ASSERT_EQUAL_INT(BlockDb_decrementCellCount(&db, nonexist, 1), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_incrementCellCount(&db, invalid, 1), -1);
+    ASSERT_EQUAL_INT(BlockDb_incrementCellCount(&db, invalid, 1), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_removeBlock(&db, invalid), -1);
+    ASSERT_EQUAL_INT(BlockDb_removeBlock(&db, nonexist), -1);
+}
+
 
 
 /*=================================================================
@@ -632,6 +690,8 @@ int main() {
     ADD_CASE(testTransformBlock);
     ADD_CASE(testTranslateBlock);
     ADD_CASE(testGetCellCount);
+
+    ADD_CASE(testInvalidBlockDbOperations);
 
     EWENIT_END;
     return 0;

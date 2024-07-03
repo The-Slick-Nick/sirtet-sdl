@@ -256,6 +256,11 @@ int BlockDb_transformBlock(BlockDb *self, int block_id, Point transform) {
 
 // Translate a block's position in place
 int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate) {
+
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
+
     Point new_pos = Point_translate(self->positions[block_id], translate);
     self->positions[block_id] = new_pos;
     return 0;
@@ -263,11 +268,17 @@ int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate) {
 
 // Determine if a block's contents has a particular bit set
 bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit) {
+    if (block_id <= INVALID_BLOCK_ID) {
+        return false;
+    }
     return (self->contents[block_id] & (1L << content_bit)) == 1;
 }
 
 // Identify if a block id has live cells
 bool BlockDb_doesBlockExist(BlockDb *self, int block_id) {
+    if (block_id <= INVALID_BLOCK_ID) {
+        return false;
+    }
     return self->ids[block_id] > 0;
 }
 
@@ -280,6 +291,9 @@ int BlockDb_getBlockSize(BlockDb *self, int block_id) {
 }
 
 int BlockDb_setBlockSize(BlockDb *self, int block_id, int size) {
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
 
     self->sizes[block_id] = size;
     return 0;
@@ -292,6 +306,9 @@ long BlockDb_getBlockContents(BlockDb *self, int block_id) {
 }
 
 int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents) {
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
     self->contents[block_id] = contents;
     return 0;
 }
@@ -301,6 +318,9 @@ Point BlockDb_getBlockPosition(BlockDb *self, int block_id) {
 }
 
 int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position) {
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
     self->positions[block_id] = position;
     return 0;
 }
@@ -331,21 +351,23 @@ int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by) {
 // necessarily match the number of bits set in `contents` mask
 int BlockDb_getCellCount(BlockDb *self, int block_id) {
 
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
+
     return self->ids[block_id];
     return 0;
 }
 
 
+// Remove the indicated block from existence
 int BlockDb_removeBlock(BlockDb *self, int block_id) {
+
+    if (block_id <= INVALID_BLOCK_ID) {
+        return -1;
+    }
 
     self->ids[block_id] = 0;
     return 0;
 }
-
-
-
-
-
-
-
 
