@@ -295,7 +295,7 @@ int main() {
     ADD_CASE(testGameGridCanBlockExist);
     ADD_CASE(testGameGridResolveRows);
     ADD_CASE(testGameGridCommitBlock);
-    EWENIT_END_VERBOSE;
     // EWENIT_END_COMPACT;
+    EWENIT_END;
     return 0;
 }

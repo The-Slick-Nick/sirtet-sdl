@@ -11,19 +11,20 @@
 */
 
 
-   /* represent in quadrants  in the complex plane
-    * (-i + 1) | ( i + 1)
-    * ---------------------
-    * (-i - 1) | ( i - 1)
-    *
-    * To rotate 90deg clockwise, multiply by i
-    * To rotate 90deg counterclockwise, multiply by -i
-    * To rotate 180deg, multiply by -1
-    *
-    *  Perform two rotations, first rotating 2x2 blocks 
-    *  around the overall center, than performing that
-    *  same rotation within each 2x2.
-    */
+/* For rotations, represent in quadrants  in the complex plane
+*
+* (-i + 1) | ( i + 1)
+* ---------------------
+* (-i - 1) | ( i - 1)
+*
+* To rotate 90deg clockwise, multiply by i
+* To rotate 90deg counterclockwise, multiply by -i
+* To rotate 180deg, multiply by -1
+*
+*  Perform two rotations, first rotating 2x2 blocks 
+*  around the overall center, than performing that
+*  same rotation within each 2x2.
+*/
 
 
 // Convert a bit number representing a position with a block's contents to its 
@@ -193,3 +194,25 @@ int BlockIds_incrementId(BlockIds* ids, int to_increment, int by) {
 }
 
 
+
+
+// void BlockDb_transformBlock(BlockDb *self, int block_id, Point transform);
+// void BlockDb_translateBlock(BlockDb *self, int block_id, Point translate);
+// bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit);
+//
+// // Provision and create a new block, returning its id
+// int BlockDb_createBlock(BlockDb *self, int size, long contents, Point position);
+//
+// // Getters & setters
+// int BlockDb_getBlockSize(BlockDb *self, int block_id);
+// int BlockDb_setBlockSize(BlockDb *self, int block_id, int size);  
+// // NOTE: Should this be allowable? Setting a block's size post-creation seems like a bad ides
+//
+// long BlockDb_getBlockContents(BlockDb *self, int block_id);
+// int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents);
+//
+// Point BlockDb_getBlockPosition(BlockDb *self, int block_id);
+// int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position);
+//
+// int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by);
+// int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by);

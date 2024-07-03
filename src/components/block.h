@@ -6,12 +6,9 @@
 #include "coordinates.h"
 
 
-
-
 // maximum number of blocks that may exist
 // TODO Perhaps this is something to handle in a global config instead?
 #define MAX_BLOCK_COUNT 128 
-
 #define INVALID_BLOCK_ID -1
 
 /* For a standard size 4 block
@@ -44,8 +41,49 @@ typedef struct {
     int head;      // Pointer to current highest id provisioned so far
 } BlockIds;
 
+
+// Struct to handle/store block information
+typedef struct {
+    int max_ids;
+    int head;
+
+    int *ids;
+    int *sizes;
+    long *contents;
+    Point *positions;
+} BlockDb;
+
 // transformation on the integer representation of a block's contents
 long transformBlockContents(long contents, int blockSize, Point transform);
+
+
+int BlockDb_transformBlock(BlockDb *self, int block_id, Point transform);
+int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate);
+bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit);
+
+// Provision and create a new block, returning its id
+int BlockDb_createBlock(BlockDb *self, int size, long contents, Point position);
+bool BlockDb_doesBlockExist(BlockDb *self, int block_id);
+
+// Getters & setters
+int BlockDb_getBlockSize(BlockDb *self, int block_id);
+int BlockDb_setBlockSize(BlockDb *self, int block_id, int size);  
+// NOTE: Should this be allowable? Setting a block's size post-creation seems like a bad ides
+
+long BlockDb_getBlockContents(BlockDb *self, int block_id);
+int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents);
+
+Point BlockDb_getBlockPosition(BlockDb *self, int block_id);
+int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position);
+
+
+// Block cell count management
+
+int BlockDb_getCellCount(BlockDb *self, int block_id);
+int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by);
+int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by);
+int BlockDb_removeBlock(BlockDb *self, int block_id);
+
 
 // in-place transformation of a block
 void Block_transform(Block* block, Point transform); 

@@ -1,0 +1,18 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-I../src",
+      "-I../src/drawing",
+      "-I../src/components",
+      "-I../src/states",
+      "-o",
+      "main.bin",
+      "main.c"
+    ],
+    "directory": "/home/nick/Documents/Projects/tetris-clone",
+    "file": "/home/nick/Documents/Projects/tetris-clone/main.c",
+    "output": "/home/nick/Documents/Projects/tetris-clone/main.bin"
+  }
+]
