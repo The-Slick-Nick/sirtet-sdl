@@ -595,6 +595,25 @@ void testTranslateBlock() {
 
 
 
+void testGetCellCount() {
+    
+    INFO("Size 2");
+    ASSERT_EQUAL_INT(getCellCount(0b1111L, 2), 4);
+    ASSERT_EQUAL_INT(getCellCount(0b0000L, 2), 0);
+    ASSERT_EQUAL_INT(getCellCount(0b0110L, 2), 2);
+
+    INFO("Size 4");
+    ASSERT_EQUAL_INT(getCellCount(0b1111111111111111L, 4), 16);
+    ASSERT_EQUAL_INT(getCellCount(0b0000000000000000L, 4), 0);
+    ASSERT_EQUAL_INT(getCellCount(0b1111111100000000L, 4), 8);
+
+    INFO("Size 5 (odd)");
+    ASSERT_EQUAL_INT(getCellCount(0b1111111111111111111111111L, 5), 25);
+    ASSERT_EQUAL_INT(getCellCount(0b0000000000000000000000000L, 5), 0);
+    ASSERT_EQUAL_INT(getCellCount(0b1111111111000000000000000L, 5), 10);
+}
+
+
 /*=================================================================
  * End refactor zone
 ==================================================================*/
