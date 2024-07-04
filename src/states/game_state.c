@@ -11,6 +11,8 @@
 #include <limits.h>
 #include <assert.h>
 
+#include "grid.h"
+#include "block.h"
 #include "game_state.h"
 #include "application_state.h"
 #include "component_drawing.h"
@@ -40,44 +42,65 @@ void* GameState_init() {
         0b1100011000000000
     };
 
-    long* block_presets = (long*)malloc(7 * sizeof(long));
-    memcpy(block_presets, preset_prototypes, 7 * sizeof(long));
-
-    int* all_ids = (int*)calloc(256, sizeof(long));
 
     // TODO replace the 720 with whatever the configured window height is
     const int grid_draw_height = (3 * 720) / 4;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
     const int grid_draw_width = GRID_WIDTH * cell_size;
 
-    bool *gamecode_states = (bool*)calloc((int)NUM_GAMECODES, sizeof(bool));
-    int *grid_contents = (int*)malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(int));
-
-    memset(grid_contents, -1, sizeof(int));
-
 
     /*** Initialize struct ***/
-
     GameState *retval = (GameState*)malloc(sizeof(GameState));
     *(retval) = (GameState){
+        // single values 
         .move_counter=0,
         .god_mode=false,
         .num_presets=7,
-        .block_presets=block_presets,
 
-        .game_grid = (GameGrid){.width=GRID_WIDTH, .height=GRID_HEIGHT, .contents=grid_contents},
-        .primary_block = (Block){.id=INVALID_BLOCK_ID, .size=4},
-        .block_ids = (BlockIds){.head=0, .max_ids=256, .id_array=all_ids},
+        .primary_block = 0,
+
+        // structs and arrays
+        .block_presets=(long*)malloc(7 * sizeof(long)),
+
+        .block_db = (BlockDb){
+            .head=0,
+            .max_ids=256,
+
+            .ids=(int*)calloc(256, sizeof(int)),
+            .sizes=(int*)malloc(256 * sizeof(int)),
+            .contents=(long*)malloc(256 * sizeof(long)),
+            .positions=(Point*)malloc(256 * sizeof(Point))
+        },
+
+        .game_grid = (GameGrid){
+            .width=GRID_WIDTH,
+            .height=GRID_HEIGHT,
+            .contents=(int*)malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(int))
+        },
+
+
         .keymaps=(GamecodeMap){.head=0},
-        .draw_window=(SDL_Rect){ .x=10, .y=10, .w=grid_draw_width, .h=grid_draw_height },
+        .draw_window=(SDL_Rect){
+            .x=10, .y=10,
+            .w=grid_draw_width,
+            .h=grid_draw_height
+        },
 
-        .gamecode_states=gamecode_states
+        .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool))
     };
 
 
-    int move_cd = TARGET_FPS / 15;
 
     /*** Post-creation processing ***/
+
+    // Initialize block presets
+    memcpy(retval->block_presets, preset_prototypes, 7 * sizeof(long));
+
+    // Initialize grid cells
+    GameGrid_clear(&retval->game_grid);
+
+    // Add some key mappings
+    int move_cd = TARGET_FPS / 15;
     Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
     Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
     Gamecode_addMap(&retval->keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
@@ -87,7 +110,9 @@ void* GameState_init() {
 
     GameGrid_clear(&retval->game_grid);
 
-
+    // TODO: Can (and should) remove void cast - this function's
+    // output is not directly tied to or called from StateRunner
+    // so therefore can return as GameState pointer
     return (void*)retval;
 }
 
@@ -100,9 +125,15 @@ int GameState_deconstruct(void* self) {
     GameState *game_state = (GameState*)self;
 
     free(game_state->block_presets);
-    free(game_state->block_ids.id_array);
-    free(game_state->gamecode_states);
+
+    free(game_state->block_db.ids);
+    free(game_state->block_db.sizes);
+    free(game_state->block_db.contents);
+    free(game_state->block_db.positions);
+
     free(game_state->game_grid.contents);
+
+    free(game_state->gamecode_states);
 
     free(self);
     return 0;
@@ -160,6 +191,12 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
 
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
+
+    if (game_state->primary_block != INVALID_BLOCK_ID) {
+
+        // drawBlock(SDL_Renderer *rend, SDL_Rect display_window, BlockDb *block_db, int block_id, GameGrid *ref_grid)
+        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, game_state->game_grid);
+    }
 
     if (game_state->primary_block.id != INVALID_BLOCK_ID) {
         drawBlock(rend, draw_window, &game_state->primary_block, &game_state->game_grid);

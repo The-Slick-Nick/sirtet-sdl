@@ -292,6 +292,9 @@ int BlockDb_getBlockSize(BlockDb *self, int block_id) {
     return self->sizes[block_id];
 }
 
+// Set the size parameter for an existing block
+// NOTE: Exercise caution using this, as it will trigger a reinterpretation
+// of the `contents` mask, which could have strange side effects
 int BlockDb_setBlockSize(BlockDb *self, int block_id, int size) {
     if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;

@@ -11,8 +11,9 @@
 #include <SDL2/SDL.h>
 #include <assert.h>
 
-#include "../components/block.h"
+// #include "../components/block.h"
 #include "coordinates.h"
+#include "block.h"
 #include "grid.h"
 #include "draw_config.h"
 
@@ -143,24 +144,31 @@ int drawGrid(
 }
 
 
-// Draw a given block to the appropriate renderer.
 int drawBlock(
     SDL_Renderer *rend,
     SDL_Rect display_window,
-    Block *block,
+    BlockDb *block_db,
+    int block_id,
     GameGrid *ref_grid
 ) {
 
-    int cell_width = display_window.w / ref_grid->width;
+    int cell_width = display_window.x / ref_grid->width;
     int cell_height = display_window.h / ref_grid->height;
 
-    SDL_Color base_color = getCellColorById(block->id);
-    for (int bit_num = 0; bit_num < (block->size * block->size); bit_num++) {
-        if (Block_isContentBitSet(block, bit_num)) {
+    // TODO: Change this (once block refactor complete)
+    SDL_Color base_color = getCellColorById(block_id);
 
-            Point block_coords = blockContentBitToGridCoords(bit_num, block->size, block->position);
+
+    int block_size = BlockDb_getBlockSize(block_db, block_id);
+
+
+    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
+
+        if (BlockDb_isContentBitSet(block_db, block_id, bit_num)) {
+
+            Point block_coords = blockContentBitToGridCoords(bit_num, block_size, BlockDb_getBlockPosition(block_db, block_id));
             drawBlockCell(
-                rend,
+                rend, 
                 (Point){
                      .x=display_window.x + (cell_width * block_coords.x),
                      .y=display_window.y + (cell_height * block_coords.y)
@@ -169,10 +177,41 @@ int drawBlock(
                 cell_height,
                 base_color
             );
-
         }
     }
-
     return 0;
 }
 
+// Draw a given block to the appropriate renderer.
+// int drawBlock(
+//     SDL_Renderer *rend,
+//     SDL_Rect display_window,
+//     Block *block,
+//     GameGrid *ref_grid
+// ) {
+//
+//     int cell_width = display_window.w / ref_grid->width;
+//     int cell_height = display_window.h / ref_grid->height;
+//
+//     SDL_Color base_color = getCellColorById(block->id);
+//     for (int bit_num = 0; bit_num < (block->size * block->size); bit_num++) {
+//         if (Block_isContentBitSet(block, bit_num)) {
+//
+//             Point block_coords = blockContentBitToGridCoords(bit_num, block->size, block->position);
+//             drawBlockCell(
+//                 rend,
+//                 (Point){
+//                      .x=display_window.x + (cell_width * block_coords.x),
+//                      .y=display_window.y + (cell_height * block_coords.y)
+//                 },
+//                 cell_width,
+//                 cell_height,
+//                 base_color
+//             );
+//
+//         }
+//     }
+//
+//     return 0;
+// }
+//

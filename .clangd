@@ -1,4 +1,8 @@
 CompileFlags:
-  Add:
-    - "-Isrc"
-    - "-Isrc/components"
+  Add: [
+    "-Wall",
+    "-Isrc",
+    "-Isrc/components",
+    "-Isrc/drawing",
+    "-Isrc/states"
+]

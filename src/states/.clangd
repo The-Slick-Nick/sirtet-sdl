@@ -1,0 +1,9 @@
+CompileFlags:
+  Add: [ 
+        "-Wall",
+        "-I../components/",
+        "-I..",
+        "-Isrc",
+        "-I../drawing"
+
+]

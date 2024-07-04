@@ -10,6 +10,7 @@
 
 #include <SDL2/SDL.h>
 #include "grid.h"
+#include "block.h"
 #include "coordinates.h"
 
 
@@ -29,9 +30,17 @@ int drawGrid(
 int drawBlock(
     SDL_Renderer *rend,
     SDL_Rect display_window,
-    Block *block,
+    BlockDb *block_db,
+    int block_id,
     GameGrid *ref_grid
 );
+
+// int drawBlock(
+//     SDL_Renderer *rend,
+//     SDL_Rect display_window,
+//     Block *block,
+//     GameGrid *ref_grid
+// );
 
 
 #endif

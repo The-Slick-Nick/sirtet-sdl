@@ -95,7 +95,8 @@ int GameGrid_commitBlock(GameGrid* self, Block* block) {
     return 0;
 }
 
-// TODO Convert below to return an integer status code
+// TODO: Convert below to return an integer status code
+//
 // Reset all of a grid's contents
 void GameGrid_clear(GameGrid* grid) {
     for (int idx = 0; idx < grid->width * grid->height; idx++) {

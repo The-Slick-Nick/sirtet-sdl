@@ -2,3 +2,4 @@ CompileFlags:
   Add:
     - "-Isrc"
     - "-Isrc/components"
+    - "-Isrc/states"
