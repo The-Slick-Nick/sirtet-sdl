@@ -102,7 +102,7 @@ void testGameGridCanBlockInfoExist() {
 }
 
 void testGameGridCanBlockExist() {
-    
+
     const int width = 4;
     const int height = 4;
     int grid_contents[16] = {-1};
@@ -128,6 +128,7 @@ void testGameGridCanBlockExist() {
     int block_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0});
 
 
+    bool result;
     // even sized grid
     // nw corner
     INFO("NW");

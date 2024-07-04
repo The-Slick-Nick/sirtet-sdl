@@ -28,10 +28,14 @@ Point blockContentBitToGridCoords(
 }
 
 // Identify if the given block is compatible with the current grid
-bool GameGrid_canBlockExist(GameGrid *self, Block *block) {
+bool GameGrid_canBlockExist(GameGrid *self, BlockDb *db, int block_id) {
+    // GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
 
     return GameGrid_canBlockInfoExist(
-        self, block->size, block->contents, block->position
+        self,
+        BlockDb_getBlockSize(db, block_id),
+        BlockDb_getBlockContents(db, block_id),
+        BlockDb_getBlockPosition(db, block_id)
     );
 }
 
@@ -72,26 +76,30 @@ bool GameGrid_canBlockInfoExist(
  * @param self  Pointer to the GameGrid struct in question
  * @param block Pointer to the Block struct to commit.
 */
-int GameGrid_commitBlock(GameGrid* self, Block* block) {
-
-    if ( !GameGrid_canBlockExist(self, block) ) {
+int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
+// int GameGrid_commitBlock(GameGrid* self, Block* block) {
+    
+    if ( !GameGrid_canBlockExist(self, db, block_id) ) {
         return -1;
     }
 
-    for (int bit_num = 0; bit_num < block->size * block->size; bit_num++) {
-        if ( 0 == (block->contents & (1L << bit_num)) ) {
+    int block_size = BlockDb_getBlockSize(db, block_id);
+    long block_contents = BlockDb_getBlockContents(db, block_id);
+    Point block_pos = BlockDb_getBlockPosition(db, block_id);
+
+    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
+        if ( 0 == (block_contents & (1L << bit_num)) ) {
             continue;
         }
 
-        Point grid_coords = blockContentBitToGridCoords(
-            bit_num, block->size, block->position);
+        Point grid_coords = blockContentBitToGridCoords(bit_num, block_size, block_pos);
 
         // 2d access
         int grid_idx = grid_coords.x + (self->width * grid_coords.y);
-        self->contents[grid_idx] = block->id;
+        self->contents[grid_idx] = block_id;
     }
 
-    block->contents = 0L;
+    BlockDb_setBlockContents(db, block_id, 0L);
     return 0;
 }
 
