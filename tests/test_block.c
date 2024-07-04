@@ -440,6 +440,37 @@ void testBlockCreation() {
 
 }
 
+
+void testCreateManyBlocks() {
+    // Create a lot of blocks and ensure all have a valid id
+
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+    int id;
+    for (int block_num = 0; block_num < 128; block_num++) {
+        id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0});
+        ASSERT_NOT_EQUAL_INT(id, INVALID_BLOCK_ID);
+    }
+
+    id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0});
+    ASSERT_EQUAL_INT(id, INVALID_BLOCK_ID);
+}
+
 void testBlockCellManipulation() {
     // Add and remove cells from blocks
 
@@ -685,6 +716,7 @@ int main() {
     ADD_CASE(testContentBitConversionProperties);
 
     ADD_CASE(testBlockCreation);
+    ADD_CASE(testCreateManyBlocks);
     ADD_CASE(testBlockCellManipulation);
     ADD_CASE(testTransformBlock);
     ADD_CASE(testTranslateBlock);
