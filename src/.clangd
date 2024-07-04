@@ -1,5 +1,8 @@
 CompileFlags:
   Add:
-    - "-Isrc"
-    - "-Isrc/components"
+    - "-I"
+    - "-I/components"
+    - "-I/states"
+    - "-I/drawing"
     - "-Isrc/states"
+

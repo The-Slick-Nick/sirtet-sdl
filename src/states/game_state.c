@@ -57,7 +57,7 @@ void* GameState_init() {
         .god_mode=false,
         .num_presets=7,
 
-        .primary_block = 0,
+        .primary_block = INVALID_BLOCK_ID,
 
         // structs and arrays
         .block_presets=(long*)malloc(7 * sizeof(long)),
@@ -193,13 +193,7 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
     SDL_RenderClear(rend);
 
     if (game_state->primary_block != INVALID_BLOCK_ID) {
-
-        // drawBlock(SDL_Renderer *rend, SDL_Rect display_window, BlockDb *block_db, int block_id, GameGrid *ref_grid)
-        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, game_state->game_grid);
-    }
-
-    if (game_state->primary_block.id != INVALID_BLOCK_ID) {
-        drawBlock(rend, draw_window, &game_state->primary_block, &game_state->game_grid);
+        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
     }
 
     drawGrid(rend, draw_window, &game_state->game_grid);
@@ -211,60 +205,84 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
 // Update portion of main game loop
 int updateGame(GameState *game_state) {
 
+    // relevant variable extraction
+    BlockDb *db = &game_state->block_db;
+    GameGrid *grid = &game_state->game_grid;
+    int *primary_block = &game_state->primary_block;
 
 
-    // new block time baby
-    if (game_state->primary_block.id == INVALID_BLOCK_ID) {
-        int new_id = BlockIds_provisionId(&game_state->block_ids, game_state->primary_block.size);
-        assert(new_id != INVALID_BLOCK_ID);
+    // generate a new block if current is invalid
 
+    if (game_state->primary_block == INVALID_BLOCK_ID) {
+
+        // determine new content
         long new_contents = game_state->block_presets[(rand() + game_state->num_presets) % game_state->num_presets];
-        game_state->primary_block = (Block){
-            .id=new_id,
-            .position=(Point){.x=5, .y=5},
-            .contents=new_contents,
-            .size=4
-        };
 
 
-        if (!GameGrid_canBlockExist(&game_state->game_grid, &game_state->primary_block)) {
+        *primary_block = BlockDb_createBlock(&game_state->block_db, 4, new_contents, (Point){5, 5});
+        // game_state->primary_block = BlockDb_createBlock(&game_state->block_db, 4, new_contents, (Point){5, 5});
+        assert(game_state->primary_block != INVALID_BLOCK_ID);
+
+        if (!GameGrid_canBlockExist(&game_state->game_grid, &game_state->block_db, game_state->primary_block)) {
             printf("Game over!\n");
             return -1;
         }
 
-        printf("New block id is %d\n", game_state->primary_block.id);
+        printf("New block id is %d\n", game_state->primary_block);
         printf("New contents representation is %ld\n", new_contents);
+
     }
+
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_ROTATE)) {
         printf("Rotation!\n");
-        if (GameGrid_canBlockInfoExist(
-                &game_state->game_grid, 4, rotateBlockContentsCw90(game_state->primary_block.contents, 4), game_state->primary_block.position
-        )) {
 
-            game_state->primary_block.contents = rotateBlockContentsCw90(game_state->primary_block.contents, 4);
+        // long rotated_contents = rotateBlockContentsCw90(long contents, int blockSize)
+        long rotated_contents = rotateBlockContentsCw90(
+            BlockDb_getBlockContents(&game_state->block_db, game_state->primary_block),
+            BlockDb_getBlockSize(&game_state->block_db, game_state->primary_block)
+        );
+
+        // if (GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
+        if (GameGrid_canBlockInfoExist(
+                &game_state->game_grid,
+                BlockDb_getBlockSize(&game_state->block_db, game_state->primary_block),
+                rotated_contents,
+                BlockDb_getBlockPosition(&game_state->block_db, game_state->primary_block)
+            )
+        ) {
+            BlockDb_setBlockContents(&game_state->block_db, game_state->primary_block, rotated_contents);
         }
     }
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_LEFT)) {
+
+        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, game_state->primary_block), (Point){-1, 0});
+
         if (
+            // GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
             GameGrid_canBlockInfoExist(
-                &game_state->game_grid, 4, game_state->primary_block.contents,
-                Point_translate(game_state->primary_block.position, (Point){.x=-1, .y=0})
+                grid,
+                BlockDb_getBlockSize(db, *primary_block),
+                BlockDb_getBlockContents(db, *primary_block),
+                new_pos
             )
         ) {
-            Block_translate(&game_state->primary_block, (Point){.x=-1, .y=0});
+            BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
     }
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_RIGHT)) {
+        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){1, 0});
         if (
             GameGrid_canBlockInfoExist(
-                &game_state->game_grid, 4, game_state->primary_block.contents,
-                Point_translate(game_state->primary_block.position, (Point){.x=1, .y=0})
+                grid,
+                BlockDb_getBlockSize(db, *primary_block),
+                BlockDb_getBlockContents(db, *primary_block),
+                new_pos
             )
         ) {
-            Block_translate(&game_state->primary_block, (Point){.x=1, .y=0});
+            BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
     }
 
@@ -277,26 +295,21 @@ int updateGame(GameState *game_state) {
         game_state->move_counter = 0;
 
         Point down_translation = (Point){.x=0, .y=1};
-        Point up_translation = (Point){.x=0, .y=-1};
-        Block projected_block;
 
-        projected_block = (Block){
-            .size=game_state->primary_block.size,
-            .contents=game_state->primary_block.contents,
-            .id=-1,
-            .position=(Point){.x=game_state->primary_block.position.x, .y=game_state->primary_block.position.y + 1}
-        };
+        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), down_translation);
 
-        if (GameGrid_canBlockExist(&game_state->game_grid, &projected_block)) {
-            Block_translate(&game_state->primary_block, down_translation);
+        // if (GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
+        if (GameGrid_canBlockInfoExist(grid, BlockDb_getBlockSize(db, *primary_block), BlockDb_getBlockContents(db, *primary_block), new_pos)) {
+
+            BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
         else {
-            GameGrid_commitBlock(&game_state->game_grid, &game_state->primary_block);
-            game_state->primary_block.id = INVALID_BLOCK_ID;
+            GameGrid_commitBlock(grid, db, *primary_block);
+            *primary_block = INVALID_BLOCK_ID;
         }
     }
 
-    GameGrid_resolveRows(&game_state->game_grid, &game_state->block_ids);
+    GameGrid_resolveRows(grid, db);
     return 0;
 }
 
