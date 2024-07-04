@@ -112,21 +112,21 @@ void GameGrid_clear(GameGrid* grid) {
     };
 }  
 
-// Reset a grid's contents, clearing encountered blocks
-void GameGrid_reset(GameGrid* grid, BlockIds* ids) {
+// Reset a grid's contents, clearing encountered blocks within BlockDb
+void GameGrid_reset(GameGrid* grid, BlockDb *db) {
 
     for (int grid_idx = 0; grid_idx < grid->width * grid->height; grid_idx++) {
         if (grid->contents[grid_idx] < 0) {
             continue;
         }
 
-        BlockIds_decrementId(ids, grid->contents[grid_idx], 1);
-        grid->contents[grid_idx] = -1;
+        BlockDb_decrementCellCount(db, grid->contents[grid_idx], 1);
+        grid->contents[grid_idx] = INVALID_BLOCK_ID;
     }
 }  
 
 // clears full rows of committed blocks
-int GameGrid_resolveRows(GameGrid* self, BlockIds* ids) {
+int GameGrid_resolveRows(GameGrid *self, BlockDb *db) {
 
     int read_ptr = self->height - 1;
     int num_full_rows = 0;
@@ -152,7 +152,7 @@ int GameGrid_resolveRows(GameGrid* self, BlockIds* ids) {
                 for (int x = 0; x < self->width; x++) {
                     int grid_idx = x + (self->width * read_ptr);
                     int grid_cell_val = self->contents[grid_idx];
-                    BlockIds_decrementId(ids, grid_cell_val, 1);
+                    BlockDb_decrementCellCount(db, grid_cell_val, 1);
                 }
                 read_ptr--;
                 num_full_rows++;

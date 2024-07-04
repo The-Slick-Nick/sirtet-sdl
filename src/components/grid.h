@@ -45,9 +45,9 @@ int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id);
 void GameGrid_clear(GameGrid* grid);  
 
 // Reset a grid's contents, clearing encountered blocks
-void GameGrid_reset(GameGrid* grid, BlockIds* ids);  
+void GameGrid_reset(GameGrid* grid, BlockDb *db);  
 
 // clears full rows of committed blocks
-int GameGrid_resolveRows(GameGrid* grid, BlockIds* ids);
+int GameGrid_resolveRows(GameGrid* grid, BlockDb *db);
 
 #endif
