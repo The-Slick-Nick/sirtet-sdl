@@ -142,7 +142,7 @@ void Block_translate(Block* self, Point translation) {
 bool Block_isContentBitSet(Block* self, int content_bit) {
 
 
-    return 0 != (self->contents & (1L << content_bit));
+    return 0L != (self->contents & (1L << content_bit));
 }
 
 
@@ -241,6 +241,8 @@ int BlockDb_createBlock(
 
     return return_id;
 }
+
+
 // Transform a block's contents in place
 int BlockDb_transformBlock(BlockDb *self, int block_id, Point transform) {
 
@@ -273,7 +275,7 @@ bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit) {
     if (!BlockDb_doesBlockExist(self, block_id)) {
         return false;
     }
-    return (self->contents[block_id] & (1L << content_bit)) == 1;
+    return (self->contents[block_id] & (1L << content_bit)) != 0L;
 }
 
 // Identify if a block id has live cells

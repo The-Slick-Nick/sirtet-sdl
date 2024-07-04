@@ -700,6 +700,47 @@ void testInvalidBlockDbOperations() {
     ASSERT_EQUAL_INT(BlockDb_removeBlock(&db, nonexist), -1);
 }
 
+void testContentBitCheck() {
+
+    long content_mask = (1L << 5) | (1L << 6) | (1L << 9) | (1L << 10) ;
+
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+                                       // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
+    int block_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0});
+    bool is_set;
+
+    ASSERT_NOT_EQUAL_INT(block_id, INVALID_BLOCK_ID);
+    for (int bit_num = 0; bit_num < 16; bit_num++) {
+
+        is_set = BlockDb_isContentBitSet(&db, block_id, bit_num);
+
+        if (bit_num == 5 || bit_num == 6 || bit_num == 9 || bit_num == 10) {
+            ASSERT_TRUE(is_set);
+        }
+        else {
+            ASSERT_FALSE(is_set);
+        }
+
+    }
+
+}
+
 
 
 /*=================================================================
@@ -723,7 +764,7 @@ int main() {
     ADD_CASE(testGetCellCount);
 
     ADD_CASE(testInvalidBlockDbOperations);
-
+    ADD_CASE(testContentBitCheck);
     EWENIT_END;
     return 0;
 }
