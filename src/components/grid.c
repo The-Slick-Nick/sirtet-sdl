@@ -29,7 +29,6 @@ Point blockContentBitToGridCoords(
 
 // Identify if the given block is compatible with the current grid
 bool GameGrid_canBlockExist(GameGrid *self, BlockDb *db, int block_id) {
-    // GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
 
     return GameGrid_canBlockInfoExist(
         self,
@@ -77,7 +76,6 @@ bool GameGrid_canBlockInfoExist(
  * @param block Pointer to the Block struct to commit.
 */
 int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
-// int GameGrid_commitBlock(GameGrid* self, Block* block) {
     
     if ( !GameGrid_canBlockExist(self, db, block_id) ) {
         return -1;

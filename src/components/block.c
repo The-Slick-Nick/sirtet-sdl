@@ -227,16 +227,16 @@ int BlockDb_createBlock(
 
     for (int attempt = 1; attempt <= self->max_ids; attempt++) {
 
-        if (self->ids[self->head] > 0) {
-            self->head = (self->head + 1) % self->max_ids;
-            continue;
+        if (self->ids[self->head] == 0) {
+            return_id = self->head;
+            self->ids[return_id] = getCellCount(contents, size);
+            self->sizes[return_id] = size;
+            self->contents[return_id] = contents;
+            self->positions[return_id] = position;
+            return return_id;
         }
 
-        return_id = self->head;
-        self->ids[return_id] = getCellCount(contents, size);
-        self->sizes[return_id] = size;
-        self->contents[return_id] = contents;
-        self->positions[return_id] = position;
+        self->head = (self->head + 1) % self->max_ids;
     }
 
     return return_id;

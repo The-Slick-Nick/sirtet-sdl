@@ -239,6 +239,8 @@ void testGameGridCommitBlock() {
     int block_ids[8];
     int block_sizes[8];
     Point block_positions[8];
+    memset(block_ids, 0, 8 * sizeof(int));
+
     BlockDb db = {
         .head=0,
         .max_ids=8,
@@ -251,6 +253,9 @@ void testGameGridCommitBlock() {
     int goodblock_id = BlockDb_createBlock(&db, 4, content_mask, (Point){2, 2});
     int badblock_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0});
     // bad because would need to commit to negative indices
+
+    INFO_FMT("goodblock_id is %d\n", goodblock_id);
+    INFO_FMT("badblock_id is %d\n", badblock_id);
 
     int good_result = GameGrid_commitBlock(&grid, &db, goodblock_id);
 
@@ -270,8 +275,6 @@ void testGameGridCommitBlock() {
     int bad_result = GameGrid_commitBlock(&grid, &db, badblock_id);
     ASSERT_EQUAL_INT(bad_result, -1);
     for (int grid_cell = 0; grid_cell < 16; grid_cell++) {
-        // Id should be negative (though exact number doesn't matter)
-
         ASSERT_EQUAL_INT(grid.contents[grid_cell], INVALID_BLOCK_ID);
     }
 
