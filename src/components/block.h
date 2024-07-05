@@ -17,32 +17,13 @@
 * [08] [09] [10] [11]
 * [12] [13] [14] [15]
 */
-typedef struct Block {
-    int id; // Uniquely identifying number of this block
-
-    Point position; // Coordinates representing the center point.
-                    // If blockSize is odd, this is the center of a square.
-                    // If blockSize is even, this is at a corner of four
-                    // squares at the center
-
-    long contents;  // Mask representing positions of individual block "cells"
-                    // within a grid using bits - supports up to 8-tiled blocks.
-
-    int size;       // Dimension of block-placement grid.
-                    // Does not necessarily indicate the number of squares
-                    // used for this block, but the maximum supported
-} Block;
-
-// Struct to manage & track how block ids are assigned
-// TODO Don't hard-code a macroed size, value, have the struct contain the array & a size
-typedef struct {
-    int max_ids;   // Maximum number of ids that can be provisioned
-    int *id_array; // Array counting number of cells per id (by index)
-    int head;      // Pointer to current highest id provisioned so far
-} BlockIds;
 
 
 // Struct to handle/store block information
+// Behaves as an ECS, where a caller/user
+// is given an integer block id that can be
+// used to query the BlockDb for information
+// about the block tied to that ID
 typedef struct {
     int max_ids;
     int head;
@@ -89,26 +70,6 @@ int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by);
 int BlockDb_removeBlock(BlockDb *self, int block_id);
 
 
-// in-place transformation of a block
-void Block_transform(Block* block, Point transform); 
-
-// in-place translation of a block
-void Block_translate(Block* self, Point translation);
-
-// identify if given content bit is set (shorthand for bit magic)
-bool Block_isContentBitSet(Block* self, int content_bit);
-
-long rotateBlockContentsCw90(long contents, int blockSize);
-long rotateBlockContentsCcw90(long contents, int blockSize);
-long rotateBlockContents180(long contents, int blockSize);
-
-
-int BlockIds_provisionId(BlockIds *self, int block_size);
-int BlockIds_removeId(BlockIds *ids, int to_remove);
-int BlockIds_decrementId(BlockIds* ids, int to_decrement, int by);
-int BlockIds_incrementId(BlockIds* ids, int to_decrement, int by);
-
-
 
 // Convert a bit number representing a position with a block's contents to its 
 // relative coordinates to the center
@@ -116,7 +77,14 @@ int BlockIds_incrementId(BlockIds* ids, int to_decrement, int by);
 // be (2, 2) (see diagram above)
 Point contentBitToPoint(int bitNum, int blockSize);
 
+// Convert an x,y coordinate to bit num in a bit mask representing
+// a block's contents based on a given block size
 int pointToContentBit(Point point, int blockSize); 
+
+long rotateBlockContentsCw90(long contents, int blockSize);
+long rotateBlockContentsCcw90(long contents, int blockSize);
+long rotateBlockContents180(long contents, int blockSize);
+
 
 #endif
 

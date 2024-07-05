@@ -127,92 +127,10 @@ int getCellCount(long contents, int block_size) {
     return count;
 }
 
+/* ===========================================================================
+ * BlockDb methods
+ =========================================================================== */
 
-// Transform a block in place, by the given transformation vector (point)
-void Block_transform(Block* self, Point transform) {
-    self->contents = transformBlockContents(self->contents, self->size, transform);
-}
-
-// translate a block in place, by the given translation vector (point)
-void Block_translate(Block* self, Point translation) {
-    self->position = Point_translate(self->position, translation);
-}
-
-// identify if given content bit is set (shorthand for bit magic)
-bool Block_isContentBitSet(Block* self, int content_bit) {
-
-
-    return 0L != (self->contents & (1L << content_bit));
-}
-
-
-
-// Get and assign a block_id from the given BlockIds struct for a block
-// of provided size, returning the new id. If no ids are available,
-// returns -1
-int BlockIds_provisionId(BlockIds *self, int block_size) {
-
-    const int block_count = self->max_ids;
-
-    for (int self_checked = 0; self_checked < block_count; self_checked++) {
- 
-        if (0 == *(self->id_array + self->head)) {
-            *(self->id_array + self->head) = *(self->id_array + self->head) + block_size;
-            return self->head;
-        }
-
-        self->head = (self->head + 1) % block_count;
-    }
-    return -1;
-}
-
-
-// remove the contents at a particular id
-int BlockIds_removeId(BlockIds *self, int to_remove) {
-    (self->id_array)[to_remove] = 0;
-    return 0;
-}
-
-
-// Decrease the number of instances of an id recorded
-int BlockIds_decrementId(BlockIds* ids, int to_decrement, int by) {
-
-    if (to_decrement < 0 || to_decrement >= ids->max_ids) {
-        return -1;
-    }
-
-    if (ids->id_array[to_decrement] < by) {
-        return -1;
-    }
-
-    if (by < 0) {
-        return -1;
-    }
-
-    ids->id_array[to_decrement] = ids->id_array[to_decrement] - by;
-    return 0;
-}
-
-// Increase the number of instances of an id recorded
-int BlockIds_incrementId(BlockIds* ids, int to_increment, int by) {
-
-
-    if (to_increment < 0 || to_increment >= ids->max_ids) {
-        return -1;
-    }
-
-    if (by < 0) {
-        return -1;
-    }
-
-    ids->id_array[to_increment] = ids->id_array[to_increment] + by;
-    return 0;
-}
-
-
-/* ============================================================================
- * BlockDb (block refactor) section
-============================================================================ */
 
 // Provision and create a new block, returning its id
 int BlockDb_createBlock(
@@ -334,6 +252,13 @@ int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position) {
     return 0;
 }
 
+
+/**
+ * @brief Decrease the number of content cells represented by a block id
+ * @param self - Pointer to BlockDb to decrement within
+ * @param by - Integer quantity to decrement by. Cannot be greater than the
+ *             current number of cells represented by this block.
+ */
 int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by) {
 
     if (!BlockDb_doesBlockExist(self, block_id) || by > self->ids[block_id]) {
@@ -345,6 +270,11 @@ int BlockDb_decrementCellCount(BlockDb *self, int block_id, int by) {
 }
 
 
+/**
+ * @brief Increment the number of content cells represented by a block
+ * @param self - Pointer to BlockDb struct
+ * @param by - Integer quantity to increment by
+ */
 int BlockDb_incrementCellCount(BlockDb *self, int block_id, int by) {
 
     if (!BlockDb_doesBlockExist(self, block_id) || self->ids[block_id] == 0) {

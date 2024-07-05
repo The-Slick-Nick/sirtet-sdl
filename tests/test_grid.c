@@ -21,30 +21,52 @@ void testGameGridClear() {
 
 void testGameGridReset() {
 
+    int block_ids[8];
+    int block_sizes[8];
+    long block_contents[8];
+    Point block_positions[8];
+
+    BlockDb db = {
+        .head=0, .max_ids=8,
+        .ids=block_ids,
+        .sizes=block_sizes,
+        .contents=block_contents,
+        .positions=block_positions
+    };
+
+    // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
+    int id1 = BlockDb_createBlock(&db, 1, 0b1, (Point){0, 0});
+    int id2 = BlockDb_createBlock(&db, 1, 0b1, (Point){0, 0});
+
+
     const int width = 2;
     const int height = 4;
     int grid_contents[8] = {
         -1, -1,
-         0,  0,
+         id1, -1,
         -1, -1,
-         2,  2
+        -1, id2 
     };
 
-    int id_arr[4] = {2, 0, 2, 0};
     GameGrid grid = {.width=width, .height=height, .contents=grid_contents};
-    BlockIds ids = {.max_ids=4, .id_array=id_arr, .head=0};
 
-    GameGrid_reset(&grid, &ids);
+    GameGrid_reset(&grid, &db);
 
     for (int i = 0; i < 8; i++) {
         INFO_FMT("Index %d", i);
         ASSERT_EQUAL_INT((grid.contents)[i], -1);
     }
 
-    for (int i = 0; i < 4; i++) {
-        INFO_FMT("Index %d", i);
-        ASSERT_EQUAL_INT((ids.id_array)[i], 0);
-    }
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id1), 0);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id2), 0);
+
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, id1));
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, id2));
+
+    // for (int i = 0; i < 4; i++) {
+    //     INFO_FMT("Index %d", i);
+    //     ASSERT_EQUAL_INT((ids.id_array)[i], 0);
+    // }
 }
 
 
@@ -171,32 +193,53 @@ void testGameGridCanBlockExist() {
 }
 
 void testGameGridResolveRows() {
+    /* modify - change this part to use BlockDb */
+    int block_ids[8];
+    int block_sizes[8];
+    long block_contents[8];
+    Point block_positions[8];
+
+    memset(block_ids, 0, 8 * sizeof(int));
+
+    BlockDb db = {
+        .head=0, .max_ids=8,
+        .ids=block_ids,
+        .sizes=block_sizes,
+        .contents=block_contents,
+        .positions=block_positions
+    };
+
+    // int id_arr[2] = {4, 4};
+    // BlockIds ids = {.max_ids=2, .id_array=id_arr, .head=0};
+    int id1 = BlockDb_createBlock(&db, 2, 0b1111, (Point){0, 0});
+    int id2 = BlockDb_createBlock(&db, 2, 0b1111, (Point){0, 0});
 
     const int width = 4;
     const int height = 4;
+    // manually insert - perhaps this would work better using 
+    // GameGrid_commitBlock?
     int grid_contents[16] = {
-        -1, -1, -1, -1, 
-         0,  0, -1, -1,
-         0,  0,  1,  1,
-        -1, -1,  1,  1
+        -1,     -1,   -1,   -1, 
+         id1,  id1,   -1,   -1,
+         id1,  id1,  id2,  id2,
+        -1,     -1,  id2,  id2
     };
     GameGrid grid = {.width=width, .height=height, .contents=grid_contents};
 
-    int id_arr[2] = {4, 4};
-    BlockIds ids = {.max_ids=2, .id_array=id_arr, .head=0};
-
-    int result = GameGrid_resolveRows(&grid, &ids);
+    int result = GameGrid_resolveRows(&grid, &db);
 
     ASSERT_EQUAL_INT(result, 1); // one row resolved
-    ASSERT_EQUAL_INT(ids.id_array[0], 2);
-    ASSERT_EQUAL_INT(ids.id_array[1], 2);
+
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id1), 2);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id2), 2);
+
 
     /* final should be as below.
      * Notice the floating 0s - this is an official tetris quirk
         -1, -1, -1, -1, 
         -1, -1, -1, -1, 
-         0,  0, -1, -1, 
-        -1, -1,  1,  1
+         id1,  id1, -1, -1, 
+        -1, -1,  id2, id2 
     */
 
     for (int grid_y = 0; grid_y < height; grid_y++) {
@@ -206,10 +249,10 @@ void testGameGridResolveRows() {
             int grid_cell_val = grid.contents[grid_idx];
 
             if (8 == grid_idx || 9 == grid_idx) {
-                ASSERT_EQUAL_INT(grid_cell_val, 0);
+                ASSERT_EQUAL_INT(grid_cell_val, id1);
             }
             else if (14 == grid_idx || 15 == grid_idx) {
-                ASSERT_EQUAL_INT(grid_cell_val, 1);
+                ASSERT_EQUAL_INT(grid_cell_val, id2);
             }
             else {
                 ASSERT_GREATER_THAN_INT(0, grid_cell_val);  // invalid id
