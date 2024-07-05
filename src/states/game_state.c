@@ -109,6 +109,7 @@ GameState* GameState_init(int state_num) {
     Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
     Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
     Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
+    Gamecode_addMap(&retval->keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
 
     GameGrid_clear(&retval->game_grid);
 
@@ -160,13 +161,10 @@ int runGameFrame(StateRunner *state_runner, void *application_data, void *state_
     SDL_Rect draw_window = game_state->draw_window;
 
 
-
-
     /***** PROCESS INPUTS *****/
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
 
     // TODO: Remove this part later, as it is currly only a very quick test
-
     if (hardware_states[SDL_SCANCODE_TAB] == 1) {
 
         GameState *new_state = GameState_init(game_state->state_num + 1);
@@ -185,6 +183,11 @@ int runGameFrame(StateRunner *state_runner, void *application_data, void *state_
 
     if ( updateGame(game_state) != 0 ) {
         return -1;
+    }
+
+
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
+        StateRunner_addState(state_runner, game_state, runGameFramePaused, NULL);
     }
 
     /***** DRAW *****/
@@ -308,3 +311,57 @@ int updateGame(GameState *game_state) {
     GameGrid_resolveRows(grid, db);
     return 0;
 }
+
+
+/**
+ * @brief Runs a paused version of the game, not updating anything but drawing
+ */
+int runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data) {
+
+    /* Recasting */
+    GameState *game_state = (GameState*)state_data;
+    ApplicationState *application_state = (ApplicationState*)application_data;
+
+    /* Relevant variable extraction */
+    SDL_Renderer *rend = application_state->rend;
+    int *hardware_states = application_state->hardware_states;
+    GamecodeMap *keymaps = &game_state->keymaps;
+
+    SDL_Rect draw_window = game_state->draw_window;
+
+
+    /***** PROCESS INPUTS *****/
+    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
+
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
+        return -1;
+    }
+
+    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
+    SDL_RenderClear(rend);
+
+    if (game_state->primary_block != INVALID_BLOCK_ID) {
+        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
+    }
+
+    drawGrid(rend, draw_window, &game_state->game_grid);
+
+    SDL_RenderPresent(rend);
+
+
+    return 0;
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+

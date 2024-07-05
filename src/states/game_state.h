@@ -63,4 +63,7 @@ int updateGame(GameState *game_state);
 int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data);
 
 
+int runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data);
+
+
 #endif
