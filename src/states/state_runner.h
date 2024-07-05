@@ -39,15 +39,20 @@
 #ifndef STATE_RUNNER_H
 #define STATE_RUNNER_H
 
-
-#include "application_state.h"
+#include <stdlib.h>
 
 
 // typedefs for convenience
 typedef struct StateRunner StateRunner;
 
+// Parameter is a pointer to a struct of state data, cast as void
 typedef int (*deconstruct_func_t)(void*);
-typedef int (*state_func_t)(StateRunner*, ApplicationState*, void*);
+
+// Params:
+// StateRunner* - Pointer to StateRunner struct (to potentially propagate new state)
+// void* - Pointer to application-level state data
+// void* - Pointer to local-level state data
+typedef int (*state_func_t)(StateRunner*, void*, void*);
 
 
 // Struct to store information about states
@@ -98,7 +103,66 @@ int StateRunner_addState(StateRunner *self, void* state_data, state_func_t state
 // Migrate buffer states to the "live" state array
 int StateRunner_commitBuffer(StateRunner *self);
 
-// Run an iteration of the "top" state
-int StateRunner_runState(StateRunner *self, ApplicationState* app_state);
+/**
+ * @brief - Run an interation of the "top" state
+ * @param self - StateRunner pointer to run from
+ * @param app_state - Pointer to some struct holding global,
+ *                    application-level state. Passed as a void
+ *                    pointer to make this API generic, to be
+ *                    recast to whatever ApplicationState
+ *                    struct implementation is used
+ */
+int StateRunner_runState(StateRunner *self, void* app_state);
+
+
+
+/** 
+ * @brief - Initialize StateRunner with heap allocated memory
+ * @param - buffer_size - Integer number of states that can be maintained
+ *                        at one time
+ * @param - q_size - Integer number of in-transit states that can
+ *                   be queued for addition within a single frame
+*/
+StateRunner* StateRunner_init(int buffer_size, int q_size);
+
+
+/**
+ * @brief - Decommission a StateRunner initialized with StateRunner_init,
+ *          freeing all of its allocated memory
+ * @param self - Pointer to StateRunner struct to free
+ */
+int StateRunner_deconstruct(StateRunner *self);
+
+
+/**
+ * @brief - Calculate the number of bytes needed to fully
+ *          build a StateRunner struct successfully
+ * @param buffer_size - Size of current-state storage
+ * @param q_size - Size of added-state storage
+ */
+size_t StateRunner_requiredBytes(int buffer_size, int q_size);
+
+
+/**
+ * @brief - Initialize a StateRunner pointer from a single allocated
+ *          memory block. Experimental, use with caution.
+ * @param buffer_size - Integer number of states to maintain at once
+ * @param q_size - Integer number of in-transit states that can be maintained
+ */
+StateRunner* StateRunner_initSingleBlock(int buffer_size, int q_size);
+
+
+int StateRunner_deconstructSingleBlock(StateRunner *self);
+
+
+/**
+ * @brief - Construct a StateRunner struct from a pre-allocated, provided
+ *          chunk of memory
+ * @param memory - char pointer to the starting address of a chunk of memory
+ *                 to use. Must be at least of size StateRunner_requiredBytes(...)
+ * @param buffer_size - Integer number of states to maintain at once
+ * @param q_size - Integer number of in-transit states that can be maintained
+ */
+int StateRunner_build(char *memory, int buffer_size, int q_size);
 
 #endif

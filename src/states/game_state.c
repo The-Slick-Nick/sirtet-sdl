@@ -146,11 +146,12 @@ int GameState_deconstruct(void* self) {
 
 // Run a single frame of game
 // "state-runner function" for GameState
-int runGameFrame(StateRunner *state_runner, ApplicationState *application_state, void *state_data) {
+int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data) {
 
 
     /* Recasting */
     GameState *game_state = (GameState*)state_data;
+    ApplicationState *application_state = (ApplicationState*)application_data;
 
     /* Relevant variable extraction */
     SDL_Renderer *rend = application_state->rend;

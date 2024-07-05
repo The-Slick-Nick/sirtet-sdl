@@ -17,7 +17,6 @@
 #include "inputs.h"
 
 #include "state_runner.h"
-#include "application_state.h"
 
 
 #define GRID_WIDTH 10
@@ -38,7 +37,7 @@ typedef struct {
 
 
 
-    int primary_block;
+    int primary_block;          // id of main block dropping from top to bottom
     SDL_Rect draw_window;       // Region/coordinates of screen to draw grid on
 
     long *block_presets;        // Array of block content masks to draw from
@@ -58,6 +57,6 @@ int GameState_deconstruct(void* self);
 int updateGame(GameState *game_state);
 
 // Run one frame of game
-int runGameFrame(StateRunner *state_runner, ApplicationState *application_state, void *state_data);
+int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data);
 
 #endif

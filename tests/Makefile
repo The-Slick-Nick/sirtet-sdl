@@ -3,7 +3,7 @@
 # NOTE: I could just search for any ".c" file in this directory,
 # but something about this feels nicer
 
-TEST_SUITES = test_block.c test_coordinates.c test_grid.c
+TEST_SUITES = test_block.c test_coordinates.c test_grid.c test_states.c
 ############################################################
 
 
