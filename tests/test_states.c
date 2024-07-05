@@ -136,6 +136,21 @@ void testRunMultiple() {
 
 }
 
+void testNullDeconstructor() {
+
+    StateRunner *runner = StateRunner_init(32, 16);
+    TestStruct test_struct = {0, 0};
+
+    StateRunner_addState(runner, (void*)&test_struct, runFuncTerminates, NULL);
+    StateRunner_commitBuffer(runner);
+
+    StateRunner_runState(runner, NULL);
+    ASSERT_EQUAL_INT(test_struct.run_count, 1);
+    ASSERT_EQUAL_INT(test_struct.deconstruct_count, 0);
+
+    StateRunner_deconstruct(runner);
+
+}
 
 
 
@@ -146,6 +161,7 @@ int main() {
     ADD_CASE(testRunState);
     ADD_CASE(testRunWithDecon);
     ADD_CASE(testRunMultiple);
+    ADD_CASE(testNullDeconstructor);
 
     EWENIT_END;
 

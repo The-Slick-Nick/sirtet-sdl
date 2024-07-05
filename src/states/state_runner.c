@@ -82,7 +82,10 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
 
     // TODO: Macro to makes codes more understandable (something something semantic)
     if (retval == -1) {
-        top_decon(top_state);
+
+        if (top_decon != NULL) {
+            top_decon(top_state);
+        }
         self->head--;
     }
 
