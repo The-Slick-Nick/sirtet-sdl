@@ -62,8 +62,8 @@ void testStateRunnerInit() {
     StateRunner_deconstructSingleBlock(runner2);
 
 
-    assert(1000 >= StateRunner_requiredBytes(32, 16));
-    char mem_buffer[1000];
+    assert(10000 >= StateRunner_requiredBytes(32, 16));
+    char mem_buffer[10000];
     StateRunner_build(mem_buffer, 32, 16);
 
     StateRunner *runner3 = (StateRunner*)(mem_buffer);

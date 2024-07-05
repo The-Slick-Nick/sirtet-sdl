@@ -109,7 +109,7 @@ size_t StateRunner_requiredBytes(int buffer_size, int q_size) {
     bytes_needed += sizeof(StateRunner);
 
     // states & states buffer memory
-    bytes_needed += buffer_size + q_size;
+    bytes_needed += sizeof(void*) * (buffer_size + q_size);
 
     // runners & runners buffer memory
     bytes_needed += sizeof(state_func_t) * (buffer_size + q_size);
@@ -136,8 +136,6 @@ StateRunner* StateRunner_init(int buffer_size, int q_size) {
     size_t sf_sz = sizeof(state_func_t);
     size_t decon_sz = sizeof(deconstruct_func_t);
 
-    size_t ptr_size = sizeof(&q_size);
-
     StateRunner *runner = (StateRunner*)malloc(sizeof(StateRunner));
 
     *runner = (StateRunner){
@@ -149,8 +147,8 @@ StateRunner* StateRunner_init(int buffer_size, int q_size) {
         .buffer_tail = 0,
         .buffer_size = q_size,
 
-        .states = malloc(buffer_size * ptr_size),
-        .states_buffer = malloc(q_size * ptr_size),
+        .states = malloc(buffer_size * sizeof(void*)),
+        .states_buffer = malloc(q_size * sizeof(void*)),
 
         .runners = (state_func_t*)malloc(buffer_size * sf_sz),
         .runners_buffer = (state_func_t*)malloc(q_size * sf_sz),
@@ -190,8 +188,6 @@ StateRunner* StateRunner_initSingleBlock(int buffer_size, int q_size) {
  */
 int StateRunner_build(char *memory, int buffer_size, int q_size) {
 
-    size_t ptr_size = sizeof(memory);
-
     *(StateRunner*)(memory) = (StateRunner){
 
         .head = -1,
@@ -206,10 +202,10 @@ int StateRunner_build(char *memory, int buffer_size, int q_size) {
     int offset = sizeof(StateRunner);
 
     runner->states = (void*)(memory + offset);
-    offset += buffer_size * ptr_size;
+    offset += buffer_size * sizeof(void*);
 
     runner->states_buffer = (void*)(memory + offset);
-    offset += q_size * ptr_size;
+    offset += q_size * sizeof(void*);
 
     runner->runners = (state_func_t*)(memory + offset);
     offset += buffer_size * sizeof(state_func_t);
