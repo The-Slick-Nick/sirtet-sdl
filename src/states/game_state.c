@@ -141,70 +141,8 @@ int GameState_deconstruct(void* self) {
 
 
 /*=============================================================================
- State handling
+ * Logical components 
 =============================================================================*/
-
-// Run a single frame of game
-// "state-runner function" for GameState
-int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data) {
-
-
-    /* Recasting */
-    GameState *game_state = (GameState*)state_data;
-    ApplicationState *application_state = (ApplicationState*)application_data;
-
-    /* Relevant variable extraction */
-    SDL_Renderer *rend = application_state->rend;
-    int *hardware_states = application_state->hardware_states;
-    GamecodeMap *keymaps = &game_state->keymaps;
-
-    SDL_Rect draw_window = game_state->draw_window;
-
-
-    /***** PROCESS INPUTS *****/
-    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
-
-    // TODO: Remove this part later, as it is currly only a very quick test
-    if (hardware_states[SDL_SCANCODE_TAB] == 1) {
-
-        GameState *new_state = GameState_init(game_state->state_num + 1);
-        StateRunner_addState(state_runner, new_state, runGameFrame, GameState_deconstruct);
-    }
-
-    /***** UPDATE *****/
-    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
-        printf("Quitting...\n");
-        return -1;
-    }
-
-    if (hardware_states[SDL_SCANCODE_G] == 1) {
-        game_state->god_mode = (game_state->god_mode == false);
-    }
-
-    if ( updateGame(game_state) != 0 ) {
-        return -1;
-    }
-
-
-    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
-        StateRunner_addState(state_runner, game_state, runGameFramePaused, NULL);
-    }
-
-    /***** DRAW *****/
-
-    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
-    SDL_RenderClear(rend);
-
-    if (game_state->primary_block != INVALID_BLOCK_ID) {
-        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
-    }
-
-    drawGrid(rend, draw_window, &game_state->game_grid);
-
-    SDL_RenderPresent(rend);
-
-    return 0;
-}
 
 // Update portion of main game loop
 int updateGame(GameState *game_state) {
@@ -313,10 +251,77 @@ int updateGame(GameState *game_state) {
 }
 
 
+
+
+/*=============================================================================
+ State runners
+=============================================================================*/
+
+// Run a single frame of game
+// "state-runner function" for GameState
+StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, void *state_data) {
+
+
+    /* Recasting */
+    GameState *game_state = (GameState*)state_data;
+    ApplicationState *application_state = (ApplicationState*)application_data;
+
+    /* Relevant variable extraction */
+    SDL_Renderer *rend = application_state->rend;
+    int *hardware_states = application_state->hardware_states;
+    GamecodeMap *keymaps = &game_state->keymaps;
+
+    SDL_Rect draw_window = game_state->draw_window;
+
+
+    /***** PROCESS INPUTS *****/
+    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
+
+    // TODO: Remove this part later, as it is currly only a very quick test
+    if (hardware_states[SDL_SCANCODE_TAB] == 1) {
+
+        GameState *new_state = GameState_init(game_state->state_num + 1);
+        StateRunner_addState(state_runner, new_state, runGameFrame, GameState_deconstruct);
+    }
+
+    /***** UPDATE *****/
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
+        printf("Quitting...\n");
+        return STATEFUNC_QUIT;
+    }
+
+    if (hardware_states[SDL_SCANCODE_G] == 1) {
+        game_state->god_mode = (game_state->god_mode == false);
+    }
+
+    if ( updateGame(game_state) != 0 ) {
+        return STATEFUNC_ERROR;
+    }
+
+
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
+        StateRunner_addState(state_runner, game_state, runGameFramePaused, NULL);
+    }
+
+    /***** DRAW *****/
+
+    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
+    SDL_RenderClear(rend);
+
+    if (game_state->primary_block != INVALID_BLOCK_ID) {
+        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
+    }
+
+    drawGrid(rend, draw_window, &game_state->game_grid);
+
+    SDL_RenderPresent(rend);
+
+    return STATEFUNC_CONTINUE;
+}
 /**
  * @brief Runs a paused version of the game, not updating anything but drawing
  */
-int runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data) {
+StateFuncStatus runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data) {
 
     /* Recasting */
     GameState *game_state = (GameState*)state_data;
@@ -334,7 +339,7 @@ int runGameFramePaused(StateRunner *state_runner, void *application_data, void *
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
-        return -1;
+        return STATEFUNC_QUIT;
     }
 
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
@@ -348,18 +353,8 @@ int runGameFramePaused(StateRunner *state_runner, void *application_data, void *
 
     SDL_RenderPresent(rend);
 
-
-    return 0;
-
-
+    return STATEFUNC_CONTINUE;
 }
-
-
-
-
-
-
-
 
 
 

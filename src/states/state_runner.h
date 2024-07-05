@@ -42,6 +42,13 @@
 #include <stdlib.h>
 
 
+typedef enum {
+    STATEFUNC_CONTINUE = 0,
+    STATEFUNC_QUIT = -1,
+    STATEFUNC_ERROR = -2
+} StateFuncStatus;
+
+
 // typedefs for convenience
 typedef struct StateRunner StateRunner;
 
@@ -52,7 +59,7 @@ typedef int (*deconstruct_func_t)(void*);
 // StateRunner* - Pointer to StateRunner struct (to potentially propagate new state)
 // void* - Pointer to application-level state data
 // void* - Pointer to local-level state data
-typedef int (*state_func_t)(StateRunner*, void*, void*);
+typedef StateFuncStatus (*state_func_t)(StateRunner*, void*, void*);
 
 
 // Struct to store information about states

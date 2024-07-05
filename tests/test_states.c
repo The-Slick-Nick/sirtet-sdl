@@ -15,21 +15,21 @@ typedef struct {
 } TestStruct;
 
 
-int runFunc(StateRunner *runner, void *app_data, void *state_data) {
+StateFuncStatus runFunc(StateRunner *runner, void *app_data, void *state_data) {
 
     TestStruct *local_state = (TestStruct*)state_data;
     local_state->run_count++;
 
-    return 0;
+    return STATEFUNC_CONTINUE;
 
 }
 
-int runFuncTerminates(StateRunner *runner, void *app_data, void *state_data) {
+StateFuncStatus runFuncTerminates(StateRunner *runner, void *app_data, void *state_data) {
 
     TestStruct *local_state = (TestStruct*)state_data;
     local_state->run_count++;
 
-    return -1;
+    return STATEFUNC_QUIT;
 }
 
 
