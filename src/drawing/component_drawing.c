@@ -136,7 +136,6 @@ int drawGrid(
             );
          }
     }
-
     return 0;
 }
 

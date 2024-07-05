@@ -32,7 +32,7 @@ ApplicationState* ApplicationState_init() {
     *(retval) = (ApplicationState){
         .rend=rend,
         .wind=wind,
-        .hardware_states=hardware_states,
+        .hardware_states=hardware_states
     };
     return retval;
 }

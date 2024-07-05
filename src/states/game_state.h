@@ -27,6 +27,7 @@
 // This struct wraps information that the game cares about
 typedef struct {
 
+    int state_num;
     bool *gamecode_states;      // boolean flag array for gamecodes (indexed by Gamecode)
 
     bool god_mode;              // boolean flag for ultra-easy mode
@@ -48,15 +49,18 @@ typedef struct {
 
 
 // Initialize and return a pointer for GameState
-void* GameState_init();
+GameState* GameState_init(int state_num);
 
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);
+
+void GameState_debugPrint(GameState *self);
 
 // Run the update portion of the main game loop
 int updateGame(GameState *game_state);
 
 // Run one frame of game
 int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data);
+
 
 #endif

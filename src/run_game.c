@@ -30,7 +30,7 @@ int run() {
     }
 
     printf("Initializing game state...\n");
-    GameState *game_state = GameState_init();
+    GameState *game_state = GameState_init(1);
     if (game_state == NULL) {
         return -1;
     }
@@ -40,36 +40,10 @@ int run() {
 
     StateRunner *state_runner = StateRunner_init(32, 16);
 
-    // void *states[32];
-    // void *states_buffer[16];
-    //
-    // state_func_t runners[32];
-    // state_func_t runners_buffer[16];
-    //
-    // deconstruct_func_t deconstructors[32];
-    // deconstruct_func_t deconstructors_buffer[16];
-    //
-    // StateRunner state_runner = {
-    //     .head = -1,
-    //     .size = 32,
-    //
-    //     .buffer_head = 0,
-    //     .buffer_tail = 0,
-    //     .buffer_size = 16,
-    //
-    //     .states = states,
-    //     .deconstructors = deconstructors,
-    //     .runners = runners,
-    //
-    //     .states_buffer = states_buffer,
-    //     .deconstructors_buffer = deconstructors_buffer,
-    //     .runners_buffer = runners_buffer
-    // };
-
     // Begin with game state
     printf("Pushing game state...\n");
     StateRunner_addState(state_runner, (void*)game_state, runGameFrame, GameState_deconstruct);
-    StateRunner_commitBuffer(state_runner);
+    assert(StateRunner_commitBuffer(state_runner) == 0);
 
 
     clock_t frame_start;
@@ -91,9 +65,8 @@ int run() {
         processHardwareInputs(global_state->hardware_states);
 
         /* Run game-state specific code */
-        StateRunner_runState(state_runner, global_state);
-        StateRunner_commitBuffer(state_runner);
-
+        assert(StateRunner_runState(state_runner, (void*)global_state) == 0);
+        assert(StateRunner_commitBuffer(state_runner) == 0);
 
         elapsed = (double)(clock() - frame_start) / CLOCKS_PER_SEC;
         raw_fps = (1.0 / elapsed);

@@ -2,6 +2,7 @@
 *
 * Logic implementation for operating on a StateRunner struct
 */
+#include <stdio.h>
 
 #include "state_runner.h"
 
@@ -31,9 +32,13 @@ int StateRunner_addState(
 int StateRunner_commitBuffer(StateRunner *self) {
 
     while (self->buffer_tail != self->buffer_head) {
-    
+
         // Move write head
         self->head++;
+
+        if (self->head >= self->size) {
+            return -1;
+        }
 
         // Copy from read head to write head
         self->states[self->head] = self->states_buffer[self->buffer_tail];
@@ -42,6 +47,11 @@ int StateRunner_commitBuffer(StateRunner *self) {
 
         // Move read head
         self->buffer_tail = (self->buffer_tail + 1) % self->buffer_size;
+
+        if (self->buffer_tail >= self->buffer_size) {
+            return -1;
+        }
+
     }
     return 0;
 
@@ -60,7 +70,7 @@ int StateRunner_commitBuffer(StateRunner *self) {
  */
 int StateRunner_runState(StateRunner *self, void* app_state) {
 
-    if (self->head < 0) {
+    if (self->head < 0 || self->head >= self->size) {
         return -1;
     }
 
@@ -126,6 +136,8 @@ StateRunner* StateRunner_init(int buffer_size, int q_size) {
     size_t sf_sz = sizeof(state_func_t);
     size_t decon_sz = sizeof(deconstruct_func_t);
 
+    size_t ptr_size = sizeof(&q_size);
+
     StateRunner *runner = (StateRunner*)malloc(sizeof(StateRunner));
 
     *runner = (StateRunner){
@@ -135,10 +147,10 @@ StateRunner* StateRunner_init(int buffer_size, int q_size) {
 
         .buffer_head = 0,
         .buffer_tail = 0,
-        .buffer_size = 16,
+        .buffer_size = q_size,
 
-        .states = malloc(buffer_size),
-        .states_buffer = malloc(q_size),
+        .states = malloc(buffer_size * ptr_size),
+        .states_buffer = malloc(q_size * ptr_size),
 
         .runners = (state_func_t*)malloc(buffer_size * sf_sz),
         .runners_buffer = (state_func_t*)malloc(q_size * sf_sz),
@@ -178,6 +190,8 @@ StateRunner* StateRunner_initSingleBlock(int buffer_size, int q_size) {
  */
 int StateRunner_build(char *memory, int buffer_size, int q_size) {
 
+    size_t ptr_size = sizeof(memory);
+
     *(StateRunner*)(memory) = (StateRunner){
 
         .head = -1,
@@ -192,10 +206,10 @@ int StateRunner_build(char *memory, int buffer_size, int q_size) {
     int offset = sizeof(StateRunner);
 
     runner->states = (void*)(memory + offset);
-    offset += buffer_size;
+    offset += buffer_size * ptr_size;
 
     runner->states_buffer = (void*)(memory + offset);
-    offset += q_size;
+    offset += q_size * ptr_size;
 
     runner->runners = (state_func_t*)(memory + offset);
     offset += buffer_size * sizeof(state_func_t);

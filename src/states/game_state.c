@@ -7,6 +7,7 @@
 * for a state-runner to run
 */
 
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
 #include <limits.h>
 #include <assert.h>
@@ -28,7 +29,7 @@
 //
 // Assumes that GameState_deconstruct() is eventually called
 // on the return value
-void* GameState_init() {
+GameState* GameState_init(int state_num) {
 
     /*** Supplementary data ***/
 
@@ -56,6 +57,7 @@ void* GameState_init() {
         .move_counter=0,
         .god_mode=false,
         .num_presets=7,
+        .state_num=state_num,
 
         .primary_block = INVALID_BLOCK_ID,
 
@@ -110,10 +112,7 @@ void* GameState_init() {
 
     GameGrid_clear(&retval->game_grid);
 
-    // TODO: Can (and should) remove void cast - this function's
-    // output is not directly tied to or called from StateRunner
-    // so therefore can return as GameState pointer
-    return (void*)retval;
+    return retval;
 }
 
 // Go through process of deconstructing a GameState struct,
@@ -140,6 +139,86 @@ int GameState_deconstruct(void* self) {
 }
 
 
+void GameState_debugPrint(GameState *self) {
+
+
+    //
+    // bool *gamecode_states;      // boolean flag array for gamecodes (indexed by Gamecode)
+    //
+    // bool god_mode;              // boolean flag for ultra-easy mode
+    // int move_counter;           // number of frames since last movement
+    //
+    // BlockDb block_db;
+    // GameGrid game_grid;         // Grid struct storing committed blocks
+    //
+    // int primary_block;          // id of main block dropping from top to bottom
+    // SDL_Rect draw_window;       // Region/coordinates of screen to draw grid on
+    //
+    // long *block_presets;        // Array of block content masks to draw from
+    // int num_presets;            // Number of block content presets in *block_presets
+    // GamecodeMap keymaps;        // collection of hardware -> gamecode key mappings
+
+    char *line = "-----------------------------\n";
+    
+
+    printf("bool *gamecode_states\n");
+    for (int i = 0; i < NUM_GAMECODES; i++) {
+        printf("idx %d == %d\n", i, self->gamecode_states[i]);
+    }
+
+    printf("%s", line);
+
+    printf("bool god_mode = %d\n", self->god_mode);
+    printf("%s", line);
+
+    printf("int move_counter = %d\n", self->move_counter);
+    printf("%s", line);
+
+    printf("BlockDb block_db\n");
+    BlockDb *db = &self->block_db;
+    printf("address = %ld\n", &self->block_db);
+    printf("max_ids = %d\n", db->max_ids);
+    printf("head = %d\n", db->head);
+
+    // int *ids;
+    // int *sizes;
+    // long *contents;
+    // Point *positions;
+
+
+    printf("%s", line);
+    GameGrid *grid = &self->game_grid;
+    printf("GameGrid\n");
+
+    printf("address = %ld\n", grid);
+    printf("width = %d\n", grid->width);
+    printf("height = %d\n", grid->height);
+    for (int i = 0; i < grid->width * grid->height; i++) {
+        if (grid->contents[i] != -1)
+            printf("idx %d = %d\n", i, grid->contents[i]);
+    }
+
+    printf("%s", line);
+    printf("primary block = %d\n", self->primary_block);
+
+    printf("%s", line);
+    printf("draw window = (%d, %d, %d, %d)\n", self->draw_window.x, self->draw_window.y, self->draw_window.w, self->draw_window.h);
+
+
+    printf("%s", line);
+    printf("presets\n");
+    for (int i = 0; i < self->num_presets; i++) {
+        printf("preset %d = %ld\n", i, self->block_presets[i]);
+    }
+
+
+    // int *contents;
+
+
+}
+
+
+
 /*=============================================================================
  State handling
 =============================================================================*/
@@ -161,6 +240,8 @@ int runGameFrame(StateRunner *state_runner, void *application_data, void *state_
     SDL_Rect draw_window = game_state->draw_window;
 
 
+
+
     /***** PROCESS INPUTS *****/
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
 
@@ -168,11 +249,9 @@ int runGameFrame(StateRunner *state_runner, void *application_data, void *state_
 
     if (hardware_states[SDL_SCANCODE_TAB] == 1) {
 
-        GameState *new_state = GameState_init();
-
-        StateRunner_addState(state_runner, (void*)new_state, runGameFrame, GameState_deconstruct);
+        GameState *new_state = GameState_init(game_state->state_num + 1);
+        StateRunner_addState(state_runner, new_state, runGameFrame, GameState_deconstruct);
     }
-
 
     /***** UPDATE *****/
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
@@ -200,6 +279,7 @@ int runGameFrame(StateRunner *state_runner, void *application_data, void *state_
     drawGrid(rend, draw_window, &game_state->game_grid);
 
     SDL_RenderPresent(rend);
+
     return 0;
 }
 
@@ -308,5 +388,3 @@ int updateGame(GameState *game_state) {
     GameGrid_resolveRows(grid, db);
     return 0;
 }
-
-
