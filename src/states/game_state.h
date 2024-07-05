@@ -33,14 +33,12 @@ typedef struct {
     bool god_mode;              // boolean flag for ultra-easy mode
     int move_counter;           // number of frames since last movement
 
-    // BlockIds block_ids;         // Block ID repository to handle creating unique ids for blocks
     BlockDb block_db;
     GameGrid game_grid;         // Grid struct storing committed blocks
 
 
 
     int primary_block;
-    // Block primary_block;        // Main block being dropped
     SDL_Rect draw_window;       // Region/coordinates of screen to draw grid on
 
     long *block_presets;        // Array of block content masks to draw from
@@ -60,7 +58,6 @@ int GameState_deconstruct(void* self);
 int updateGame(GameState *game_state);
 
 // Run one frame of game
-// int runGameFrame(void *global_state_data, void *state_data);
 int runGameFrame(StateRunner *state_runner, ApplicationState *application_state, void *state_data);
 
 #endif

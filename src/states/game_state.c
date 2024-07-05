@@ -205,25 +205,26 @@ int runGameFrame(StateRunner *state_runner, ApplicationState *application_state,
 // Update portion of main game loop
 int updateGame(GameState *game_state) {
 
-    // relevant variable extraction
+    // relevant variable extraction - for shorthand (
+    // and to save my fingers from typing a lot)
     BlockDb *db = &game_state->block_db;
     GameGrid *grid = &game_state->game_grid;
     int *primary_block = &game_state->primary_block;
+    long *block_presets = game_state->block_presets;
 
 
     // generate a new block if current is invalid
 
-    if (game_state->primary_block == INVALID_BLOCK_ID) {
+    if (*primary_block == INVALID_BLOCK_ID) {
 
         // determine new content
-        long new_contents = game_state->block_presets[(rand() + game_state->num_presets) % game_state->num_presets];
+        int rand_idx = (rand() + game_state->num_presets) % game_state->num_presets;
+        long new_contents = block_presets[rand_idx];
 
+        *primary_block = BlockDb_createBlock(db, 4, new_contents, (Point){5, 5});
+        assert(*primary_block != INVALID_BLOCK_ID);
 
-        *primary_block = BlockDb_createBlock(&game_state->block_db, 4, new_contents, (Point){5, 5});
-        // game_state->primary_block = BlockDb_createBlock(&game_state->block_db, 4, new_contents, (Point){5, 5});
-        assert(game_state->primary_block != INVALID_BLOCK_ID);
-
-        if (!GameGrid_canBlockExist(&game_state->game_grid, &game_state->block_db, game_state->primary_block)) {
+        if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
             printf("Game over!\n");
             return -1;
         }
@@ -237,30 +238,27 @@ int updateGame(GameState *game_state) {
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_ROTATE)) {
         printf("Rotation!\n");
 
-        // long rotated_contents = rotateBlockContentsCw90(long contents, int blockSize)
         long rotated_contents = rotateBlockContentsCw90(
-            BlockDb_getBlockContents(&game_state->block_db, game_state->primary_block),
-            BlockDb_getBlockSize(&game_state->block_db, game_state->primary_block)
+            BlockDb_getBlockContents(db, *primary_block),
+            BlockDb_getBlockSize(db, *primary_block)
         );
 
-        // if (GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
         if (GameGrid_canBlockInfoExist(
-                &game_state->game_grid,
-                BlockDb_getBlockSize(&game_state->block_db, game_state->primary_block),
+                grid,
+                BlockDb_getBlockSize(db, *primary_block),
                 rotated_contents,
-                BlockDb_getBlockPosition(&game_state->block_db, game_state->primary_block)
+                BlockDb_getBlockPosition(db, *primary_block)
             )
         ) {
-            BlockDb_setBlockContents(&game_state->block_db, game_state->primary_block, rotated_contents);
+            BlockDb_setBlockContents(db, *primary_block, rotated_contents);
         }
     }
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_LEFT)) {
 
-        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, game_state->primary_block), (Point){-1, 0});
+        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){-1, 0});
 
         if (
-            // GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
             GameGrid_canBlockInfoExist(
                 grid,
                 BlockDb_getBlockSize(db, *primary_block),
@@ -294,11 +292,8 @@ int updateGame(GameState *game_state) {
     if ( Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN) || game_state->move_counter > TARGET_FPS / 2) {
         game_state->move_counter = 0;
 
-        Point down_translation = (Point){.x=0, .y=1};
+        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){0, 1});
 
-        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), down_translation);
-
-        // if (GameGrid_canBlockInfoExist(GameGrid *self, int block_size, long block_contents, Point block_position)
         if (GameGrid_canBlockInfoExist(grid, BlockDb_getBlockSize(db, *primary_block), BlockDb_getBlockContents(db, *primary_block), new_pos)) {
 
             BlockDb_setBlockPosition(db, *primary_block, new_pos);
