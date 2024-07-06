@@ -67,7 +67,7 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         // single values 
         .move_counter=0,
         .score=0,
-        .level=1,
+        .level=0,
         .god_mode=false,
         .num_presets=7,
 
@@ -267,6 +267,11 @@ int updateGame(GameState *game_state) {
         }
     }
 
+    int to_inc = GameGrid_assessScore(grid, game_state->level);
+    if (to_inc > 0) {
+        printf("Gained %d score\n", to_inc);
+    }
+    game_state->score += to_inc;
     GameGrid_resolveRows(grid, db);
     return 0;
 }

@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <assert.h>
 #include <stdio.h>
 #include "grid.h"
 #include "block.h"
@@ -204,6 +205,8 @@ int GameGrid_assessScore(GameGrid *self, int level) {
      * "soft dropped" (sped up), though that will not be tabulated here.
      *
     **************************************************************************/
+
+    assert(level >= 0);
 
     int num_rows = 0;
     int idx;
