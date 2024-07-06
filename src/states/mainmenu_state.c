@@ -96,16 +96,12 @@ StateFuncStatus MainMenuState_run(
     if (Menucode_pressed(menu_codes, MENUCODE_SELECT)) {
         GameState *new_state = GameState_init(rend, app_state->menu_font, 1);
         StateRunner_addState(
-            state_runner, new_state, runGameFrame, GameState_deconstruct
+            state_runner, new_state, GameState_run, GameState_deconstruct
         );
     }
 
-
-
     /***** Draw *****/
-    // SDL_RenderCopy(SDL_Renderer *renderer, SDL_Texture *texture, const SDL_Rect *srcrect, const SDL_Rect *dstrect)
     SDL_Rect loc = {.x=10, .y=10};
-    // SDL_QueryTexture(SDL_Texture *texture, Uint32 *format, int *access, int *w, int *h)
     SDL_QueryTexture(menu_state->title_banner, NULL, NULL, &loc.w, &loc.h);
     SDL_RenderCopy(rend, menu_state->title_banner, NULL, &loc);
 

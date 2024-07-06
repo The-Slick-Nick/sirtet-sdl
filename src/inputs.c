@@ -71,6 +71,28 @@ int processHardwareInputs(int* hardware_states) {
  * Game Inputs
 ******************************************************************************/
 
+GamecodeMap* GamecodeMap_init(int max_maps) {
+
+    if (max_maps < 0) {
+        return NULL;
+    }
+
+    GamecodeMap *retval = (GamecodeMap*)malloc(sizeof(GamecodeMap));
+
+    retval->head = 0;
+    retval->size = max_maps;
+    retval->mappings = (GamecodeMapItem*)malloc(max_maps * sizeof(GamecodeMapItem));
+
+    return retval;
+
+}
+int GamecodeMap_deconstruct(GamecodeMap *self) {
+
+    free(self->mappings);
+    free(self);
+    return 0;
+}
+
 /**
  * @brief Populate gamecode flag array based on key mappings and customized state of hardware
  * @param gamecode_states   Pointer to flag array for gamecode states. Should be of size (int)NUM_GAMECODE_STATES

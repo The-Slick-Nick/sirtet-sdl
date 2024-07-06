@@ -43,7 +43,7 @@ typedef struct {
 
     long *block_presets;        // Array of block content masks to draw from
     int num_presets;            // Number of block content presets in *block_presets
-    GamecodeMap keymaps;        // collection of hardware -> gamecode key mappings
+    GamecodeMap *keymaps;       // collection of hardware -> gamecode key mappings
 
 
     /* State/structs for alternate versions of state */
@@ -64,10 +64,8 @@ void GameState_debugPrint(GameState *self);
 int updateGame(GameState *game_state);
 
 // Run one frame of game
-int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data);
-
-
-int runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data);
+StateFuncStatus GameState_run(StateRunner *state_runner, void *application_data, void *state_data);
+StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data);
 
 
 #endif

@@ -52,8 +52,14 @@ typedef struct {
 // Struct wrapping a list of gamecode mappings
 typedef struct {
     int head;
-    GamecodeMapItem mappings[MAX_GAMECODE_MAPS];
+    int size;
+    GamecodeMapItem *mappings;
 } GamecodeMap;
+
+
+GamecodeMap* GamecodeMap_init(int max_maps);
+int GamecodeMap_deconstruct(GamecodeMap *self);
+
 
 int Gamecode_addMap(
     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,

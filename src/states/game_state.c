@@ -91,8 +91,7 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
             .contents=(int*)malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(int))
         },
 
-
-        .keymaps=(GamecodeMap){.head=0},
+        .keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS),
         .draw_window=(SDL_Rect){
             .x=10, .y=10,
             .w=grid_draw_width,
@@ -115,16 +114,17 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
 
     // Add some key mappings
     int move_cd = TARGET_FPS / 15;
-    Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
-    Gamecode_addMap(&retval->keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+    Gamecode_addMap(retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    Gamecode_addMap(retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+    Gamecode_addMap(retval->keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
+    Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
+    Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
+    Gamecode_addMap(retval->keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
 
     GameGrid_clear(&retval->game_grid);
 
+    printf("Returning game state...\n");
     return retval;
 }
 
@@ -146,6 +146,9 @@ int GameState_deconstruct(void* self) {
     free(game_state->game_grid.contents);
 
     free(game_state->gamecode_states);
+
+
+    GamecodeMap_deconstruct(game_state->keymaps);
 
     SDL_DestroyTexture(game_state->pause_texture);
 
@@ -274,8 +277,10 @@ int updateGame(GameState *game_state) {
 
 // Run a single frame of game
 // "state-runner function" for GameState
-StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, void *state_data) {
 
+StateFuncStatus GameState_run(
+    StateRunner *state_runner, void *application_data, void *state_data
+) {
 
     /* Recasting */
     GameState *game_state = (GameState*)state_data;
@@ -284,7 +289,7 @@ StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, 
     /* Relevant variable extraction */
     SDL_Renderer *rend = application_state->rend;
     int *hardware_states = application_state->hardware_states;
-    GamecodeMap *keymaps = &game_state->keymaps;
+    GamecodeMap *keymaps = game_state->keymaps;
 
     SDL_Rect draw_window = game_state->draw_window;
 
@@ -296,7 +301,7 @@ StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, 
     if (hardware_states[SDL_SCANCODE_TAB] == 1) {
 
         GameState *new_state = GameState_init(application_state->rend, application_state->menu_font, game_state->state_num + 1);
-        StateRunner_addState(state_runner, new_state, runGameFrame, GameState_deconstruct);
+        StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
     }
 
     /***** UPDATE *****/
@@ -315,7 +320,7 @@ StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, 
 
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
-        StateRunner_addState(state_runner, game_state, runGameFramePaused, NULL);
+        StateRunner_addState(state_runner, game_state, GameState_runPaused, NULL);
     }
 
     /***** DRAW *****/
@@ -336,7 +341,7 @@ StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, 
 /**
  * @brief Runs a paused version of the game, not updating anything but drawing
  */
-StateFuncStatus runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data) {
+StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data) {
 
     /* Recasting */
     GameState *game_state = (GameState*)state_data;
@@ -345,7 +350,7 @@ StateFuncStatus runGameFramePaused(StateRunner *state_runner, void *application_
     /* Relevant variable extraction */
     SDL_Renderer *rend = application_state->rend;
     int *hardware_states = application_state->hardware_states;
-    GamecodeMap *keymaps = &game_state->keymaps;
+    GamecodeMap *keymaps = game_state->keymaps;
 
     SDL_Rect draw_window = game_state->draw_window;
 
