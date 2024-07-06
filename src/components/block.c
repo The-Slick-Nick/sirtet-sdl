@@ -37,6 +37,41 @@
 */
 
 
+/******************************************************************************
+ * Struct initialization, deconstruction
+******************************************************************************/
+BlockDb* BlockDb_init(int size) {
+
+    BlockDb *retval = (BlockDb*)malloc(sizeof(BlockDb));
+
+    *retval = (BlockDb){
+        .max_ids=size,
+        .head=0,
+        .ids=(int*)calloc(size, sizeof(int)),
+        .sizes=(int*)malloc(size * sizeof(int)),
+        .contents=(long*)malloc(size * sizeof(long)),
+        .positions=(Point*)malloc(size * sizeof(Point)),
+        .colors=(SDL_Color*)malloc(size * sizeof(SDL_Color))
+    };
+    return retval;
+}
+
+int BlockDb_deconstruct(BlockDb *self) {
+
+    free(self->ids);
+    free(self->sizes);
+    free(self->contents);
+    free(self->positions);
+    free(self->colors);
+    free(self);
+    return 0;
+}
+
+
+
+/******************************************************************************
+******************************************************************************/
+
 // Convert a bit number representing a position with a block's contents to its 
 // relative coordinates to the center
 Point contentBitToPoint(int bitNum, int blockSize) {

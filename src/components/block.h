@@ -21,6 +21,10 @@
 */
 
 
+/******************************************************************************
+ * Struct definition, initialization, deconstruction
+******************************************************************************/
+
 // Struct to handle/store block information
 // Behaves as an ECS, where a caller/user
 // is given an integer block id that can be
@@ -37,6 +41,12 @@ typedef struct {
     SDL_Color *colors;
 } BlockDb;
 
+BlockDb* BlockDb_init(int size);
+int BlockDb_deconstruct(BlockDb *self);
+
+/******************************************************************************
+******************************************************************************/
+
 // transformation on the integer representation of a block's contents
 long transformBlockContents(long contents, int blockSize, Point transform);
 
@@ -51,8 +61,7 @@ bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit);
 
 // Provision and create a new block, returning its id
 int BlockDb_createBlock(
-    BlockDb *self, int size, long contents, Point position, SDL_Color color
-);
+    BlockDb *self, int size, long contents, Point position, SDL_Color color);
 bool BlockDb_doesBlockExist(BlockDb *self, int block_id);
 
 // Getters & setters

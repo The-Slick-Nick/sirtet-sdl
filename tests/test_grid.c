@@ -23,24 +23,11 @@ void testGameGridClear() {
 
 void testGameGridReset() {
 
-    int block_ids[8];
-    int block_sizes[8];
-    long block_contents[8];
-    Point block_positions[8];
-    SDL_Color block_colors[8];
-
-    BlockDb db = {
-        .head=0, .max_ids=8,
-        .ids=block_ids,
-        .sizes=block_sizes,
-        .contents=block_contents,
-        .positions=block_positions,
-        .colors=block_colors
-    };
+    BlockDb *db = BlockDb_init(8);
 
     // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
-    int id1 = BlockDb_createBlock(&db, 1, 0b1, (Point){0, 0}, (SDL_Color){});
-    int id2 = BlockDb_createBlock(&db, 1, 0b1, (Point){0, 0}, (SDL_Color){});
+    int id1 = BlockDb_createBlock(db, 1, 0b1, (Point){0, 0}, (SDL_Color){});
+    int id2 = BlockDb_createBlock(db, 1, 0b1, (Point){0, 0}, (SDL_Color){});
 
 
     const int width = 2;
@@ -54,18 +41,20 @@ void testGameGridReset() {
 
     GameGrid grid = {.width=width, .height=height, .contents=grid_contents};
 
-    GameGrid_reset(&grid, &db);
+    GameGrid_reset(&grid, db);
 
     for (int i = 0; i < 8; i++) {
         INFO_FMT("Index %d", i);
         ASSERT_EQUAL_INT((grid.contents)[i], -1);
     }
 
-    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id1), 0);
-    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id2), 0);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(db, id1), 0);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(db, id2), 0);
 
-    ASSERT_FALSE(BlockDb_doesBlockExist(&db, id1));
-    ASSERT_FALSE(BlockDb_doesBlockExist(&db, id2));
+    ASSERT_FALSE(BlockDb_doesBlockExist(db, id1));
+    ASSERT_FALSE(BlockDb_doesBlockExist(db, id2));
+
+    BlockDb_deconstruct(db);
 }
 
 
@@ -130,27 +119,12 @@ void testGameGridCanBlockExist() {
     GameGrid grid = {.width=width, .height=height, .contents=grid_contents};
     GameGrid_clear(&grid);
 
-    int block_ids[8];
-    memset(block_ids, 0, 8 * sizeof(int));
-    int block_sizes[8];
-    long block_contents[8];
-    Point block_positions[8];
-    SDL_Color block_colors[8];
-
-    BlockDb db = {
-        .head=0,
-        .max_ids=8,
-        .ids=block_ids,
-        .sizes=block_sizes,
-        .contents=block_contents,
-        .positions=block_positions,
-        .colors=block_colors
-    };
+    BlockDb *db = BlockDb_init(8);
 
     long content_mask = ( 1L << 5 | 1L << 6 | 1L << 9 | 1L << 10 );
 
     int block_id = BlockDb_createBlock(
-        &db, 4, content_mask, (Point){0, 0}, (SDL_Color){0, 0, 0, 0}
+        db, 4, content_mask, (Point){0, 0}, (SDL_Color){0, 0, 0, 0}
     );
 
     ASSERT_GREATER_THAN_INT(block_id, INVALID_BLOCK_ID);
@@ -159,69 +133,56 @@ void testGameGridCanBlockExist() {
     // even sized grid
     // nw corner
     INFO("NW");
-    BlockDb_setBlockPosition(&db, block_id, (Point){0, 0});
-    result = GameGrid_canBlockExist(&grid, &db, block_id);
+    BlockDb_setBlockPosition(db, block_id, (Point){0, 0});
+    result = GameGrid_canBlockExist(&grid, db, block_id);
     ASSERT_FALSE(result);
 
     // ne corner
     INFO("NE");
-    BlockDb_setBlockPosition(&db, block_id, (Point){4, 0});
-    result = GameGrid_canBlockExist(&grid, &db, block_id);
+    BlockDb_setBlockPosition(db, block_id, (Point){4, 0});
+    result = GameGrid_canBlockExist(&grid, db, block_id);
     ASSERT_FALSE(result);
 
 
     // sw corner
     INFO("SW");
-    BlockDb_setBlockPosition(&db, block_id, (Point){0, 4});
-    result = GameGrid_canBlockExist(&grid, &db, block_id);
+    BlockDb_setBlockPosition(db, block_id, (Point){0, 4});
+    result = GameGrid_canBlockExist(&grid, db, block_id);
     ASSERT_FALSE(result);
 
     // s3 corner
     INFO("SE");
-    ASSERT_TRUE(BlockDb_doesBlockExist(&db, block_id));
-    BlockDb_setBlockPosition(&db, block_id, (Point){4, 4});
-    result = GameGrid_canBlockExist(&grid, &db, block_id);
+    ASSERT_TRUE(BlockDb_doesBlockExist(db, block_id));
+    BlockDb_setBlockPosition(db, block_id, (Point){4, 4});
+    result = GameGrid_canBlockExist(&grid, db, block_id);
     ASSERT_FALSE(result);
 
     // center
     INFO("Center");
-    ASSERT_TRUE(BlockDb_doesBlockExist(&db, block_id));
-    BlockDb_setBlockPosition(&db, block_id, (Point){2, 2});
-    result = GameGrid_canBlockExist(&grid, &db, block_id);
+    ASSERT_TRUE(BlockDb_doesBlockExist(db, block_id));
+    BlockDb_setBlockPosition(db, block_id, (Point){2, 2});
+    result = GameGrid_canBlockExist(&grid, db, block_id);
     ASSERT_TRUE(result);
 
     // overlap
     INFO("Overlapping");
     grid.contents[5] = 1;
 
-    BlockDb_setBlockPosition(&db, block_id, (Point){2, 2});
-    result = GameGrid_canBlockExist(&grid, &db, block_id);
+    BlockDb_setBlockPosition(db, block_id, (Point){2, 2});
+    result = GameGrid_canBlockExist(&grid, db, block_id);
     ASSERT_FALSE(result);
+
+    BlockDb_deconstruct(db);
 }
 
 void testGameGridResolveRows() {
-    /* modify - change this part to use BlockDb */
-    int block_ids[8];
-    int block_sizes[8];
-    long block_contents[8];
-    Point block_positions[8];
-    SDL_Color block_colors[8];
 
-    memset(block_ids, 0, 8 * sizeof(int));
-
-    BlockDb db = {
-        .head=0, .max_ids=8,
-        .ids=block_ids,
-        .sizes=block_sizes,
-        .contents=block_contents,
-        .positions=block_positions,
-        .colors=block_colors
-    };
+    BlockDb *db = BlockDb_init(8);
 
     // int id_arr[2] = {4, 4};
     // BlockIds ids = {.max_ids=2, .id_array=id_arr, .head=0};
-    int id1 = BlockDb_createBlock(&db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
-    int id2 = BlockDb_createBlock(&db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
+    int id1 = BlockDb_createBlock(db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
+    int id2 = BlockDb_createBlock(db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
 
     const int width = 4;
     const int height = 4;
@@ -235,12 +196,12 @@ void testGameGridResolveRows() {
     };
     GameGrid grid = {.width=width, .height=height, .contents=grid_contents};
 
-    int result = GameGrid_resolveRows(&grid, &db);
+    int result = GameGrid_resolveRows(&grid, db);
 
     ASSERT_EQUAL_INT(result, 1); // one row resolved
 
-    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id1), 2);
-    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, id2), 2);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(db, id1), 2);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(db, id2), 2);
 
 
     /* final should be as below.
@@ -268,6 +229,7 @@ void testGameGridResolveRows() {
             }
         }
     }
+    BlockDb_deconstruct(db);
 }
 
 void testGameGridCommitBlock() {
@@ -287,32 +249,16 @@ void testGameGridCommitBlock() {
      */
     long content_mask = ( 1L << 5 | 1L << 6 | 1L << 9 | 1L << 10 );
 
-    long block_contents[8];
-    int block_ids[8];
-    int block_sizes[8];
-    Point block_positions[8];
-    memset(block_ids, 0, 8 * sizeof(int));
+    BlockDb *db = BlockDb_init(8);
 
-    SDL_Color block_colors[8];
-
-    BlockDb db = {
-        .head=0,
-        .max_ids=8,
-        .ids=block_ids,
-        .sizes=block_sizes,
-        .contents=block_contents,
-        .positions=block_positions,
-        .colors=block_colors
-    };
-
-    int goodblock_id = BlockDb_createBlock(&db, 4, content_mask, (Point){2, 2}, (SDL_Color){});
-    int badblock_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0}, (SDL_Color){});
+    int goodblock_id = BlockDb_createBlock(db, 4, content_mask, (Point){2, 2}, (SDL_Color){});
+    int badblock_id = BlockDb_createBlock(db, 4, content_mask, (Point){0, 0}, (SDL_Color){});
     // bad because would need to commit to negative indices
 
     INFO_FMT("goodblock_id is %d\n", goodblock_id);
     INFO_FMT("badblock_id is %d\n", badblock_id);
 
-    int good_result = GameGrid_commitBlock(&grid, &db, goodblock_id);
+    int good_result = GameGrid_commitBlock(&grid, db, goodblock_id);
 
     ASSERT_EQUAL_INT(good_result, 0);
     ASSERT_EQUAL_INT(grid.contents[5], goodblock_id);
@@ -322,18 +268,20 @@ void testGameGridCommitBlock() {
 
     // ASSERT_EQUAL_LONG(good_block.contents, 0L);  
     // Committed blocks have no more contents
-    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(&db, goodblock_id), 0L);
+    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(db, goodblock_id), 0L);
 
     GameGrid_clear(&grid);
 
     // int bad_result = GameGrid_commitBlock(&grid, &bad_block);
-    int bad_result = GameGrid_commitBlock(&grid, &db, badblock_id);
+    int bad_result = GameGrid_commitBlock(&grid, db, badblock_id);
     ASSERT_EQUAL_INT(bad_result, -1);
     for (int grid_cell = 0; grid_cell < 16; grid_cell++) {
         ASSERT_EQUAL_INT(grid.contents[grid_cell], INVALID_BLOCK_ID);
     }
 
-    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(&db, badblock_id), content_mask);  // nochange
+    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(db, badblock_id), content_mask);  // nochange
+
+    BlockDb_deconstruct(db);
 }
 
 
