@@ -41,7 +41,11 @@ typedef struct {
     SDL_Color *colors;
 } BlockDb;
 
+// Initialize a BlockDb struct with the given size, returning
+// a pointer to it
 BlockDb* BlockDb_init(int size);
+
+// Deconstruct a BlockDb and free its allocated memory
 int BlockDb_deconstruct(BlockDb *self);
 
 /******************************************************************************

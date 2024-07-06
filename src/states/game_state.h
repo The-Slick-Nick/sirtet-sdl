@@ -34,7 +34,7 @@ typedef struct {
     bool god_mode;              // boolean flag for ultra-easy mode
     int move_counter;           // number of frames since last movement
 
-    BlockDb block_db;
+    BlockDb *block_db;
     GameGrid game_grid;         // Grid struct storing committed blocks
 
 

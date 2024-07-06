@@ -75,16 +75,7 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
         // structs and arrays
         .block_presets=(long*)malloc(7 * sizeof(long)),
 
-        .block_db = (BlockDb){
-            .head=0,
-            .max_ids=256,
-
-            .ids=(int*)calloc(256, sizeof(int)),
-            .sizes=(int*)malloc(256 * sizeof(int)),
-            .contents=(long*)malloc(256 * sizeof(long)),
-            .positions=(Point*)malloc(256 * sizeof(Point)),
-            .colors=(SDL_Color*)malloc(256 * sizeof(SDL_Color))
-        },
+        .block_db = BlockDb_init(256),
 
         .game_grid = (GameGrid){
             .width=GRID_WIDTH,
@@ -137,18 +128,12 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
 int GameState_deconstruct(void* self) {
     GameState *game_state = (GameState*)self;
 
+
+    BlockDb_deconstruct(game_state->block_db);
+
     free(game_state->block_presets);
-
-    free(game_state->block_db.ids);
-    free(game_state->block_db.sizes);
-    free(game_state->block_db.contents);
-    free(game_state->block_db.positions);
-    free(game_state->block_db.colors);
-
     free(game_state->game_grid.contents);
-
     free(game_state->gamecode_states);
-
 
     GamecodeMap_deconstruct(game_state->keymaps);
 
@@ -169,7 +154,7 @@ int updateGame(GameState *game_state) {
 
     // relevant variable extraction - for shorthand (
     // and to save my fingers from typing a lot)
-    BlockDb *db = &game_state->block_db;
+    BlockDb *db = game_state->block_db;
     GameGrid *grid = &game_state->game_grid;
     int *primary_block = &game_state->primary_block;
     long *block_presets = game_state->block_presets;
@@ -307,6 +292,7 @@ StateFuncStatus GameState_run(
     SDL_Renderer *rend = application_state->rend;
     int *hardware_states = application_state->hardware_states;
     GamecodeMap *keymaps = game_state->keymaps;
+    BlockDb *db = game_state->block_db;
 
     SDL_Rect draw_window = game_state->draw_window;
 
@@ -346,10 +332,10 @@ StateFuncStatus GameState_run(
     SDL_RenderClear(rend);
 
     if (game_state->primary_block != INVALID_BLOCK_ID) {
-        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
+        drawBlock(rend, draw_window, db, game_state->primary_block, &game_state->game_grid);
     }
 
-    drawGrid(rend, draw_window, &game_state->block_db, &game_state->game_grid);
+    drawGrid(rend, draw_window, db, &game_state->game_grid);
 
     return STATEFUNC_CONTINUE;
 }
@@ -366,6 +352,7 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     SDL_Renderer *rend = application_state->rend;
     int *hardware_states = application_state->hardware_states;
     GamecodeMap *keymaps = game_state->keymaps;
+    BlockDb *db = game_state->block_db;
 
     SDL_Rect draw_window = game_state->draw_window;
 
@@ -383,11 +370,10 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     SDL_RenderClear(rend);
 
     if (game_state->primary_block != INVALID_BLOCK_ID) {
-        drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
+        drawBlock(rend, draw_window, db, game_state->primary_block, &game_state->game_grid);
     }
 
-    // drawGrid(rend, draw_window, &game_state->game_grid);
-    drawGrid(rend, draw_window, &game_state->block_db, &game_state->game_grid);
+    drawGrid(rend, draw_window, db, &game_state->game_grid);
 
     SDL_Rect dstrect = {.x=10, .y=10};
     SDL_QueryTexture(game_state->pause_texture, NULL, NULL, &dstrect.w, &dstrect.h);
