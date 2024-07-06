@@ -6,7 +6,9 @@
 #include <assert.h>
 #include <stdbool.h>
 
-
+/******************************************************************************
+ * Hardware Inputs
+******************************************************************************/
 
 // hardware_states should be an array of size
 // (int)SDL_Scancode.
@@ -65,6 +67,9 @@ int processHardwareInputs(int* hardware_states) {
 }
 
 
+/******************************************************************************
+ * Game Inputs
+******************************************************************************/
 
 /**
  * @brief Populate gamecode flag array based on key mappings and customized state of hardware
@@ -101,38 +106,7 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
     return 0;
 }
 
-
 // Add a mapping of hardware code to virtual code
-//
-// Acts as a blueprint to flag the virtual_code as pressed if the number of
-// frames that a hardware code has been pressed for is from frame_start
-// to frame_end, both endpoints inclusive.
-// int addKeymap(
-//     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
-//     int frame_start, int frame_end
-// ) {
-//
-//     // TODO: Return -1 instead?
-//     assert(mapping->head < MAX_GAMECODE_MAPS);
-//
-//     *(mapping->mappings + mapping->head) = (GamecodeMapItem){
-//         .virtual_code=virtual_code,
-//         .hardware_code=hardware_code,
-//         .frame_start=frame_start,
-//         .frame_end=frame_end
-//     };
-//
-//     mapping->head += 1;
-//
-//     return 0;
-// }
-
-
-// Add a mapping of hardware code to virtual code
-//
-// Acts as a blueprint to flag the virtual_code as pressed if the number of
-// frames that a hardware code has been pressed for is from frame_start
-// to frame_end, both endpoints inclusive.
 int Gamecode_addMap(
     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
     int frame_start, int frame_end, int frame_interval
@@ -159,4 +133,72 @@ int Gamecode_addMap(
 // Identify if a given gamecode is active by parsing an boolean array indexed by gamecodes
 bool Gamecode_pressed(bool *gamecode_arr, Gamecode gamecode) {
     return gamecode_arr[(int)gamecode];
+}
+
+
+/******************************************************************************
+ * Menu inputs
+******************************************************************************/
+
+/**
+ * @brief Populate menucode flag array based on key mappings and customized 
+ *                          state of hardware
+ * @param menucode_states   Pointer to flag array for gamecode states. Should
+ *                          be of size (int)NUM_MENUCODE_STATES
+ * @param hardware_states   Pointer to integer state array for hardware states.
+ *                          Should be of size (int)SDL_NUM_SCANCODES
+ * @param all_mappings      Pointer to struct of menucodeMap type key mappings.
+*/
+int processMenucodes(
+    bool *menucode_states, int *hardware_states, MenucodeMap *all_mappings
+) {
+
+    for (int int_menu = 0; int_menu < (int)NUM_MENUCODES; int_menu++) {
+        menucode_states[int_menu] = false;
+    }
+
+    MenucodeMapItem map_itm;
+    for (int map_i = 0; map_i < all_mappings->head; map_i++) {
+
+        map_itm = all_mappings->mappings[map_i];
+
+        int frame_count = hardware_states[(int)map_itm.hardware_code];
+
+        if (
+            frame_count >= map_itm.frame_start
+            && frame_count <= map_itm.frame_end
+            && (
+                map_itm.frame_interval == 0
+                || (frame_count - map_itm.frame_start) % map_itm.frame_interval == 0
+            )
+        ) {
+            menucode_states[(int)map_itm.virtual_code] = true;
+        }
+    }
+
+    return 0;
+}
+
+
+// Add a mapping of hardware code to virtual code
+int Menucode_addMap(
+    MenucodeMap *map_itm, Menucode virtual_code, SDL_Scancode hardware_code,
+    int frame_start, int frame_end, int frame_interval
+) {
+
+    // TODO: Return -1 instead?
+    assert(map_itm->head < MAX_GAMECODE_MAPS);
+
+    *(map_itm->mappings + map_itm->head) = (MenucodeMapItem){
+        .virtual_code=virtual_code,
+        .hardware_code=hardware_code,
+        .frame_start=frame_start,
+        .frame_end=frame_end,
+        .frame_interval=frame_interval
+
+    };
+
+    map_itm->head += 1;
+
+    return 0;
 }
