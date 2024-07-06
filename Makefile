@@ -40,7 +40,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
-CPPFLAGS := $(INC_FLAGS) -MMD -MP -lSDL2
+CPPFLAGS := $(INC_FLAGS) -MMD -MP -lSDL2 -lSDL2_ttf
 
 ######################
 ### Build Commands ###
@@ -60,7 +60,7 @@ $(BUILD_DIR)/lib.a: $(OBJS)
 	ar rvs $@ $^	
 
 ./main.bin: $(BUILD_DIR)/lib.a
-	gcc main.c -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a -lSDL2
+	gcc main.c -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a -lSDL2 -lSDL2_ttf
 
 ##################
 ### HIGH LEVEL ###

@@ -6,6 +6,12 @@
 
 #include "state_runner.h"
 
+
+/* ============================================================================
+ * State management
+ ============================================================================*/
+
+
 // Add a state to the StateRunner's buffer
 int StateRunner_addState(
     StateRunner* self, void* state_data,

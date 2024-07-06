@@ -9,6 +9,8 @@
 
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
+#include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_ttf.h>
 #include <limits.h>
 #include <assert.h>
 
@@ -29,7 +31,7 @@
 //
 // Assumes that GameState_deconstruct() is eventually called
 // on the return value
-GameState* GameState_init(int state_num) {
+GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num) {
 
     /*** Supplementary data ***/
 
@@ -48,6 +50,16 @@ GameState* GameState_init(int state_num) {
     const int grid_draw_height = (3 * 720) / 4;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
     const int grid_draw_width = GRID_WIDTH * cell_size;
+
+    SDL_Surface *surf = TTF_RenderText_Solid(menu_font, "Paused", (SDL_Color){255, 255, 255});
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surf);
+
+    SDL_FreeSurface(surf);  // no longer needed
+
+
+    // Maybe this moves into the actual draw portion?
+    SDL_Rect dstrect = {.x=10, .y=10};
+    SDL_QueryTexture(texture, NULL, NULL, &dstrect.w, &dstrect.h);
 
 
     /*** Initialize struct ***/
@@ -88,10 +100,11 @@ GameState* GameState_init(int state_num) {
             .h=grid_draw_height
         },
 
-        .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool))
+        .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
+
+        .pause_texture=texture
+
     };
-
-
 
     /*** Post-creation processing ***/
 
@@ -135,7 +148,10 @@ int GameState_deconstruct(void* self) {
 
     free(game_state->gamecode_states);
 
+    SDL_DestroyTexture(game_state->pause_texture);
+
     free(self);
+
     return 0;
 }
 
@@ -280,7 +296,7 @@ StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, 
     // TODO: Remove this part later, as it is currly only a very quick test
     if (hardware_states[SDL_SCANCODE_TAB] == 1) {
 
-        GameState *new_state = GameState_init(game_state->state_num + 1);
+        GameState *new_state = GameState_init(application_state->rend, application_state->menu_font, game_state->state_num + 1);
         StateRunner_addState(state_runner, new_state, runGameFrame, GameState_deconstruct);
     }
 
@@ -314,7 +330,7 @@ StateFuncStatus runGameFrame(StateRunner *state_runner, void *application_data, 
 
     drawGrid(rend, draw_window, &game_state->game_grid);
 
-    SDL_RenderPresent(rend);
+
 
     return STATEFUNC_CONTINUE;
 }
@@ -342,6 +358,8 @@ StateFuncStatus runGameFramePaused(StateRunner *state_runner, void *application_
         return STATEFUNC_QUIT;
     }
 
+    /***** DRAWING *****/
+
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
 
@@ -351,7 +369,10 @@ StateFuncStatus runGameFramePaused(StateRunner *state_runner, void *application_
 
     drawGrid(rend, draw_window, &game_state->game_grid);
 
-    SDL_RenderPresent(rend);
+    SDL_Rect dstrect = {.x=10, .y=10};
+    SDL_QueryTexture(game_state->pause_texture, NULL, NULL, &dstrect.w, &dstrect.h);
+    SDL_RenderCopy(rend, game_state->pause_texture, NULL, &dstrect);
+
 
     return STATEFUNC_CONTINUE;
 }

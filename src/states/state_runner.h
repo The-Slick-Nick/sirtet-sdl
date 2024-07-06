@@ -41,7 +41,6 @@
 
 #include <stdlib.h>
 
-
 typedef enum {
     STATEFUNC_CONTINUE = 0,
     STATEFUNC_QUIT = -1,

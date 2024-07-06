@@ -11,6 +11,7 @@
 #define GAME_STATE_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "block.h"
 #include "grid.h"
@@ -37,7 +38,6 @@ typedef struct {
     GameGrid game_grid;         // Grid struct storing committed blocks
 
 
-
     int primary_block;          // id of main block dropping from top to bottom
     SDL_Rect draw_window;       // Region/coordinates of screen to draw grid on
 
@@ -45,11 +45,15 @@ typedef struct {
     int num_presets;            // Number of block content presets in *block_presets
     GamecodeMap keymaps;        // collection of hardware -> gamecode key mappings
 
+
+    /* State/structs for alternate versions of state */
+    SDL_Texture *pause_texture; // Texture with "pause" text
+
 } GameState;
 
 
 // Initialize and return a pointer for GameState
-GameState* GameState_init(int state_num);
+GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num);
 
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);
