@@ -106,6 +106,7 @@ SDL_Color getCellColorById(int block_id) {
 int drawGrid(
     SDL_Renderer *rend,
     SDL_Rect display_window,
+    BlockDb *block_db,
     GameGrid *grid
 ) {
 
@@ -125,7 +126,8 @@ int drawGrid(
                 continue;
             }
 
-            body_color = getCellColorById(cell_id);
+            // body_color = getCellColorById(cell_id);
+            body_color = BlockDb_getBlockColor(block_db, cell_id);
 
             drawBlockCell(
                 rend, 
@@ -151,9 +153,7 @@ int drawBlock(
     int cell_width = display_window.w / ref_grid->width;
     int cell_height = display_window.h / ref_grid->height;
 
-
-    // TODO: Change this (once block refactor complete)
-    SDL_Color base_color = getCellColorById(block_id);
+    SDL_Color base_color = BlockDb_getBlockColor(block_db, block_id);
 
     int block_size = BlockDb_getBlockSize(block_db, block_id);
     for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {

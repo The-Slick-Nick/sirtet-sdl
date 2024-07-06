@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <SDL2/SDL.h>
 #include "block.h"
 #include "coordinates.h"
 
@@ -143,12 +144,12 @@ int getCellCount(long contents, int block_size) {
 
 // Provision and create a new block, returning its id
 int BlockDb_createBlock(
-    BlockDb *self, int size, long contents, Point position
+    BlockDb *self, int size, long contents, Point position, SDL_Color color
 ) {
 
     int return_id = INVALID_BLOCK_ID;
 
-    if (contents == 0) {
+    if (contents == 0L) {
         return return_id;
     }
 
@@ -160,6 +161,7 @@ int BlockDb_createBlock(
             self->sizes[return_id] = size;
             self->contents[return_id] = contents;
             self->positions[return_id] = position;
+            self->colors[return_id] = color;
             return return_id;
         }
 
@@ -256,10 +258,23 @@ Point BlockDb_getBlockPosition(BlockDb *self, int block_id) {
 
 
 int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position) {
+
     if (!BlockDb_doesBlockExist(self, block_id)) {
         return -1;
     }
     self->positions[block_id] = position;
+    return 0;
+}
+
+SDL_Color BlockDb_getBlockColor(BlockDb *self, int block_id) {
+    return self->colors[block_id];
+}
+
+int BlockDb_setBlockColor(BlockDb *self, int block_id, SDL_Color color) {
+    if (!BlockDb_doesBlockExist(self, block_id)) {
+        return -1;
+    }
+    self->colors[block_id] = color;
     return 0;
 }
 

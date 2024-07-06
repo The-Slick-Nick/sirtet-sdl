@@ -1,6 +1,8 @@
 #ifndef BLOCK_H
 #define BLOCK_H
 
+#include <SDL2/SDL.h>
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include "coordinates.h"
@@ -32,6 +34,7 @@ typedef struct {
     int *sizes;
     long *contents;
     Point *positions;
+    SDL_Color *colors;
 } BlockDb;
 
 // transformation on the integer representation of a block's contents
@@ -47,7 +50,9 @@ int BlockDb_translateBlock(BlockDb *self, int block_id, Point translate);
 bool BlockDb_isContentBitSet(BlockDb *self, int block_id, int content_bit);
 
 // Provision and create a new block, returning its id
-int BlockDb_createBlock(BlockDb *self, int size, long contents, Point position);
+int BlockDb_createBlock(
+    BlockDb *self, int size, long contents, Point position, SDL_Color color
+);
 bool BlockDb_doesBlockExist(BlockDb *self, int block_id);
 
 // Getters & setters
@@ -60,6 +65,9 @@ int BlockDb_setBlockContents(BlockDb *self, int block_id, long contents);
 
 Point BlockDb_getBlockPosition(BlockDb *self, int block_id);
 int BlockDb_setBlockPosition(BlockDb *self, int block_id, Point position);
+
+SDL_Color BlockDb_getBlockColor(BlockDb *self, int block_id);
+int BlockDb_setBlockColor(BlockDb *self, int block_id, SDL_Color color);
 
 
 // Block cell count management

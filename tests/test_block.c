@@ -406,6 +406,7 @@ void testBlockCreation() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -416,10 +417,11 @@ void testBlockCreation() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
 
-    int new_block = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){.x=0, .y=0});
+    int new_block = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){.x=0, .y=0}, (SDL_Color){});
     ASSERT_GREATER_THAN_INT(new_block, INVALID_BLOCK_ID);
     ASSERT_TRUE(BlockDb_doesBlockExist(&db, new_block));
 
@@ -430,11 +432,11 @@ void testBlockCreation() {
 
     // fill up our db
     for (int i = 0; i < 127; i++) {
-        BlockDb_createBlock(&db, 4, 0L, (Point){.x=0, .y=0});
+        BlockDb_createBlock(&db, 4, 0L, (Point){.x=0, .y=0}, (SDL_Color){});
     }
 
     // create one too many
-    int bad_block = BlockDb_createBlock(&db, 4, 0L, (Point){.x=0, .y=0});
+    int bad_block = BlockDb_createBlock(&db, 4, 0L, (Point){.x=0, .y=0}, (SDL_Color){});
     ASSERT_EQUAL_INT(bad_block, INVALID_BLOCK_ID);
     ASSERT_FALSE(BlockDb_doesBlockExist(&db, bad_block));
 
@@ -448,6 +450,7 @@ void testCreateManyBlocks() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -458,16 +461,17 @@ void testCreateManyBlocks() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
 
     int id;
     for (int block_num = 0; block_num < 128; block_num++) {
-        id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0});
+        id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0}, (SDL_Color){});
         ASSERT_NOT_EQUAL_INT(id, INVALID_BLOCK_ID);
     }
 
-    id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0});
+    id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0}, (SDL_Color){});
     ASSERT_EQUAL_INT(id, INVALID_BLOCK_ID);
 }
 
@@ -478,6 +482,7 @@ void testBlockCellManipulation() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -488,12 +493,13 @@ void testBlockCellManipulation() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
 
     // make a block with 4 cells
     // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
-    int block_id = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0});
+    int block_id = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0}, (SDL_Color){});
 
     ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, block_id), 8);
 
@@ -518,7 +524,7 @@ void testBlockCellManipulation() {
     retval = BlockDb_decrementCellCount(&db, block_id, 1);
     ASSERT_EQUAL_INT(retval, -1);  // fail
 
-    int block_id_2 = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0});
+    int block_id_2 = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0}, (SDL_Color){});
 
     // decrement to 0 counts as a "manual" removal
     retval = BlockDb_decrementCellCount(&db, block_id_2, 8);
@@ -526,7 +532,7 @@ void testBlockCellManipulation() {
     ASSERT_FALSE(BlockDb_doesBlockExist(&db, block_id_2));
 
     // cannot decrement past 0
-    int block_id_3 = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0});
+    int block_id_3 = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0}, (SDL_Color){});
     retval = BlockDb_decrementCellCount(&db, block_id_3, 9);
     ASSERT_EQUAL_INT(retval, -1);  // fail
     
@@ -541,6 +547,7 @@ void testTransformBlock() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -551,11 +558,12 @@ void testTransformBlock() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
 
     // int block_id = BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
-    int block_id = BlockDb_createBlock(&db, 2, 0b0011L, (Point){0, 0});
+    int block_id = BlockDb_createBlock(&db, 2, 0b0011L, (Point){0, 0}, (SDL_Color){});
 
     int retval = BlockDb_transformBlock(&db, block_id, (Point){0, 1});
     ASSERT_EQUAL_INT(retval, 0);
@@ -571,6 +579,7 @@ void testTranslateBlock() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -581,14 +590,15 @@ void testTranslateBlock() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
 
     Point new_pos;
     Point init_pos = {.x=2, .y=2};
     int retval;
 
-    int block_id = BlockDb_createBlock(&db, 2, 0b1111, init_pos);
+    int block_id = BlockDb_createBlock(&db, 2, 0b1111, init_pos, (SDL_Color){});
     retval = BlockDb_translateBlock(&db, block_id, (Point){1, 0});
     ASSERT_EQUAL_INT(retval, 0);
 
@@ -650,6 +660,7 @@ void testInvalidBlockDbOperations() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -660,7 +671,8 @@ void testInvalidBlockDbOperations() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
     
     int invalid = INVALID_BLOCK_ID;
@@ -708,6 +720,7 @@ void testContentBitCheck() {
     int size_arr[128];
     long contents_arr[128];
     Point position_arr[128];
+    SDL_Color color_arr[128];
 
     memset(id_arr, 0, 128 * sizeof(int));
 
@@ -718,11 +731,11 @@ void testContentBitCheck() {
         .ids=id_arr,
         .sizes=size_arr,
         .contents=contents_arr,
-        .positions=position_arr
+        .positions=position_arr,
+        .colors=color_arr
     };
 
-                                       // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
-    int block_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0});
+    int block_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0}, (SDL_Color){});
     bool is_set;
 
     ASSERT_NOT_EQUAL_INT(block_id, INVALID_BLOCK_ID);

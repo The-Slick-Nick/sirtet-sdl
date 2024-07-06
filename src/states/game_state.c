@@ -82,7 +82,8 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
             .ids=(int*)calloc(256, sizeof(int)),
             .sizes=(int*)malloc(256 * sizeof(int)),
             .contents=(long*)malloc(256 * sizeof(long)),
-            .positions=(Point*)malloc(256 * sizeof(Point))
+            .positions=(Point*)malloc(256 * sizeof(Point)),
+            .colors=(SDL_Color*)malloc(256 * sizeof(SDL_Color))
         },
 
         .game_grid = (GameGrid){
@@ -142,6 +143,7 @@ int GameState_deconstruct(void* self) {
     free(game_state->block_db.sizes);
     free(game_state->block_db.contents);
     free(game_state->block_db.positions);
+    free(game_state->block_db.colors);
 
     free(game_state->game_grid.contents);
 
@@ -173,6 +175,17 @@ int updateGame(GameState *game_state) {
     long *block_presets = game_state->block_presets;
 
 
+    // TODO: Incorporate this into game_state later
+    SDL_Color pallette[7] = {
+        (SDL_Color){155, 0, 0},
+        (SDL_Color){155, 155, 0},
+        (SDL_Color){155, 0, 155},
+        (SDL_Color){155, 155, 155},
+        (SDL_Color){0, 155, 0},
+        (SDL_Color){0, 155, 155},
+        (SDL_Color){0, 0, 155}
+    };
+
     // generate a new block if current is invalid
 
     if (*primary_block == INVALID_BLOCK_ID) {
@@ -181,7 +194,11 @@ int updateGame(GameState *game_state) {
         int rand_idx = (rand() + game_state->num_presets) % game_state->num_presets;
         long new_contents = block_presets[rand_idx];
 
-        *primary_block = BlockDb_createBlock(db, 4, new_contents, (Point){5, 5});
+        *primary_block = BlockDb_createBlock(
+            db, 4, new_contents, (Point){5, 5},
+            pallette[rand_idx]
+        );
+
         assert(*primary_block != INVALID_BLOCK_ID);
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
@@ -332,9 +349,7 @@ StateFuncStatus GameState_run(
         drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
     }
 
-    drawGrid(rend, draw_window, &game_state->game_grid);
-
-
+    drawGrid(rend, draw_window, &game_state->block_db, &game_state->game_grid);
 
     return STATEFUNC_CONTINUE;
 }
@@ -371,7 +386,8 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
         drawBlock(rend, draw_window, &game_state->block_db, game_state->primary_block, &game_state->game_grid);
     }
 
-    drawGrid(rend, draw_window, &game_state->game_grid);
+    // drawGrid(rend, draw_window, &game_state->game_grid);
+    drawGrid(rend, draw_window, &game_state->block_db, &game_state->game_grid);
 
     SDL_Rect dstrect = {.x=10, .y=10};
     SDL_QueryTexture(game_state->pause_texture, NULL, NULL, &dstrect.w, &dstrect.h);
