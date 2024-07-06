@@ -95,8 +95,6 @@ int run() {
         };
         SDL_RenderCopy(global_state->rend, fps_texture, NULL, &fps_dest);
 
-
-
         SDL_RenderPresent(global_state->rend);
 
         SDL_DestroyTexture(fps_texture);
@@ -115,8 +113,6 @@ int run() {
         // calculate actual fps
         elapsed = (double)(clock() - frame_start) / CLOCKS_PER_SEC;
         actual_fps = (1.0 / elapsed);
-
-
 
         if (frame_counter >= TARGET_FPS) {
             frame_counter = 0;
