@@ -84,12 +84,8 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
     deconstruct_func_t top_decon = self->deconstructors[self->head];
     void* top_state = self->states[self->head];
 
-    // int retval = top_runner(self, app_state, top_state);
     StateFuncStatus retval = top_runner(self, app_state, top_state);
 
-    // TODO: Macro to makes codes more understandable (something something semantic)
-    // if (retval == -1) {
-    
     if (retval == STATEFUNC_ERROR) {
         return -1;
     }

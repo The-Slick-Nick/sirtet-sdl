@@ -68,6 +68,7 @@ int run() {
         /* Non-game related stuff */
         processHardwareInputs(global_state->hardware_states);
 
+        SDL_SetRenderDrawColor(global_state->rend, 10, 20, 30, 255);
         SDL_RenderClear(global_state->rend);
 
         /* Run game-state specific code */
@@ -84,7 +85,6 @@ int run() {
         // NOTE: We want to optimize this later to not free every frame
         SDL_FreeSurface(fps_surf);
 
-
         int txt_h, txt_w;
         SDL_QueryTexture(fps_texture, NULL, NULL, &txt_w, &txt_h);
         SDL_Rect fps_dest = (SDL_Rect){
@@ -98,6 +98,8 @@ int run() {
 
 
         SDL_RenderPresent(global_state->rend);
+
+        SDL_DestroyTexture(fps_texture);
 
         /*********************************************************************
          * Maintenance calculations
