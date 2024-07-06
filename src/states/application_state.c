@@ -1,4 +1,8 @@
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <limits.h>
+#include <assert.h>
+#include <string.h>
 
 #include "application_state.h"
 
@@ -7,9 +11,12 @@
  State Struct creation & destruction
 =============================================================================*/
 
-ApplicationState* ApplicationState_init() {
+ApplicationState* ApplicationState_init(char *asset_folder) {
 
     SDL_Init(SDL_INIT_VIDEO);
+    assert(TTF_Init() == 0);
+
+
     ApplicationState *retval = (ApplicationState*)malloc(sizeof(ApplicationState));
 
     SDL_Window *wind = SDL_CreateWindow(
@@ -29,18 +36,32 @@ ApplicationState* ApplicationState_init() {
         return NULL;
     }
 
+    // Will need a slightly different solution later when more fonts are needed
+    char buffer[1000];
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/Lekton-Bold.ttf");
+    // printf("path is %s\n", buffer);
+
     *(retval) = (ApplicationState){
         .rend=rend,
         .wind=wind,
         .hardware_states=hardware_states,
+        .menu_font=TTF_OpenFont(buffer, 24)
     };
+
     return retval;
 }
+
+
 
 int ApplicationState_deconstruct(ApplicationState* self) {
 
     SDL_DestroyWindow(self->wind);
     free(self->hardware_states);
     free(self);
+
+
+    TTF_Quit();
+    SDL_Quit();
     return 0;
 }

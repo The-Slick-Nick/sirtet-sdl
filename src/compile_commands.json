@@ -3,10 +3,11 @@
     "arguments": [
       "/usr/bin/gcc",
       "-c",
+      "-Icomponents",
+      "-Idrawing",
+      "-Istates",
+      "-I.",
       "-Isrc",
-      "-Isrc/components",
-      "-Isrc/drawing",
-      "-Isrc/states",
       "-o",
       "main.bin",
       "main.c"

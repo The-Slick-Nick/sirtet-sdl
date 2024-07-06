@@ -11,13 +11,13 @@
 #define GAME_STATE_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "block.h"
 #include "grid.h"
 #include "inputs.h"
 
 #include "state_runner.h"
-#include "application_state.h"
 
 
 #define GRID_WIDTH 10
@@ -28,34 +28,46 @@
 // This struct wraps information that the game cares about
 typedef struct {
 
+    int state_num;
     bool *gamecode_states;      // boolean flag array for gamecodes (indexed by Gamecode)
 
     bool god_mode;              // boolean flag for ultra-easy mode
     int move_counter;           // number of frames since last movement
 
-    BlockIds block_ids;         // Block ID repository to handle creating unique ids for blocks
+    BlockDb block_db;
     GameGrid game_grid;         // Grid struct storing committed blocks
-    Block primary_block;        // Main block being dropped
+
+
+    int primary_block;          // id of main block dropping from top to bottom
     SDL_Rect draw_window;       // Region/coordinates of screen to draw grid on
 
     long *block_presets;        // Array of block content masks to draw from
     int num_presets;            // Number of block content presets in *block_presets
     GamecodeMap keymaps;        // collection of hardware -> gamecode key mappings
 
+
+    /* State/structs for alternate versions of state */
+    SDL_Texture *pause_texture; // Texture with "pause" text
+
 } GameState;
 
 
 // Initialize and return a pointer for GameState
-void* GameState_init();
+GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num);
 
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);
+
+void GameState_debugPrint(GameState *self);
 
 // Run the update portion of the main game loop
 int updateGame(GameState *game_state);
 
 // Run one frame of game
-// int runGameFrame(void *global_state_data, void *state_data);
-int runGameFrame(StateRunner *state_runner, ApplicationState *application_state, void *state_data);
+int runGameFrame(StateRunner *state_runner, void *application_data, void *state_data);
+
+
+int runGameFramePaused(StateRunner *state_runner, void *application_data, void *state_data);
+
 
 #endif

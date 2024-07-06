@@ -28,10 +28,13 @@ Point blockContentBitToGridCoords(
 }
 
 // Identify if the given block is compatible with the current grid
-bool GameGrid_canBlockExist(GameGrid *self, Block *block) {
+bool GameGrid_canBlockExist(GameGrid *self, BlockDb *db, int block_id) {
 
     return GameGrid_canBlockInfoExist(
-        self, block->size, block->contents, block->position
+        self,
+        BlockDb_getBlockSize(db, block_id),
+        BlockDb_getBlockContents(db, block_id),
+        BlockDb_getBlockPosition(db, block_id)
     );
 }
 
@@ -72,30 +75,34 @@ bool GameGrid_canBlockInfoExist(
  * @param self  Pointer to the GameGrid struct in question
  * @param block Pointer to the Block struct to commit.
 */
-int GameGrid_commitBlock(GameGrid* self, Block* block) {
-
-    if ( !GameGrid_canBlockExist(self, block) ) {
+int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
+    
+    if ( !GameGrid_canBlockExist(self, db, block_id) ) {
         return -1;
     }
 
-    for (int bit_num = 0; bit_num < block->size * block->size; bit_num++) {
-        if ( 0 == (block->contents & (1L << bit_num)) ) {
+    int block_size = BlockDb_getBlockSize(db, block_id);
+    long block_contents = BlockDb_getBlockContents(db, block_id);
+    Point block_pos = BlockDb_getBlockPosition(db, block_id);
+
+    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
+        if ( 0 == (block_contents & (1L << bit_num)) ) {
             continue;
         }
 
-        Point grid_coords = blockContentBitToGridCoords(
-            bit_num, block->size, block->position);
+        Point grid_coords = blockContentBitToGridCoords(bit_num, block_size, block_pos);
 
         // 2d access
         int grid_idx = grid_coords.x + (self->width * grid_coords.y);
-        self->contents[grid_idx] = block->id;
+        self->contents[grid_idx] = block_id;
     }
 
-    block->contents = 0L;
+    BlockDb_setBlockContents(db, block_id, 0L);
     return 0;
 }
 
-// TODO Convert below to return an integer status code
+// TODO: Convert below to return an integer status code
+//
 // Reset all of a grid's contents
 void GameGrid_clear(GameGrid* grid) {
     for (int idx = 0; idx < grid->width * grid->height; idx++) {
@@ -103,21 +110,21 @@ void GameGrid_clear(GameGrid* grid) {
     };
 }  
 
-// Reset a grid's contents, clearing encountered blocks
-void GameGrid_reset(GameGrid* grid, BlockIds* ids) {
+// Reset a grid's contents, clearing encountered blocks within BlockDb
+void GameGrid_reset(GameGrid* grid, BlockDb *db) {
 
     for (int grid_idx = 0; grid_idx < grid->width * grid->height; grid_idx++) {
         if (grid->contents[grid_idx] < 0) {
             continue;
         }
 
-        BlockIds_decrementId(ids, grid->contents[grid_idx], 1);
-        grid->contents[grid_idx] = -1;
+        BlockDb_decrementCellCount(db, grid->contents[grid_idx], 1);
+        grid->contents[grid_idx] = INVALID_BLOCK_ID;
     }
 }  
 
 // clears full rows of committed blocks
-int GameGrid_resolveRows(GameGrid* self, BlockIds* ids) {
+int GameGrid_resolveRows(GameGrid *self, BlockDb *db) {
 
     int read_ptr = self->height - 1;
     int num_full_rows = 0;
@@ -143,7 +150,7 @@ int GameGrid_resolveRows(GameGrid* self, BlockIds* ids) {
                 for (int x = 0; x < self->width; x++) {
                     int grid_idx = x + (self->width * read_ptr);
                     int grid_cell_val = self->contents[grid_idx];
-                    BlockIds_decrementId(ids, grid_cell_val, 1);
+                    BlockDb_decrementCellCount(db, grid_cell_val, 1);
                 }
                 read_ptr--;
                 num_full_rows++;

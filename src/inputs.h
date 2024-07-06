@@ -19,6 +19,7 @@ typedef enum {
     GAMECODE_MOVE_RIGHT,
     GAMECODE_MOVE_DOWN,
     GAMECODE_QUIT,
+    GAMECODE_PAUSE,
     NUM_GAMECODES
 } Gamecode;
 

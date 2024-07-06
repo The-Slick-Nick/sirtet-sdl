@@ -62,6 +62,7 @@ int main() {
     EWENIT_START;
     ADD_CASE(testPointTransform);
 
+    // EWENIT_END_COMPACT;
     EWENIT_END;
 }
 

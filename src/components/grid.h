@@ -11,12 +11,6 @@
 #include <stdbool.h>
 
 
-// 10 wide, 20 tall is standard tetris
-// TODO perhaps this should be in a global config file?
-// #define GRID_HEIGHT 20
-// #define GRID_WIDTH 10
-
-
 typedef struct {
 
     int width;
@@ -34,7 +28,7 @@ typedef struct {
 Point blockContentBitToGridCoords(int content_bit, int block_size, Point block_position);
 
 // Identify if the given block is compatible with current grid
-bool GameGrid_canBlockExist(GameGrid *self, Block *block);
+bool GameGrid_canBlockExist(GameGrid *self, BlockDb *db, int block_id);
 
 // Identify if the provided block data is compatible with current grid
 bool GameGrid_canBlockInfoExist(
@@ -42,8 +36,7 @@ bool GameGrid_canBlockInfoExist(
 );
 
 // add a block's cells to the grid. Modifies provided grid and block in place
-int GameGrid_commitBlock(GameGrid* self, Block* block);
-
+int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id);
 
 // TODO For the below two in-place methods, change return type
 // to an integer status code (0 = success, -1 = fail)
@@ -52,9 +45,9 @@ int GameGrid_commitBlock(GameGrid* self, Block* block);
 void GameGrid_clear(GameGrid* grid);  
 
 // Reset a grid's contents, clearing encountered blocks
-void GameGrid_reset(GameGrid* grid, BlockIds* ids);  
+void GameGrid_reset(GameGrid* grid, BlockDb *db);  
 
 // clears full rows of committed blocks
-int GameGrid_resolveRows(GameGrid* grid, BlockIds* ids);
+int GameGrid_resolveRows(GameGrid* grid, BlockDb *db);
 
 #endif

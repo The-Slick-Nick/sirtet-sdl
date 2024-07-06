@@ -5,32 +5,32 @@
 
 void testContentRotationProperties() {
     /* Test the properties of clockwise rotation across all block sizes */
-    long inputContents;
+    long input_contents;
 
-    for (int blockSize = 1; blockSize <= 8; blockSize++) {
+    for (int block_size = 1; block_size <= 8; block_size++) {
         INFO("-------------------------------");
-        INFO_FMT("blockSize = %d", blockSize);
+        INFO_FMT("block_size = %d", block_size);
 
         // Note that we don't care about bits of higher order than are needed 
-        // for the blockSize
+        // for the block_size
         long allSet = 0L;
-        for (int i = 0; i < blockSize * blockSize; i++) {
+        for (int i = 0; i < block_size * block_size; i++) {
             allSet <<= 1;
             allSet |= 1;
         }
 
-        INFO_FMT("allSet for blockSize %d is %ld", blockSize, allSet);
+        INFO_FMT("allSet for block_size %d is %ld", block_size, allSet);
         INFO("Checking rotation of all set bits");
-        ASSERT_EQUAL_LONG(allSet, rotateBlockContentsCw90(allSet, blockSize));
-        ASSERT_EQUAL_LONG(allSet, rotateBlockContentsCcw90(allSet, blockSize));
-        ASSERT_EQUAL_LONG(allSet, rotateBlockContents180(allSet, blockSize));
+        ASSERT_EQUAL_LONG(allSet, rotateBlockContentsCw90(allSet, block_size));
+        ASSERT_EQUAL_LONG(allSet, rotateBlockContentsCcw90(allSet, block_size));
+        ASSERT_EQUAL_LONG(allSet, rotateBlockContents180(allSet, block_size));
 
         INFO("Checking rotation of no set bits");
-        ASSERT_EQUAL_LONG(0L, rotateBlockContentsCw90(0L, blockSize));
-        ASSERT_EQUAL_LONG(0L, rotateBlockContentsCcw90(0L, blockSize));
-        ASSERT_EQUAL_LONG(0L, rotateBlockContents180(0L, blockSize));
+        ASSERT_EQUAL_LONG(0L, rotateBlockContentsCw90(0L, block_size));
+        ASSERT_EQUAL_LONG(0L, rotateBlockContentsCcw90(0L, block_size));
+        ASSERT_EQUAL_LONG(0L, rotateBlockContents180(0L, block_size));
 
-        for (int bitNum = 0; bitNum < blockSize * blockSize; bitNum++) {
+        for (int bitNum = 0; bitNum < block_size * block_size; bitNum++) {
             INFO_FMT("bit number %d", bitNum);
 
             long inputCcw90 = 1L << bitNum;
@@ -46,12 +46,12 @@ void testContentRotationProperties() {
             for (int rotationNum = 1; rotationNum <= 4; rotationNum++) {
                 INFO_FMT("Rotation %d", rotationNum);
 
-                outputCcw90 = rotateBlockContentsCcw90(outputCcw90, blockSize);
-                outputCw90 = rotateBlockContentsCw90(outputCw90, blockSize);
-                output180 = rotateBlockContents180(output180, blockSize);
+                outputCcw90 = rotateBlockContentsCcw90(outputCcw90, block_size);
+                outputCw90 = rotateBlockContentsCw90(outputCw90, block_size);
+                output180 = rotateBlockContents180(output180, block_size);
 
                 // absolute center on an odd-numbered block size
-                if (((blockSize & 1) == 1) && (bitNum == ((blockSize * blockSize) / 2))) {
+                if (((block_size & 1) == 1) && (bitNum == ((block_size * block_size) / 2))) {
                     continue;
                 }
 
@@ -76,20 +76,20 @@ void testContentRotationProperties() {
             }
 
             /* Certain rotations reverse one another */
-            inputContents = 1L << bitNum;
+            input_contents = 1L << bitNum;
             ASSERT_EQUAL_LONG(
-                inputContents,
-                rotateBlockContentsCcw90(rotateBlockContentsCw90(inputContents, blockSize), blockSize)
+                input_contents,
+                rotateBlockContentsCcw90(rotateBlockContentsCw90(input_contents, block_size), block_size)
             );
 
             ASSERT_EQUAL_LONG(
-                rotateBlockContents180(inputContents, blockSize),
-                rotateBlockContentsCcw90(rotateBlockContentsCcw90(inputContents, blockSize), blockSize)
+                rotateBlockContents180(input_contents, block_size),
+                rotateBlockContentsCcw90(rotateBlockContentsCcw90(input_contents, block_size), block_size)
             );
 
             ASSERT_EQUAL_LONG(
-                rotateBlockContents180(inputContents, blockSize),
-                rotateBlockContentsCw90(rotateBlockContentsCw90(inputContents, blockSize), blockSize)
+                rotateBlockContents180(input_contents, block_size),
+                rotateBlockContentsCw90(rotateBlockContentsCw90(input_contents, block_size), block_size)
             );
         }
     }
@@ -98,12 +98,12 @@ void testContentRotationProperties() {
 void testContentRotationManual() {
     /* Test manually input examples */
 
-    long inputContents;
+    long input_contents;
 
-    inputContents = 1L << 63;
-    ASSERT_EQUAL_LONG(rotateBlockContentsCcw90(inputContents, 8), (1L << 7));
+    input_contents = 1L << 63;
+    ASSERT_EQUAL_LONG(rotateBlockContentsCcw90(input_contents, 8), (1L << 7));
     ASSERT_EQUAL_LONG(
-        rotateBlockContentsCcw90(rotateBlockContentsCcw90(inputContents, 8), 8),
+        rotateBlockContentsCcw90(rotateBlockContentsCcw90(input_contents, 8), 8),
         (1L << 0)
     );
 
@@ -287,7 +287,7 @@ void testContentBitToPoint() {
 
 
 void testPointToContentBit() {
-    
+
     int expected;
     int actual;
 
@@ -295,7 +295,7 @@ void testPointToContentBit() {
     expected = 1;
     actual = pointToContentBit((Point){1, 1}, 2);
     ASSERT_EQUAL_INT(expected, actual);
-    
+
     expected = 3;
     actual = pointToContentBit((Point){1, -1}, 2);
     ASSERT_EQUAL_INT(expected, actual);
@@ -376,111 +376,376 @@ void testPointToContentBit() {
 
 }
 
-
 void testContentBitConversionProperties() {
     /* Tests using
      * contentBitToPoint and pointToContentBit in tandem
      */
     int output;
 
-    for (int blockSize = 2; blockSize <= 8; blockSize++) {
-        for (int bitNum = 0; bitNum < blockSize * blockSize; bitNum++) {
+    for (int block_size = 2; block_size <= 8; block_size++) {
+        for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
             output = pointToContentBit(
-                contentBitToPoint(bitNum, blockSize),
-                blockSize
+                contentBitToPoint(bit_num, block_size),
+                block_size
             );
 
-            ASSERT_EQUAL_INT(output, bitNum);
+            ASSERT_EQUAL_INT(output, bit_num);
         }
     }
 
 }
 
-void testSetupNewBlock() {
+/*=================================================================
+ * Refactor from here below
+==================================================================*/
+
+void testBlockCreation() {
     /* Tests on setting up new blocks */
 
-    const int max_blocks = 128;
-    int id_arr[128] = {0};
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
 
-    BlockIds my_ids = {.head = 0, .id_array = id_arr, .max_ids = 128};
+    memset(id_arr, 0, 128 * sizeof(int));
 
-    int new_id;
-    for (int i = 0; i < max_blocks; i++) {
-        new_id = BlockIds_provisionId(&my_ids, 4);
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
 
-        // PROPERTY: valid ids are positive
-        ASSERT_GREATER_THAN_INT(new_id, -1);
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
 
-        // PROPERTY: values stored are number of "cells" per block
-        ASSERT_EQUAL_INT(my_ids.id_array[new_id], 4);
+    int new_block = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){.x=0, .y=0});
+    ASSERT_GREATER_THAN_INT(new_block, INVALID_BLOCK_ID);
+    ASSERT_TRUE(BlockDb_doesBlockExist(&db, new_block));
+
+    // ensure set up correctly while also testing getters
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, new_block), 4);
+    ASSERT_EQUAL_INT(BlockDb_getBlockSize(&db, new_block), 4);
+    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(&db, new_block), 0b0000011001100000L);
+
+    // fill up our db
+    for (int i = 0; i < 127; i++) {
+        BlockDb_createBlock(&db, 4, 0L, (Point){.x=0, .y=0});
     }
-   
-    // PROPERTY: -1 should be an invalid id, returned when we couldn't provision an id
-    new_id = BlockIds_provisionId(&my_ids, 4);
-    ASSERT_EQUAL_INT(new_id, -1);
 
-    // PROPERTY: 0 should be a valid id
-    BlockIds_removeId(&my_ids, 0);
-    new_id = BlockIds_provisionId(&my_ids, 4);
-    ASSERT_GREATER_THAN_INT(new_id, -1);
+    // create one too many
+    int bad_block = BlockDb_createBlock(&db, 4, 0L, (Point){.x=0, .y=0});
+    ASSERT_EQUAL_INT(bad_block, INVALID_BLOCK_ID);
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, bad_block));
+
 }
 
-void testBlockIdsDecrementId() {
-    int id_arr[4] = {0, 0, 2, 0};
-    BlockIds my_ids = {.head = 0, .id_array=id_arr, .max_ids=4};
 
-    int good_result = BlockIds_decrementId(&my_ids, 2, 1);
-    ASSERT_EQUAL_INT(good_result, 0);
-    ASSERT_EQUAL_INT(my_ids.id_array[2], 1);
+void testCreateManyBlocks() {
+    // Create a lot of blocks and ensure all have a valid id
 
-    int bad_result = BlockIds_decrementId(&my_ids, 0, 1);
-    ASSERT_EQUAL_INT(bad_result, -1);
-    ASSERT_EQUAL_INT(my_ids.id_array[0], 0);
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+    int id;
+    for (int block_num = 0; block_num < 128; block_num++) {
+        id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0});
+        ASSERT_NOT_EQUAL_INT(id, INVALID_BLOCK_ID);
+    }
+
+    id = BlockDb_createBlock(&db, 4, 0b0000011001100000L, (Point){0, 0});
+    ASSERT_EQUAL_INT(id, INVALID_BLOCK_ID);
 }
 
-void testBlockIdsIncrementId() {
-    int id_arr[4] = {0, 0, 2, 0};
-    BlockIds my_ids = {.head = 0, .id_array=id_arr, .max_ids=4};
+void testBlockCellManipulation() {
+    // Add and remove cells from blocks
 
-    int good_result = BlockIds_incrementId(&my_ids, 2, 1);
-    ASSERT_EQUAL_INT(good_result, 0);
-    ASSERT_EQUAL_INT(my_ids.id_array[2], 3);
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+    // make a block with 4 cells
+    // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
+    int block_id = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0});
+
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, block_id), 8);
+
+    int retval = BlockDb_incrementCellCount(&db, block_id, 1);
+    ASSERT_EQUAL_INT(retval, 0);  // success
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, block_id), 9);
+
+    retval = BlockDb_decrementCellCount(&db, block_id, 2);
+    ASSERT_EQUAL_INT(retval, 0);  // success
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, block_id), 7);
+
+    retval = BlockDb_removeBlock(&db, block_id);
+    ASSERT_EQUAL_INT(retval, 0);  // success
+
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, block_id), 0);
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, block_id));
+
+    // Cannot directly increment from 0 without calling for block creation
+    retval = BlockDb_incrementCellCount(&db, block_id, 1);
+    ASSERT_EQUAL_INT(retval, -1);  // fail
+
+    retval = BlockDb_decrementCellCount(&db, block_id, 1);
+    ASSERT_EQUAL_INT(retval, -1);  // fail
+
+    int block_id_2 = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0});
+
+    // decrement to 0 counts as a "manual" removal
+    retval = BlockDb_decrementCellCount(&db, block_id_2, 8);
+    ASSERT_EQUAL_INT(retval, 0);  // success
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, block_id_2));
+
+    // cannot decrement past 0
+    int block_id_3 = BlockDb_createBlock(&db, 4, 0b0000111111110000L, (Point){.x=0, .y=0});
+    retval = BlockDb_decrementCellCount(&db, block_id_3, 9);
+    ASSERT_EQUAL_INT(retval, -1);  // fail
+    
+    // operation fails entirely - nothing removed
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, block_id_3), 8);
 }
+
 
 
 void testTransformBlock() {
-    Block my_block = {.size = 2, .contents = 0b0011};
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
 
-    Block_transform(&my_block, (Point){0, 1});
-    ASSERT_EQUAL_INT(my_block.contents, 0b0101);
+    memset(id_arr, 0, 128 * sizeof(int));
 
-    Block_transform(&my_block, (Point){-1, 0});
-    ASSERT_EQUAL_INT(my_block.contents, 0b1010);
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+    // int block_id = BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
+    int block_id = BlockDb_createBlock(&db, 2, 0b0011L, (Point){0, 0});
+
+    int retval = BlockDb_transformBlock(&db, block_id, (Point){0, 1});
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(BlockDb_getBlockContents(&db, block_id), 0b0101L);
+
+    retval = BlockDb_transformBlock(&db, block_id, (Point){-1, 0});
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(BlockDb_getBlockContents(&db, block_id), 0b1010L);
 }
 
 void testTranslateBlock() {
-    Block my_block;
-    
-    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    Block_translate(&my_block, (Point){1, 0});
-    ASSERT_EQUAL_INT(my_block.position.x , 3);
-    ASSERT_EQUAL_INT(my_block.position.y , 2);
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
 
-    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    Block_translate(&my_block, (Point){0, 1});
-    ASSERT_EQUAL_INT(my_block.position.x , 2);
-    ASSERT_EQUAL_INT(my_block.position.y , 3);
+    memset(id_arr, 0, 128 * sizeof(int));
 
-    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    Block_translate(&my_block, (Point){-1, 0});
-    ASSERT_EQUAL_INT(my_block.position.x , 1);
-    ASSERT_EQUAL_INT(my_block.position.y , 2);
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
 
-    my_block = (Block){.position = (Point){.x = 2, .y = 2}};
-    Block_translate(&my_block, (Point){0, -1});
-    ASSERT_EQUAL_INT(my_block.position.x , 2);
-    ASSERT_EQUAL_INT(my_block.position.y , 1);
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+    Point new_pos;
+    Point init_pos = {.x=2, .y=2};
+    int retval;
+
+    int block_id = BlockDb_createBlock(&db, 2, 0b1111, init_pos);
+    retval = BlockDb_translateBlock(&db, block_id, (Point){1, 0});
+    ASSERT_EQUAL_INT(retval, 0);
+
+    new_pos = BlockDb_getBlockPosition(&db, block_id);
+    ASSERT_EQUAL_INT(new_pos.x , 3);
+    ASSERT_EQUAL_INT(new_pos.y , 2);
+
+
+    BlockDb_setBlockPosition(&db, block_id, init_pos);
+    retval = BlockDb_translateBlock(&db, block_id, (Point){0, 1});
+    ASSERT_EQUAL_INT(retval, 0);
+
+    new_pos = BlockDb_getBlockPosition(&db, block_id);
+    ASSERT_EQUAL_INT(new_pos.x , 2);
+    ASSERT_EQUAL_INT(new_pos.y , 3);
+
+
+    BlockDb_setBlockPosition(&db, block_id, init_pos);
+    retval = BlockDb_translateBlock(&db, block_id, (Point){-1, 0});
+    ASSERT_EQUAL_INT(retval, 0);
+
+    new_pos = BlockDb_getBlockPosition(&db, block_id);
+    ASSERT_EQUAL_INT(new_pos.x , 1);
+    ASSERT_EQUAL_INT(new_pos.y , 2);
+
+    BlockDb_setBlockPosition(&db, block_id, init_pos);
+    retval = BlockDb_translateBlock(&db, block_id, (Point){0, -1});
+    ASSERT_EQUAL_INT(retval, 0);
+
+    new_pos = BlockDb_getBlockPosition(&db, block_id);
+    ASSERT_EQUAL_INT(new_pos.x , 2);
+    ASSERT_EQUAL_INT(new_pos.y , 1);
 }
+
+void testGetCellCount() {
+
+    INFO("Size 2");
+    ASSERT_EQUAL_INT(getCellCount(0b1111L, 2), 4);
+    ASSERT_EQUAL_INT(getCellCount(0b0000L, 2), 0);
+    ASSERT_EQUAL_INT(getCellCount(0b0110L, 2), 2);
+
+    INFO("Size 4");
+    ASSERT_EQUAL_INT(getCellCount(0b1111111111111111L, 4), 16);
+    ASSERT_EQUAL_INT(getCellCount(0b0000000000000000L, 4), 0);
+    ASSERT_EQUAL_INT(getCellCount(0b1111111100000000L, 4), 8);
+
+    INFO("Size 5 (odd)");
+    ASSERT_EQUAL_INT(getCellCount(0b1111111111111111111111111L, 5), 25);
+    ASSERT_EQUAL_INT(getCellCount(0b0000000000000000000000000L, 5), 0);
+    ASSERT_EQUAL_INT(getCellCount(0b1111111111000000000000000L, 5), 10);
+}
+
+
+void testInvalidBlockDbOperations() {
+    // Attempt to perform BlockDb operations with a nonexisting/invalid
+    // block
+
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+    
+    int invalid = INVALID_BLOCK_ID;
+    int nonexist = 5;
+    
+    ASSERT_EQUAL_INT(BlockDb_transformBlock(&db, invalid, (Point){1, 0}), -1);
+    ASSERT_EQUAL_INT(BlockDb_transformBlock(&db, nonexist, (Point){1, 0}), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_translateBlock(&db, invalid, (Point){1, 0}), -1);
+    ASSERT_EQUAL_INT(BlockDb_translateBlock(&db, nonexist, (Point){1, 0}), -1);
+
+    ASSERT_FALSE(BlockDb_isContentBitSet(&db, invalid, 1));
+    ASSERT_FALSE(BlockDb_isContentBitSet(&db, nonexist, 1));
+
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, invalid));
+    ASSERT_FALSE(BlockDb_doesBlockExist(&db, nonexist));
+
+    // Getters & setters
+    ASSERT_EQUAL_INT(BlockDb_setBlockSize(&db, invalid, 4), -1);
+    ASSERT_EQUAL_INT(BlockDb_setBlockSize(&db, nonexist, 4), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_setBlockContents(&db, invalid, 0b11111111), -1);
+    ASSERT_EQUAL_INT(BlockDb_setBlockContents(&db, nonexist, 0b11111111), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_setBlockPosition(&db, invalid, (Point){0, 0}), -1);
+    ASSERT_EQUAL_INT(BlockDb_setBlockPosition(&db, nonexist, (Point){0, 0}), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(&db, invalid), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_decrementCellCount(&db, invalid, 1), -1);
+    ASSERT_EQUAL_INT(BlockDb_decrementCellCount(&db, nonexist, 1), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_incrementCellCount(&db, invalid, 1), -1);
+    ASSERT_EQUAL_INT(BlockDb_incrementCellCount(&db, invalid, 1), -1);
+
+    ASSERT_EQUAL_INT(BlockDb_removeBlock(&db, invalid), -1);
+    ASSERT_EQUAL_INT(BlockDb_removeBlock(&db, nonexist), -1);
+}
+
+void testContentBitCheck() {
+
+    long content_mask = (1L << 5) | (1L << 6) | (1L << 9) | (1L << 10) ;
+
+    int id_arr[128];
+    int size_arr[128];
+    long contents_arr[128];
+    Point position_arr[128];
+
+    memset(id_arr, 0, 128 * sizeof(int));
+
+    BlockDb db = {
+        .max_ids=128,
+        .head=0,
+
+        .ids=id_arr,
+        .sizes=size_arr,
+        .contents=contents_arr,
+        .positions=position_arr
+    };
+
+                                       // BlockDb_createBlock(BlockDb *self, int size, long contents, Point position)
+    int block_id = BlockDb_createBlock(&db, 4, content_mask, (Point){0, 0});
+    bool is_set;
+
+    ASSERT_NOT_EQUAL_INT(block_id, INVALID_BLOCK_ID);
+    for (int bit_num = 0; bit_num < 16; bit_num++) {
+
+        is_set = BlockDb_isContentBitSet(&db, block_id, bit_num);
+
+        if (bit_num == 5 || bit_num == 6 || bit_num == 9 || bit_num == 10) {
+            ASSERT_TRUE(is_set);
+        }
+        else {
+            ASSERT_FALSE(is_set);
+        }
+
+    }
+
+}
+
+
+
+/*=================================================================
+ * End refactor zone
+==================================================================*/
 
 
 int main() {
@@ -490,13 +755,16 @@ int main() {
     ADD_CASE(testContentBitToPoint);
     ADD_CASE(testPointToContentBit);
     ADD_CASE(testContentBitConversionProperties);
-    ADD_CASE(testSetupNewBlock);
-    ADD_CASE(testBlockIdsDecrementId);
-    ADD_CASE(testBlockIdsIncrementId);
+
+    ADD_CASE(testBlockCreation);
+    ADD_CASE(testCreateManyBlocks);
+    ADD_CASE(testBlockCellManipulation);
     ADD_CASE(testTransformBlock);
     ADD_CASE(testTranslateBlock);
+    ADD_CASE(testGetCellCount);
 
+    ADD_CASE(testInvalidBlockDbOperations);
+    ADD_CASE(testContentBitCheck);
     EWENIT_END;
-    // EWENIT_END_COMPACT;
     return 0;
 }
