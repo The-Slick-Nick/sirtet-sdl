@@ -70,7 +70,7 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
 ******************************************************************************/
 // As another type of "virtual code"
 
-#define MAX_MENUCODE_MAPS  // Max number of mappings we can maintain
+#define MAX_MENUCODE_MAPS 128 // Max number of mappings we can maintain
 
 
 // Enum of codes representing menu
@@ -97,8 +97,12 @@ typedef struct {
 // Struct wrapping a list of menucode mappings
 typedef struct {
     int head;
-    MenucodeMapItem mappings[MAX_MENUCODE_MAPS];
+    int size;
+    MenucodeMapItem *mappings;
 } MenucodeMap;
+
+MenucodeMap* MenucodeMap_init(int max_maps);
+int MenucodeMap_deconstruct(MenucodeMap *self);
 
 // Add a mapping for a hardware input to menu input
 int Menucode_addMap(

@@ -45,8 +45,7 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
         0b1100011000000000
     };
 
-
-    // TODO replace the 720 with whatever the configured window height is
+    // TODO: replace the 720 with whatever the configured window height is
     const int grid_draw_height = (3 * 720) / 4;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
     const int grid_draw_width = GRID_WIDTH * cell_size;

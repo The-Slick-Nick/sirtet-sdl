@@ -140,6 +140,21 @@ bool Gamecode_pressed(bool *gamecode_arr, Gamecode gamecode) {
  * Menu inputs
 ******************************************************************************/
 
+MenucodeMap* MenucodeMap_init(int max_maps) {
+    MenucodeMap *retval = (MenucodeMap*)malloc(sizeof(MenucodeMap));
+
+    retval->head = 0;
+    retval->size=max_maps;
+    retval->mappings = (MenucodeMapItem*)malloc(max_maps * sizeof(MenucodeMapItem));
+    return retval;
+}
+
+int MenucodeMap_deconstruct(MenucodeMap *self) {
+    free(self->mappings);
+    free(self);
+    return 0;
+}
+
 /**
  * @brief Populate menucode flag array based on key mappings and customized 
  *                          state of hardware
@@ -179,7 +194,6 @@ int processMenucodes(
     return 0;
 }
 
-
 // Add a mapping of hardware code to virtual code
 int Menucode_addMap(
     MenucodeMap *map_itm, Menucode virtual_code, SDL_Scancode hardware_code,
@@ -187,18 +201,23 @@ int Menucode_addMap(
 ) {
 
     // TODO: Return -1 instead?
-    assert(map_itm->head < MAX_GAMECODE_MAPS);
+    printf("asserting...\n");
+    assert(map_itm->head < MAX_MENUCODE_MAPS);
 
-    *(map_itm->mappings + map_itm->head) = (MenucodeMapItem){
+    map_itm->mappings[map_itm->head] = (MenucodeMapItem){
         .virtual_code=virtual_code,
         .hardware_code=hardware_code,
         .frame_start=frame_start,
         .frame_end=frame_end,
         .frame_interval=frame_interval
-
     };
 
     map_itm->head += 1;
 
     return 0;
+}
+
+// Identify if a given Menucode is pressed or not
+bool Menucode_pressed(bool *menucode_arr, Menucode menucode) {
+    return menucode_arr[(int)menucode];
 }

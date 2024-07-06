@@ -1,6 +1,7 @@
 #include "inputs.h"
 #include "run_game.h"
 #include "game_state.h"
+#include "mainmenu_state.h"
 #include "application_state.h"
 #include "state_runner.h"
 #include "states/application_state.h"
@@ -31,20 +32,31 @@ int run() {
         return -1;
     }
 
-    printf("Initializing game state...\n");
-    GameState *game_state = GameState_init(global_state->rend, global_state->menu_font, 1);
-    if (game_state == NULL) {
-        return -1;
-    }
+    // printf("Initializing game state...\n");
+    // GameState *game_state = GameState_init(global_state->rend, global_state->menu_font, 1);
+    // if (game_state == NULL) {
+    //     return -1;
+    // }
+
+    printf("Initializing main menu...\n");
+    MainMenuState *mainmenu_state = MainMenuState_init(
+        global_state->rend, global_state->menu_font
+    );
 
     // State runner uses stack memory, but others use heap
     printf("Initializing state runner...\n");
-
     StateRunner *state_runner = StateRunner_init(32, 16);
 
     // Begin with game state
-    printf("Pushing game state...\n");
-    StateRunner_addState(state_runner, (void*)game_state, runGameFrame, GameState_deconstruct);
+    // printf("Pushing game state...\n");
+    // StateRunner_addState(state_runner, (void*)game_state, runGameFrame, GameState_deconstruct);
+    // assert(StateRunner_commitBuffer(state_runner) == 0);
+
+    printf("Pushing main menu state...\n");
+    StateRunner_addState(
+        state_runner, mainmenu_state, MainMenuState_run,
+        MainMenuState_deconstruct
+    );
     assert(StateRunner_commitBuffer(state_runner) == 0);
 
     clock_t frame_start;
