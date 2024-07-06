@@ -103,10 +103,10 @@ int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
 
 // TODO: Convert below to return an integer status code
 //
-// Reset all of a grid's contents
+// Reset all of a grid's contents to baseline.
 void GameGrid_clear(GameGrid* grid) {
     for (int idx = 0; idx < grid->width * grid->height; idx++) {
-         grid->contents[idx] = -1;
+         grid->contents[idx] = INVALID_BLOCK_ID;
     };
 }  
 
@@ -177,4 +177,59 @@ int GameGrid_resolveRows(GameGrid *self, BlockDb *db) {
         }
     }
     return num_full_rows;
+}
+
+// Calculate how many points to award based on the current grid state
+int GameGrid_assessScore(GameGrid *self, int level) {
+    /**************************************************************************
+     * The scoring system here will attempt to use the scoring system
+     * from the original Tetris for NES
+     *
+     * https://tetris.wiki/Scoring
+     *
+     * Points are awarded based on the number of lines cleared at a time, with
+     * a multiplier applied based on the current game level.
+     *
+     * score = (line_score) * (level + 1)
+     * game level.
+     *
+     * Number of Lines      Score
+     * ---------------------------
+     *  1                     40
+     *  2                    100
+     *  3                    300
+     *  4                   1200
+     *
+     * Also note that points will also be awarded when blocks are
+     * "soft dropped" (sped up), though that will not be tabulated here.
+     *
+    **************************************************************************/
+
+    int num_rows = 0;
+    int idx;
+    bool is_full_row;
+    for (int y = 0; y < self->height; y++) {
+        is_full_row = true;
+        for (int x = 0; x < self->width; x++) {
+            idx = x + y * self->width;
+
+            if (self->contents[idx] == INVALID_BLOCK_ID) {
+                is_full_row = false;
+                break;
+            }
+        }
+        if (is_full_row) {
+            num_rows++;
+        }
+    }
+
+    return (level + 1) * (
+        num_rows == 0 ? 0 :
+        num_rows == 1 ? 40 :
+        num_rows == 2 ? 100 :
+        num_rows == 3 ? 300 :
+        num_rows == 4 ? 1200 : -1
+    );
+
+
 }

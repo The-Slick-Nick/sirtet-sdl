@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 
+
 typedef struct {
 
     int width;
@@ -49,5 +50,8 @@ void GameGrid_reset(GameGrid* grid, BlockDb *db);
 
 // clears full rows of committed blocks
 int GameGrid_resolveRows(GameGrid* grid, BlockDb *db);
+
+// Calculate how many points to award based on the current grid state
+int GameGrid_assessScore(GameGrid *self, int level);
 
 #endif

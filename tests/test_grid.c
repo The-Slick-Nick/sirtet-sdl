@@ -106,9 +106,6 @@ void testGameGridCanBlockInfoExist() {
     grid.contents[5] = 1;
     result = GameGrid_canBlockInfoExist( &grid, block_size, block_contents, (Point){.x=2, .y=2});
     ASSERT_FALSE(result);
-
-
-    // even-sized grid
 }
 
 void testGameGridCanBlockExist() {
@@ -285,6 +282,77 @@ void testGameGridCommitBlock() {
 }
 
 
+void testGameGridAssessScore() {
+    // Assess scoring of game grid based on states
+    
+
+    // Tests will perform on a standard 10w x 24h tetris grid,
+    // but the logic used should apply
+    
+    int grid_contents[240];
+    GameGrid grid = {
+        .width=10,
+        .height=24,
+        .contents=grid_contents
+    };
+    GameGrid_clear(&grid);
+
+    int score;
+
+    // completely empty
+    score = GameGrid_assessScore(&grid, 0);
+    ASSERT_EQUAL_INT(score, 0);
+
+    // some blocks but nothing filled
+    grid.contents[0 + 10 * 23] = 0;
+    grid.contents[1 + 10 * 23] = 0;
+    grid.contents[0 + 9 * 22] = 0;
+    grid.contents[1 + 9 * 22] = 0;
+    score = GameGrid_assessScore(&grid, 0);
+    ASSERT_EQUAL_INT(score, 0);
+
+    // one row
+    for (int x = 0; x < grid.width; x++) {
+        grid.contents[x + 10 * 23] = 0;
+    }
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 0), 40);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 1), 80);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 2), 120);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 4), 200);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 8), 360);
+
+    // two rows
+    for (int x = 0; x < grid.width; x++) {
+        grid.contents[x + 10 * 22] = 0;
+    }
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 0), 100);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 1), 200);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 2), 300);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 4), 500);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 8), 900);
+
+    // three rows
+    for (int x = 0; x < grid.width; x++) {
+        grid.contents[x + 10 * 21] = 0;
+    }
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 0), 300);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 1), 600);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 2), 900);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 4), 1500);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 8), 2700);
+
+    // four rows
+    for (int x = 0; x < grid.width; x++) {
+        grid.contents[x + 10 * 20] = 0;
+    }
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 0), 1200);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 1), 2400);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 2), 3600);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 4), 6000);
+    ASSERT_EQUAL_INT(GameGrid_assessScore(&grid, 8), 10800);
+}
+
+
 int main() {
     EWENIT_START;
     ADD_CASE(testGameGridReset);
@@ -293,6 +361,10 @@ int main() {
     ADD_CASE(testGameGridCanBlockExist);
     ADD_CASE(testGameGridResolveRows);
     ADD_CASE(testGameGridCommitBlock);
+
+    ADD_CASE(testGameGridAssessScore);
+
+
     // EWENIT_END_COMPACT;
     EWENIT_END;
     return 0;

@@ -31,7 +31,7 @@
 //
 // Assumes that GameState_deconstruct() is eventually called
 // on the return value
-GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num) {
+GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
 
     /*** Supplementary data ***/
 
@@ -66,9 +66,10 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num
     *(retval) = (GameState){
         // single values 
         .move_counter=0,
+        .score=0,
+        .level=1,
         .god_mode=false,
         .num_presets=7,
-        .state_num=state_num,
 
         .primary_block = INVALID_BLOCK_ID,
 
@@ -303,7 +304,7 @@ StateFuncStatus GameState_run(
     // TODO: Remove this part later, as it is currly only a very quick test
     if (hardware_states[SDL_SCANCODE_TAB] == 1) {
 
-        GameState *new_state = GameState_init(application_state->rend, application_state->menu_font, game_state->state_num + 1);
+        GameState *new_state = GameState_init(application_state->rend, application_state->menu_font);
         StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
     }
 

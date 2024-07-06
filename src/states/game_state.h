@@ -28,11 +28,12 @@
 // This struct wraps information that the game cares about
 typedef struct {
 
-    int state_num;
     bool *gamecode_states;      // boolean flag array for gamecodes (indexed by Gamecode)
 
     bool god_mode;              // boolean flag for ultra-easy mode
     int move_counter;           // number of frames since last movement
+    int score;                  // Number of points accumulated
+    int level;                  // Current game level. Affects speed & score
 
     BlockDb *block_db;
     GameGrid game_grid;         // Grid struct storing committed blocks
@@ -53,7 +54,7 @@ typedef struct {
 
 
 // Initialize and return a pointer for GameState
-GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font, int state_num);
+GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font);
 
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);
