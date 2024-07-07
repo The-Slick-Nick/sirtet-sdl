@@ -94,10 +94,9 @@ StateFuncStatus MainMenuState_run(
     }
 
     if (Menucode_pressed(menu_codes, MENUCODE_SELECT)) {
-        GameState *new_state = GameState_init(rend, app_state->menu_font);
-        StateRunner_addState(
-            state_runner, new_state, GameState_run, GameState_deconstruct
-        );
+        // GameState *new_state = GameState_init(rend, app_state->menu_font);
+        GameState *new_state = GameState_init(app_state);
+        StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
     }
 
     /***** Draw *****/

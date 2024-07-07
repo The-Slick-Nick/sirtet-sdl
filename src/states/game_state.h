@@ -18,6 +18,7 @@
 #include "inputs.h"
 
 #include "state_runner.h"
+#include "application_state.h"
 
 
 #define GRID_WIDTH 10
@@ -54,7 +55,7 @@ typedef struct {
 
 
 // Initialize and return a pointer for GameState
-GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font);
+GameState* GameState_init(ApplicationState *app_state);
 
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);

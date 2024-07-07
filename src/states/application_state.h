@@ -18,11 +18,12 @@
 // Higher-level status/state of hardware and such
 // to pass to lower-level virtual states
 typedef struct {
+
     int *hardware_states;  // Array, indexed by SDL_Scancode, indicating # of frames a hardware input has been pressed (or released)
     SDL_Renderer *rend;     // Pointer to renderer struct in use by the application
-    SDL_Window *wind;
+    SDL_Window *wind;       // Pointer to SDL_Window struct
 
-    TTF_Font *menu_font;
+    TTF_Font *menu_font;    // Font pointer to use for menu things
 } ApplicationState;
 
 

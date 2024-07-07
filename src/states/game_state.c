@@ -11,8 +11,10 @@
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_video.h>
 #include <limits.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "grid.h"
 #include "block.h"
@@ -31,7 +33,16 @@
 //
 // Assumes that GameState_deconstruct() is eventually called
 // on the return value
-GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
+GameState* GameState_init(ApplicationState *app_state) {
+
+
+    // NOTE: I'm on the fence about passing the whole ApplicationState
+    // into GameState constructor... it's more convenient, but does it too
+    // tightly couple things?
+
+
+    SDL_Renderer *rend = app_state->rend;
+    TTF_Font *menu_font = app_state->menu_font;
 
     /*** Supplementary data ***/
 
@@ -45,8 +56,13 @@ GameState* GameState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         0b1100011000000000
     };
 
+    int window_h;
+    int window_w;
+    SDL_GetWindowSize(app_state->wind, &window_w, &window_h);
+
+
     // TODO: replace the 720 with whatever the configured window height is
-    const int grid_draw_height = (3 * 720) / 4;
+    const int grid_draw_height = (3 * window_h) / 4;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
     const int grid_draw_width = GRID_WIDTH * cell_size;
 
@@ -276,6 +292,64 @@ int updateGame(GameState *game_state) {
     return 0;
 }
 
+/*=============================================================================
+ * Draw Components
+=============================================================================*/
+
+// Draw supplmental game info (Score, on deck, flair, etc.)
+void drawInterface(GameState *game_state, ApplicationState *app_state) {
+
+    // Convenience unpacking
+    SDL_Renderer *rend = app_state->rend;
+    SDL_Rect draw_window = game_state->draw_window;
+    TTF_Font *menu_font = app_state->menu_font;
+    int score = game_state->score;
+
+    // helper vars
+    char score_buffer[32];  // 32 is overkill but just in case...
+    int window_w;
+    int window_h;
+    SDL_GetWindowSize(app_state->wind, &window_w, &window_h);
+
+    const int grid_draw_height = (3 * window_h) / 4;
+    const int cell_size =  grid_draw_height / GRID_HEIGHT;
+    const int grid_draw_width = GRID_WIDTH * cell_size;
+
+    snprintf(score_buffer, 16, "Score: %d", score);
+
+    // TODO: Cache this as as texture and only recalculate on a score
+    // recalculation
+    SDL_Surface *surf = TTF_RenderText_Solid(
+        menu_font, score_buffer, (SDL_Color){255, 255, 255}
+    );
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surf);
+
+    SDL_Rect dstrect = {.x=grid_draw_width, .y=0};
+    SDL_QueryTexture(texture, NULL, NULL, &dstrect.w, &dstrect.h);
+    SDL_RenderCopy(rend, texture, NULL, &dstrect);
+
+
+    SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surf);
+
+
+}
+
+// Draw main game area (primary block & grid)
+void drawGameArea(SDL_Renderer *rend, GameState *game_state) {
+
+    if (game_state->primary_block != INVALID_BLOCK_ID) {
+        drawBlock(
+            rend, game_state->draw_window, game_state->block_db,
+            game_state->primary_block,
+            &game_state->game_grid
+        );
+    }
+
+    drawGrid(rend, game_state->draw_window, game_state->block_db,
+             &game_state->game_grid);
+
+}
 
 
 
@@ -309,7 +383,7 @@ StateFuncStatus GameState_run(
     // TODO: Remove this part later, as it is currly only a very quick test
     if (hardware_states[SDL_SCANCODE_TAB] == 1) {
 
-        GameState *new_state = GameState_init(application_state->rend, application_state->menu_font);
+        GameState *new_state = GameState_init(application_state);
         StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
     }
 
@@ -337,11 +411,9 @@ StateFuncStatus GameState_run(
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
 
-    if (game_state->primary_block != INVALID_BLOCK_ID) {
-        drawBlock(rend, draw_window, db, game_state->primary_block, &game_state->game_grid);
-    }
+    drawGameArea(rend, game_state);
 
-    drawGrid(rend, draw_window, db, &game_state->game_grid);
+    drawInterface(game_state, application_state);
 
     return STATEFUNC_CONTINUE;
 }
@@ -375,12 +447,10 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
 
-    if (game_state->primary_block != INVALID_BLOCK_ID) {
-        drawBlock(rend, draw_window, db, game_state->primary_block, &game_state->game_grid);
-    }
+    drawGameArea(rend, game_state);
+    drawInterface(game_state, application_state);
 
-    drawGrid(rend, draw_window, db, &game_state->game_grid);
-
+    // Pause overlay
     SDL_Rect dstrect = {.x=10, .y=10};
     SDL_QueryTexture(game_state->pause_texture, NULL, NULL, &dstrect.w, &dstrect.h);
     SDL_RenderCopy(rend, game_state->pause_texture, NULL, &dstrect);
