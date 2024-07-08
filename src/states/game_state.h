@@ -31,7 +31,6 @@ typedef struct {
 
     bool *gamecode_states;      // boolean flag array for gamecodes (indexed by Gamecode)
 
-    bool god_mode;              // boolean flag for ultra-easy mode
     int move_counter;           // number of frames since last movement
     int score;                  // Number of points accumulated
     int level;                  // Current game level. Affects speed & score

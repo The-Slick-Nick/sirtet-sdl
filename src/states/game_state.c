@@ -82,7 +82,6 @@ GameState* GameState_init(ApplicationState *app_state) {
         .move_counter=0,
         .score=0,
         .level=app_state->init_level,
-        .god_mode=false,
         .num_presets=7,
 
         .primary_block = INVALID_BLOCK_ID,
@@ -256,11 +255,6 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
         }
     }
 
-    // TODO: Remove "god_mode" (replace with a more comprehensive debug mode)
-    if (!game_state->god_mode) {
-        game_state->move_counter++;
-    }
-
     if (
         Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN)
         || game_state->move_counter > (TARGET_FPS / (1 + game_state->level))
@@ -353,6 +347,8 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
 
 }
 
+
+// Draw game area, including primary block and grid
 void drawGameArea(ApplicationState *app_state, GameState *game_state) {
 
     SDL_Renderer *rend = app_state->rend;
@@ -404,10 +400,6 @@ StateFuncStatus GameState_run(
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
         printf("Quitting...\n");
         return STATEFUNC_QUIT;
-    }
-
-    if (hardware_states[SDL_SCANCODE_G] == 1) {
-        game_state->god_mode = (game_state->god_mode == false);
     }
 
     StateFuncStatus update_status = updateGame(state_runner, game_state);
