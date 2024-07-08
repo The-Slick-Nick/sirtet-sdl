@@ -315,14 +315,13 @@ int GameGrid_prepareAnimation(GameGrid *self, int framerate) {
     return 0;
 }
 
-
+// Run one frame of the current grid animation
 int GameGrid_runAnimationFrame(GameGrid *self) {
 
 
     if (!self->is_animating) {
         return -1;
     }
-
     assert(self->cooldown > 0);
 
     if (--self->cooldown > 0) {
@@ -332,21 +331,14 @@ int GameGrid_runAnimationFrame(GameGrid *self) {
     bool animation_complete = true;
     for (int x = 0; x < self->height; x++) {
 
-        if (self->to_remove[x] == 0) {
-            continue;
-        }
-
-        if (++self->removed[x] == self->to_remove[x]) {
+        if (self->removed[x] == self->to_remove[x]) {
             self->removed[x] = 0;
             self->to_remove[x] = 0;
-        }
-
-        if (self->to_remove[x] == 0) {
             continue;
         }
-        else {
-            animation_complete = false;
-        }
+
+        animation_complete = false;
+        self->removed[x]++;
     }
 
     if (animation_complete) {

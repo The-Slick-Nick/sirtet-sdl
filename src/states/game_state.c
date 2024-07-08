@@ -256,6 +256,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
         }
     }
 
+    // TODO: Remove "god_mode" (replace with a more comprehensive debug mode)
     if (!game_state->god_mode) {
         game_state->move_counter++;
     }
@@ -284,7 +285,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     }
     game_state->score += to_inc;
 
-    GameGrid_prepareAnimation(grid, 1);
+    GameGrid_prepareAnimation(grid, 3);
     if (grid->is_animating) {
         StateRunner_addState(
             state_runner, game_state, GameState_runGridAnimation, NULL
@@ -378,8 +379,7 @@ void drawGameArea(ApplicationState *app_state, GameState *game_state) {
 =============================================================================*/
 
 // Run a single frame of game
-// "state-runner function" for GameState
-
+// Primary "state-runner function" for GameState
 StateFuncStatus GameState_run(
     StateRunner *state_runner, void *application_data, void *state_data
 ) {
