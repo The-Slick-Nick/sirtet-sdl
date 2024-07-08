@@ -134,8 +134,9 @@ int Gamecode_addMap(
     int frame_start, int frame_end, int frame_interval
 ) {
 
-    // TODO: Return -1 instead?
-    assert(mapping->head < MAX_GAMECODE_MAPS);
+    if (mapping->head >= mapping->size) {
+        return -1;
+    }
 
     *(mapping->mappings + mapping->head) = (GamecodeMapItem){
         .virtual_code=virtual_code,
@@ -222,9 +223,9 @@ int Menucode_addMap(
     int frame_start, int frame_end, int frame_interval
 ) {
 
-    // TODO: Return -1 instead?
-    printf("asserting...\n");
-    assert(map_itm->head < MAX_MENUCODE_MAPS);
+    if (map_itm->head >= map_itm->size) {
+        return -1;
+    }
 
     map_itm->mappings[map_itm->head] = (MenucodeMapItem){
         .virtual_code=virtual_code,

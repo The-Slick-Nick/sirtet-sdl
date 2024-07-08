@@ -102,26 +102,30 @@ int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
     return 0;
 }
 
-// TODO: Convert below to return an integer status code
-//
 // Reset all of a grid's contents to baseline.
-void GameGrid_clear(GameGrid* grid) {
+int GameGrid_clear(GameGrid* grid) {
     for (int idx = 0; idx < grid->width * grid->height; idx++) {
          grid->contents[idx] = INVALID_BLOCK_ID;
     };
+
+    return 0;
 }  
 
 // Reset a grid's contents, clearing encountered blocks within BlockDb
-void GameGrid_reset(GameGrid* grid, BlockDb *db) {
+int GameGrid_reset(GameGrid* grid, BlockDb *db) {
 
     for (int grid_idx = 0; grid_idx < grid->width * grid->height; grid_idx++) {
         if (grid->contents[grid_idx] < 0) {
             continue;
         }
 
-        BlockDb_decrementCellCount(db, grid->contents[grid_idx], 1);
+        if (BlockDb_decrementCellCount(db, grid->contents[grid_idx], 1) == -1) {
+            return -1;
+        }
         grid->contents[grid_idx] = INVALID_BLOCK_ID;
     }
+
+    return 0;
 }  
 
 // clears full rows of committed blocks

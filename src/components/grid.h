@@ -43,10 +43,10 @@ int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id);
 // to an integer status code (0 = success, -1 = fail)
 
 // Reset all of a grid's contents
-void GameGrid_clear(GameGrid* grid);  
+int GameGrid_clear(GameGrid* grid);  
 
 // Reset a grid's contents, clearing encountered blocks
-void GameGrid_reset(GameGrid* grid, BlockDb *db);  
+int GameGrid_reset(GameGrid* grid, BlockDb *db);  
 
 // clears full rows of committed blocks
 int GameGrid_resolveRows(GameGrid* grid, BlockDb *db);

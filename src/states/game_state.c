@@ -265,8 +265,10 @@ int updateGame(GameState *game_state) {
         game_state->move_counter++;
     }
 
-    // TODO: replace `TARGET_FPS / 2` with TARGET_FPS / speed, where speed = # of moves per second
-    if ( Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN) || game_state->move_counter > TARGET_FPS / 2) {
+    if (
+        Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN)
+        || game_state->move_counter > (TARGET_FPS / (1 + game_state->level))
+    ) {
         game_state->move_counter = 0;
 
         Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){0, 1});
@@ -394,13 +396,6 @@ StateFuncStatus GameState_run(
 
     /***** PROCESS INPUTS *****/
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
-
-    // TODO: Remove this part later, as it is currly only a very quick test
-    if (hardware_states[SDL_SCANCODE_TAB] == 1) {
-
-        GameState *new_state = GameState_init(application_state);
-        StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
-    }
 
     /***** UPDATE *****/
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
