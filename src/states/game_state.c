@@ -213,7 +213,6 @@ int updateGame(GameState *game_state) {
 
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_ROTATE)) {
-        printf("Rotation!\n");
 
         long rotated_contents = rotateBlockContentsCw90(
             BlockDb_getBlockContents(db, *primary_block),

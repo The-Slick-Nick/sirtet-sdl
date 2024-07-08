@@ -121,21 +121,24 @@ StateFuncStatus MainMenuState_run(
 
     if (Menucode_pressed(menu_codes, MENUCODE_INCREMENT_VALUE)) {
         app_state->init_level++;
-        SDL_DestroyTexture(menu_state->level_label);
-        menu_state->level_label = NULL;
+        if (menu_state->level_label != NULL) {
+            SDL_DestroyTexture(menu_state->level_label);
+            menu_state->level_label = NULL;
+        }
     }
 
     if (Menucode_pressed(menu_codes, MENUCODE_DECREMENT_VALUE) && app_state->init_level > 0) {
         app_state->init_level--;
-        SDL_DestroyTexture(menu_state->level_label);
-        menu_state->level_label = NULL;
+        if (menu_state->level_label != NULL) {
+            SDL_DestroyTexture(menu_state->level_label);
+            menu_state->level_label = NULL;
+        }
     }
-
 
 
     // Draw prep
     if (menu_state->level_label == NULL) {
-        snprintf(strbuffer, 32, "Level %d", app_state->init_level);
+        snprintf(strbuffer, 32, "Level: %d", app_state->init_level);
         SDL_Surface *level_surf = TTF_RenderText_Solid(
             app_state->menu_font, strbuffer, (SDL_Color){255, 255, 255}
         );
