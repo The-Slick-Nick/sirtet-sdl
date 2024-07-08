@@ -330,6 +330,48 @@ void testGameGridAssessScore() {
 }
 
 
+void testGameGridAnimation() {
+
+    GameGrid *grid = GameGrid_init(4, 8);
+    int retval;
+
+    retval = GameGrid_prepareAnimation(grid, 10);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_FALSE(grid->is_animating);
+
+    // not yet animating
+    retval = GameGrid_runAnimationFrame(grid);
+    ASSERT_EQUAL_INT(retval, -1);
+
+
+    for (int col = 0; col < grid->width; col++) {
+        grid->contents[col] = 0;
+    }
+    retval = GameGrid_prepareAnimation(grid, 10);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_TRUE(grid->is_animating);
+
+    // 4 to remove, 10 frames per removal
+    for (int i = 0; i < 39; i++) {
+        retval = GameGrid_runAnimationFrame(grid);
+        ASSERT_EQUAL_INT(retval, 0);
+        ASSERT_TRUE(grid->is_animating);
+    }
+
+    // #40, now done
+    retval = GameGrid_runAnimationFrame(grid);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_FALSE(grid->is_animating);
+
+    retval = GameGrid_runAnimationFrame(grid);
+    ASSERT_EQUAL_INT(retval, -1);
+
+
+
+    GameGrid_deconstruct(grid);
+}
+
+
 int main() {
     EWENIT_START;
     ADD_CASE(testGameGridReset);
@@ -340,6 +382,7 @@ int main() {
     ADD_CASE(testGameGridCommitBlock);
 
     ADD_CASE(testGameGridAssessScore);
+    ADD_CASE(testGameGridAnimation);
 
 
     // EWENIT_END_COMPACT;

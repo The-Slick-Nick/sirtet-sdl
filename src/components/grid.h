@@ -10,7 +10,12 @@
 #include "block.h"
 #include <stdbool.h>
 
+#define DEFAULT_GRID_FRAMERATE 15  // One removal every X frames
 
+
+/******************************************************************************
+ * Strict declaration, initiation, deconstruction
+******************************************************************************/
 
 typedef struct {
 
@@ -22,11 +27,27 @@ typedef struct {
     // block ID (and thus that "cell" is empty)
     int *contents;
 
+    // Below is a collection of visual/animation related
+    // information
+    // TODO: Perhaps separate his into its own struct/thing
+    // later?
+    
+    // "removal" is purly visual in this instance
+    int cooldown;       // Number of frames until the next removal
+    int framerate;      // Number of frames between removals
+    bool is_animating;  // Flag to indicate if animation is in progress
+    int *to_remove;     // Array (corresponding to row indices) of total number of cells needing removed
+    int *removed;       // Array (corresponding to row indices) of number of cells removed
+
 } GameGrid;
 
 
 GameGrid *GameGrid_init(int width, int height);
 int GameGrid_deconstruct(GameGrid *self);
+
+/******************************************************************************
+ * Content management
+******************************************************************************/
 
 
 // Convert a block's content bit to grid coordinates
@@ -57,5 +78,15 @@ int GameGrid_resolveRows(GameGrid* grid, BlockDb *db);
 
 // Calculate how many points to award based on the current grid state
 int GameGrid_assessScore(GameGrid *self, int level);
+
+/******************************************************************************
+ * Display/animation management
+******************************************************************************/
+
+// Scan the grid and prepare contents for removal animation
+int GameGrid_prepareAnimation(GameGrid *self, int framerate);
+
+// Run one frame of the GameGrid animation
+int GameGrid_runAnimationFrame(GameGrid *self);
 
 #endif

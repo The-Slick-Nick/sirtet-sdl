@@ -14,7 +14,15 @@ GameGrid *GameGrid_init(int width, int height) {
     GameGrid *retval = (GameGrid*)malloc(sizeof(GameGrid));
     retval->width = width;
     retval->height = height;
+
+    retval->framerate = DEFAULT_GRID_FRAMERATE;
+    retval->cooldown = 0;   
+    retval->is_animating = false;
+
+
     retval->contents = (int*)malloc(width * height * sizeof(int));
+    retval->to_remove = (int*)calloc(height, sizeof(int));
+    retval->removed = (int*)calloc(height, sizeof(int));
 
     GameGrid_clear(retval);
     return retval;
@@ -23,10 +31,15 @@ GameGrid *GameGrid_init(int width, int height) {
 int GameGrid_deconstruct(GameGrid *self) {
     
     free(self->contents);
+    free(self->to_remove);
+    free(self->removed);
     free(self);
     return 0;
 }
 
+/******************************************************************************
+ * Content management
+******************************************************************************/
 
 // Convert a block's content bit to grid coordaintes
 Point blockContentBitToGridCoords(
@@ -260,6 +273,85 @@ int GameGrid_assessScore(GameGrid *self, int level) {
         num_rows == 3 ? 300 :
         num_rows == 4 ? 1200 : -1
     );
-
-
 }
+
+
+/******************************************************************************
+ * Display/animation management
+******************************************************************************/
+
+
+int GameGrid_prepareAnimation(GameGrid *self, int framerate) {
+
+    // must clear existing animation before attempting a new one
+    if (self->is_animating) {
+        return -1;
+    }
+
+    for (int x = 0; x < self->height; x++) {
+
+        self->to_remove[x] = 0;
+        self->removed[x] = 0;
+
+        bool row_full = true;
+        for (int y = 0; y < self->width; y++) {
+            if (self->contents[y + (self->width * x)] == INVALID_BLOCK_ID) {
+                row_full = false;
+                break;
+            }
+        }
+
+        if (row_full) {
+            self->to_remove[x] = self->width;
+            self->is_animating = true;
+        }
+    }
+
+    if (self->is_animating) {
+        self->framerate = framerate;
+        self->cooldown += framerate;
+    }
+
+    return 0;
+}
+
+
+int GameGrid_runAnimationFrame(GameGrid *self) {
+
+
+    if (!self->is_animating) {
+        return -1;
+    }
+
+    assert(self->cooldown > 0);
+
+    if (--self->cooldown > 0) {
+        return 0;
+    }
+
+    bool animation_complete = true;
+    for (int x = 0; x < self->height; x++) {
+
+        if (++self->removed[x] == self->to_remove[x]) {
+            self->removed[x] = 0;
+            self->to_remove[x] = 0;
+        }
+
+        if (self->to_remove[x] == 0) {
+            continue;
+        }
+        else {
+            animation_complete = false;
+        }
+    }
+
+    if (animation_complete) {
+        self->is_animating = false;
+    }
+    else {
+        self->cooldown += self->framerate;
+    }
+
+    return 0;
+}
+
