@@ -24,6 +24,9 @@ typedef struct {
     SDL_Window *wind;       // Pointer to SDL_Window struct
 
     TTF_Font *menu_font;    // Font pointer to use for menu things
+
+    // Game initialization settings (possibly to be moved to some kind of "settings" struct later?)
+    int init_level;
 } ApplicationState;
 
 

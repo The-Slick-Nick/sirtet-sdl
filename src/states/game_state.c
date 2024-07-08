@@ -81,7 +81,7 @@ GameState* GameState_init(ApplicationState *app_state) {
         // single values 
         .move_counter=0,
         .score=0,
-        .level=0,
+        .level=app_state->init_level,
         .god_mode=false,
         .num_presets=7,
 

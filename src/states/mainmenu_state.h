@@ -11,7 +11,7 @@
 
 #include "inputs.h"
 #include "state_runner.h"
-
+#include "application_state.h"
 
 // State representing the main menu
 // TODO: Once this is functioning correctly, extract
@@ -24,9 +24,11 @@ typedef struct {
 
     MenucodeMap *menucode_map;
 
+    SDL_Texture *level_label;   // Labels currently selected starting level
+
 } MainMenuState;
 
-MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font);
+MainMenuState* MainMenuState_init(ApplicationState *app_state);
 
 // Tear down a MainMenuState, following behaviour set by state_runner
 int MainMenuState_deconstruct(void* self);

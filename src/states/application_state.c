@@ -46,7 +46,9 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         .rend=rend,
         .wind=wind,
         .hardware_states=hardware_states,
-        .menu_font=TTF_OpenFont(buffer, 24)
+        .menu_font=TTF_OpenFont(buffer, 24),
+
+        .init_level = 0
     };
 
     return retval;

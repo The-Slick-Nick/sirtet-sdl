@@ -82,10 +82,12 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
 // Enum of codes representing menu
 typedef enum {
     MENUCODE_SELECT = 0,
-    MENUCODE_UP,
-    MENUCODE_DOWN,
-    MENUCODE_LEFT,
-    MENUCODE_RIGHT,
+    MENUCODE_MOVE_UP,
+    MENUCODE_MOVE_DOWN,
+    MENUCODE_MOVE_LEFT,
+    MENUCODE_MOVE_RIGHT,
+    MENUCODE_INCREMENT_VALUE,
+    MENUCODE_DECREMENT_VALUE,
     MENUCODE_EXIT,
     NUM_MENUCODES
 } Menucode;

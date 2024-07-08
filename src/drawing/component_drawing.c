@@ -14,7 +14,6 @@
 #include "coordinates.h"
 #include "block.h"
 #include "grid.h"
-#include "draw_config.h"
 
 
 int divround(int num, int denom) {
