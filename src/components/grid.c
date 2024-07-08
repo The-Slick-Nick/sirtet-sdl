@@ -4,6 +4,29 @@
 #include "grid.h"
 #include "block.h"
 
+/*************************************************************************************************
+ * Initialization and deconstruction
+*************************************************************************************************/
+
+
+GameGrid *GameGrid_init(int width, int height) {
+
+    GameGrid *retval = (GameGrid*)malloc(sizeof(GameGrid));
+    retval->width = width;
+    retval->height = height;
+    retval->contents = (int*)malloc(width * height * sizeof(int));
+
+    GameGrid_clear(retval);
+    return retval;
+} 
+
+int GameGrid_deconstruct(GameGrid *self) {
+    
+    free(self->contents);
+    free(self);
+    return 0;
+}
+
 
 // Convert a block's content bit to grid coordaintes
 Point blockContentBitToGridCoords(
@@ -115,7 +138,7 @@ int GameGrid_clear(GameGrid* grid) {
 int GameGrid_reset(GameGrid* grid, BlockDb *db) {
 
     for (int grid_idx = 0; grid_idx < grid->width * grid->height; grid_idx++) {
-        if (grid->contents[grid_idx] < 0) {
+        if (grid->contents[grid_idx] == INVALID_BLOCK_ID) {
             continue;
         }
 

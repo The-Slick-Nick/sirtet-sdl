@@ -92,11 +92,7 @@ GameState* GameState_init(ApplicationState *app_state) {
 
         .block_db = BlockDb_init(256),
 
-        .game_grid = (GameGrid){
-            .width=GRID_WIDTH,
-            .height=GRID_HEIGHT,
-            .contents=(int*)malloc(GRID_WIDTH * GRID_HEIGHT * sizeof(int))
-        },
+        .game_grid = GameGrid_init(GRID_WIDTH, GRID_HEIGHT),
 
         .keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS),
         .draw_window=(SDL_Rect){
@@ -117,7 +113,7 @@ GameState* GameState_init(ApplicationState *app_state) {
     memcpy(retval->block_presets, preset_prototypes, 7 * sizeof(long));
 
     // Initialize grid cells
-    GameGrid_clear(&retval->game_grid);
+    GameGrid_clear(retval->game_grid);
 
     // Add some key mappings
     int move_cd = TARGET_FPS / 15;
@@ -129,7 +125,6 @@ GameState* GameState_init(ApplicationState *app_state) {
     Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
     Gamecode_addMap(retval->keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
 
-    GameGrid_clear(&retval->game_grid);
 
     printf("Returning game state...\n");
     return retval;
@@ -145,9 +140,9 @@ int GameState_deconstruct(void* self) {
 
 
     BlockDb_deconstruct(game_state->block_db);
+    GameGrid_deconstruct(game_state->game_grid);
 
     free(game_state->block_presets);
-    free(game_state->game_grid.contents);
     free(game_state->gamecode_states);
 
     GamecodeMap_deconstruct(game_state->keymaps);
@@ -170,7 +165,7 @@ int updateGame(GameState *game_state) {
     // relevant variable extraction - for shorthand (
     // and to save my fingers from typing a lot)
     BlockDb *db = game_state->block_db;
-    GameGrid *grid = &game_state->game_grid;
+    GameGrid *grid = game_state->game_grid;
     int *primary_block = &game_state->primary_block;
     long *block_presets = game_state->block_presets;
 
@@ -358,12 +353,14 @@ void drawGameArea(ApplicationState *app_state, GameState *game_state) {
         drawBlock(
             rend, game_state->draw_window, game_state->block_db,
             game_state->primary_block,
-            &game_state->game_grid
+            game_state->game_grid
         );
     }
 
-    drawGrid(rend, game_state->draw_window, game_state->block_db,
-             &game_state->game_grid);
+    drawGrid(
+        rend, game_state->draw_window, game_state->block_db,
+        game_state->game_grid
+    );
 
 }
 

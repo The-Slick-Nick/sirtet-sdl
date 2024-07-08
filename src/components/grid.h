@@ -25,6 +25,10 @@ typedef struct {
 } GameGrid;
 
 
+GameGrid *GameGrid_init(int width, int height);
+int GameGrid_deconstruct(GameGrid *self);
+
+
 // Convert a block's content bit to grid coordinates
 Point blockContentBitToGridCoords(int content_bit, int block_size, Point block_position);
 

@@ -37,7 +37,7 @@ typedef struct {
     int level;                  // Current game level. Affects speed & score
 
     BlockDb *block_db;
-    GameGrid game_grid;         // Grid struct storing committed blocks
+    GameGrid *game_grid;        // Grid struct storing committed blocks
 
 
     int primary_block;          // id of main block dropping from top to bottom

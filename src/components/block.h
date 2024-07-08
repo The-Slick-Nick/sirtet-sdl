@@ -9,7 +9,7 @@
 
 
 // maximum number of blocks that may exist
-// TODO Perhaps this is something to handle in a global config instead?
+// TODO: Perhaps this is something to handle in a global config instead?
 #define MAX_BLOCK_COUNT 128 
 #define INVALID_BLOCK_ID -1
 

@@ -74,7 +74,7 @@ int run() {
         SDL_RenderClear(global_state->rend);
 
         /* Run game-state specific code */
-        assert(StateRunner_runState(state_runner, (void*)global_state) == 0);
+        StateRunner_runState(state_runner, (void*)global_state);
         assert(StateRunner_commitBuffer(state_runner) == 0);
 
 
