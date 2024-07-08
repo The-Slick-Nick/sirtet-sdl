@@ -115,7 +115,9 @@ int drawGrid(
     SDL_Color body_color;
 
     for (int row = 0; row < grid->height; row++) {
-        for (int col = 0; col < grid->width; col++) {
+
+
+        for (int col = 0; col < (grid->width - grid->removed[row]); col++) {
 
             int cell_idx = col + (row * grid->width);
             int cell_id = *(grid->contents + cell_idx);

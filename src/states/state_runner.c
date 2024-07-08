@@ -86,6 +86,10 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
 
     StateFuncStatus retval = top_runner(self, app_state, top_state);
 
+    if (retval == STATEFUNC_QUIT) {
+        printf("State terminated...\n");
+    }
+
     if (retval == STATEFUNC_ERROR) {
         return -1;
     }

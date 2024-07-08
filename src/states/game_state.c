@@ -160,7 +160,7 @@ int GameState_deconstruct(void* self) {
 =============================================================================*/
 
 // Update portion of main game loop
-int updateGame(GameState *game_state) {
+StateFuncStatus updateGame(GameState *game_state) {
 
     // relevant variable extraction - for shorthand (
     // and to save my fingers from typing a lot)
@@ -181,8 +181,10 @@ int updateGame(GameState *game_state) {
         (SDL_Color){0, 0, 155}
     };
 
-    // generate a new block if current is invalid
+    // Must clear first due to animation timing
+    GameGrid_resolveRows(grid, db);
 
+    // generate a new block if current is invalid
     if (*primary_block == INVALID_BLOCK_ID) {
 
         // determine new content
@@ -198,12 +200,11 @@ int updateGame(GameState *game_state) {
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
             printf("Game over!\n");
-            return -1;
+            return STATEFUNC_QUIT;
         }
 
         printf("New block id is %d\n", game_state->primary_block);
         printf("New contents representation is %ld\n", new_contents);
-
     }
 
 
@@ -282,8 +283,7 @@ int updateGame(GameState *game_state) {
         printf("Gained %d score\n", to_inc);
     }
     game_state->score += to_inc;
-    GameGrid_resolveRows(grid, db);
-    return 0;
+    return STATEFUNC_CONTINUE;
 }
 
 /*=============================================================================
@@ -403,9 +403,7 @@ StateFuncStatus GameState_run(
         game_state->god_mode = (game_state->god_mode == false);
     }
 
-    if ( updateGame(game_state) != 0 ) {
-        return STATEFUNC_ERROR;
-    }
+    StateFuncStatus update_status = updateGame(game_state);
 
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
@@ -421,8 +419,9 @@ StateFuncStatus GameState_run(
 
     drawInterface(game_state, application_state);
 
-    return STATEFUNC_CONTINUE;
+    return update_status;
 }
+
 /**
  * @brief Runs a paused version of the game, not updating anything but drawing
  */
