@@ -284,7 +284,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     }
     game_state->score += to_inc;
 
-    GameGrid_prepareAnimation(grid, 5);
+    GameGrid_prepareAnimation(grid, 1);
     if (grid->is_animating) {
         StateRunner_addState(
             state_runner, game_state, GameState_runGridAnimation, NULL
@@ -485,12 +485,10 @@ StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner,
     SDL_Renderer *rend = app_state->rend;
     GameGrid *grid = game_state->game_grid;
 
-
-    if (grid->is_animating == false) {
+    GameGrid_runAnimationFrame(grid);
+    if (!grid->is_animating) {
         return STATEFUNC_QUIT;
     }
-
-    GameGrid_runAnimationFrame(grid);
 
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
@@ -500,7 +498,6 @@ StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner,
 
 
     return STATEFUNC_CONTINUE;
-
 }
 
 
