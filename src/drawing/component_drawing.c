@@ -116,7 +116,6 @@ int drawGrid(
 
     for (int row = 0; row < grid->height; row++) {
 
-
         for (int col = 0; col < (grid->width - grid->removed[row]); col++) {
 
             int cell_idx = col + (row * grid->width);
@@ -127,7 +126,6 @@ int drawGrid(
                 continue;
             }
 
-            // body_color = getCellColorById(cell_id);
             body_color = BlockDb_getBlockColor(block_db, cell_id);
 
             drawBlockCell(

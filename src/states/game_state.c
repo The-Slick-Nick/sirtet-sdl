@@ -160,7 +160,7 @@ int GameState_deconstruct(void* self) {
 =============================================================================*/
 
 // Update portion of main game loop
-StateFuncStatus updateGame(GameState *game_state) {
+StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 
     // relevant variable extraction - for shorthand (
     // and to save my fingers from typing a lot)
@@ -283,6 +283,13 @@ StateFuncStatus updateGame(GameState *game_state) {
         printf("Gained %d score\n", to_inc);
     }
     game_state->score += to_inc;
+
+    GameGrid_prepareAnimation(grid, 5);
+    if (grid->is_animating) {
+        StateRunner_addState(
+            state_runner, game_state, GameState_runGridAnimation, NULL
+        );
+    }
     return STATEFUNC_CONTINUE;
 }
 
@@ -403,7 +410,7 @@ StateFuncStatus GameState_run(
         game_state->god_mode = (game_state->god_mode == false);
     }
 
-    StateFuncStatus update_status = updateGame(game_state);
+    StateFuncStatus update_status = updateGame(state_runner, game_state);
 
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
@@ -464,6 +471,37 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     return STATEFUNC_CONTINUE;
 }
 
+
+// Run the grid animation
+StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner, 
+                                            void *app_data,
+                                            void *state_data) {
+
+    // recasting
+    GameState *game_state = (GameState*)state_data;
+    ApplicationState *app_state = (ApplicationState*)app_data;
+
+    // extraction
+    SDL_Renderer *rend = app_state->rend;
+    GameGrid *grid = game_state->game_grid;
+
+
+    if (grid->is_animating == false) {
+        return STATEFUNC_QUIT;
+    }
+
+    GameGrid_runAnimationFrame(grid);
+
+    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
+    SDL_RenderClear(rend);
+
+    drawGameArea(app_state, game_state);
+    drawInterface(game_state, app_state);
+
+
+    return STATEFUNC_CONTINUE;
+
+}
 
 
 

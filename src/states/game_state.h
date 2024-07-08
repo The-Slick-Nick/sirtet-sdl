@@ -63,11 +63,12 @@ int GameState_deconstruct(void* self);
 void GameState_debugPrint(GameState *self);
 
 // Run the update portion of the main game loop
-int updateGame(GameState *game_state);
+// int updateGame(GameState *game_state);
+// I don't think this is necessary outside game_state.c, so I think I'll remove it
 
 // Run one frame of game
 StateFuncStatus GameState_run(StateRunner *state_runner, void *application_data, void *state_data);
 StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data);
-
+StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner, void *app_data, void *state_data);
 
 #endif

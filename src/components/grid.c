@@ -332,6 +332,10 @@ int GameGrid_runAnimationFrame(GameGrid *self) {
     bool animation_complete = true;
     for (int x = 0; x < self->height; x++) {
 
+        if (self->to_remove[x] == 0) {
+            continue;
+        }
+
         if (++self->removed[x] == self->to_remove[x]) {
             self->removed[x] = 0;
             self->to_remove[x] = 0;

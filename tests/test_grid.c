@@ -344,11 +344,23 @@ void testGameGridAnimation() {
     ASSERT_EQUAL_INT(retval, -1);
 
 
+    // (0, 0) through (0, 4)
     for (int col = 0; col < grid->width; col++) {
         grid->contents[col] = 0;
     }
+    // (1, 0) through (1, 1)
+    grid->contents[0 + 1 * grid->width] = 0;
+    grid->contents[1 + 1 * grid->width] = 0;
+
     retval = GameGrid_prepareAnimation(grid, 10);
     ASSERT_EQUAL_INT(retval, 0);
+
+    ASSERT_EQUAL_INT(grid->to_remove[0], 4);
+    ASSERT_EQUAL_INT(grid->to_remove[1], 0);
+    ASSERT_EQUAL_INT(grid->to_remove[2], 0);
+    ASSERT_EQUAL_INT(grid->to_remove[3], 0);
+
+
     ASSERT_TRUE(grid->is_animating);
 
     // 4 to remove, 10 frames per removal
