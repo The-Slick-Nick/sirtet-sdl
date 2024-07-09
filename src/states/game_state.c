@@ -85,6 +85,7 @@ GameState* GameState_init(ApplicationState *app_state) {
         .num_presets=7,
 
         .primary_block = INVALID_BLOCK_ID,
+        .queued_block = INVALID_BLOCK_ID,
 
         // structs and arrays
         .block_presets=(long*)malloc(7 * sizeof(long)),
@@ -166,6 +167,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     BlockDb *db = game_state->block_db;
     GameGrid *grid = game_state->game_grid;
     int *primary_block = &game_state->primary_block;
+    int *queued_block = &game_state->queued_block;
     long *block_presets = game_state->block_presets;
 
 
@@ -183,20 +185,35 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     // Must clear first due to animation timing
     GameGrid_resolveRows(grid, db);
 
-    if (*primary_block == INVALID_BLOCK_ID) {
+    int rand_idx;
+    long new_contents;
 
-        // determine new content
-        int rand_idx = (rand() + game_state->num_presets) % game_state->num_presets;
+    if (*queued_block == INVALID_BLOCK_ID) {
+
+        rand_idx = ((rand() + game_state->num_presets) % game_state->num_presets);
         long new_contents = block_presets[rand_idx];
 
-        *primary_block = BlockDb_createBlock(
-            db, 4, new_contents, (Point){5, 5},
-            pallette[rand_idx]
+        *queued_block = BlockDb_createBlock(
+            db, 4, new_contents, (Point){0, 0}, pallette[rand_idx]
+        );
+    }
+
+    if (*primary_block == INVALID_BLOCK_ID) {
+
+        *primary_block = *queued_block;
+
+        rand_idx = ((rand() + game_state->num_presets) % game_state->num_presets);
+        long new_contents = block_presets[rand_idx];
+
+        *queued_block = BlockDb_createBlock(
+            db, 4, new_contents, (Point){0, 0}, pallette[rand_idx]
         );
 
-        if (*primary_block == INVALID_BLOCK_ID) {
+        if (*primary_block == INVALID_BLOCK_ID || *queued_block == INVALID_BLOCK_ID) {
             return STATEFUNC_ERROR;
         }
+
+        BlockDb_setBlockPosition(db, *primary_block, (Point){5, 5});
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
             printf("Game over!\n");
@@ -276,9 +293,6 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     }
 
     int to_inc = GameGrid_assessScore(grid, game_state->level);
-    if (to_inc > 0) {
-        printf("Gained %d score\n", to_inc);
-    }
     game_state->score += to_inc;
 
     GameGrid_prepareAnimation(grid, 3);
@@ -467,9 +481,9 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
 
 
 // Run the grid animation
-StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner, 
-                                            void *app_data,
-                                            void *state_data) {
+StateFuncStatus GameState_runGridAnimation(
+    StateRunner *state_runner, void *app_data, void *state_data
+) {
 
     // recasting
     GameState *game_state = (GameState*)state_data;
@@ -478,12 +492,25 @@ StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner,
     // extraction
     SDL_Renderer *rend = app_state->rend;
     GameGrid *grid = game_state->game_grid;
+    int *hardware_states = app_state->hardware_states;
+    GamecodeMap *keymaps = game_state->keymaps;
+
+
+    /***** PROCESS INPUTS *****/
+    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
+
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
+        StateRunner_addState(state_runner, game_state, GameState_runPaused, NULL);
+    }
+
+    /***** UPDATE *****/
 
     GameGrid_runAnimationFrame(grid);
     if (!grid->is_animating) {
         return STATEFUNC_QUIT;
     }
 
+    /***** DRAW *****/
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
 

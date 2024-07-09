@@ -40,6 +40,8 @@ typedef struct {
 
 
     int primary_block;          // id of main block dropping from top to bottom
+    int queued_block;           // Next block queued up
+
     SDL_Rect draw_window;       // Region/coordinates of screen to draw grid on
 
     long *block_presets;        // Array of block content masks to draw from
