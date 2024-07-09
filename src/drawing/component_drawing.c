@@ -29,6 +29,7 @@ int divround(int num, int denom) {
 }
 
 // Lowest-level unit of "draw game component"
+// TODO: ensure 'location' is top left
 int drawBlockCell(
     SDL_Renderer *rend,
     Point location, int width, int height,
@@ -175,3 +176,35 @@ int drawBlock(
     return 0;
 }
 
+// TODO: Migrate this back into block.c?
+int BlockDb_drawBlock(
+    BlockDb *self, int block_id,
+    SDL_Renderer *rend, Point origin, int cell_width, int cell_height
+) {
+
+    SDL_Color base_color = BlockDb_getBlockColor(self, block_id);
+    int block_size = BlockDb_getBlockSize(self, block_id);
+
+    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
+        if (BlockDb_isContentBitSet(self, block_id, bit_num)) {
+    
+            Point block_coords = blockContentBitToGridCoords(
+                bit_num, block_size,
+                BlockDb_getBlockPosition(self, block_id)
+            );
+
+            drawBlockCell(
+                rend,
+                (Point){
+                    .x=origin.x + (cell_width * (block_coords.x + block_size / 2)),
+                    .y=origin.y + (cell_height * (block_coords.y + block_size / 2))
+                },
+                cell_width,
+                cell_height,
+                base_color
+            );
+        }
+    }
+    return 0;
+
+}

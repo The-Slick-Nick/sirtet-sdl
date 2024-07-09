@@ -38,6 +38,12 @@ int drawBlock(
 );
 
 
+int BlockDb_drawBlock(
+    BlockDb *self, int block_id,
+    SDL_Renderer *rend, Point origin, int cell_width, int cell_height
+);
+
+
 #endif
 
 

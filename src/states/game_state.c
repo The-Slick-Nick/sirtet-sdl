@@ -317,6 +317,7 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     TTF_Font *menu_font = app_state->menu_font;
     int score = game_state->score;
     int level = game_state->level;
+    BlockDb *block_db = game_state->block_db;
 
     // helper vars
     char score_buffer[32];  // 32 is overkill but just in case...
@@ -357,17 +358,25 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     yoffset += dstrect.h;
 
 
-    // TODO: Refactor drawBlock to make this part make more sense
-    GameGrid dummy_grid = {.width=4, .height=4};
-    SDL_Rect display_window = {.x=grid_draw_width, .y=yoffset, .w=50, .h=50};
-    drawBlock(rend, display_window, game_state->block_db, game_state->queued_block, &dummy_grid);
+    // // TODO: Refactor drawBlock to make this part make more sense
+    // GameGrid dummy_grid = {.width=4, .height=4};
+    // SDL_Rect display_window = {.x=grid_draw_width, .y=yoffset, .w=50, .h=50};
+    // drawBlock(rend, display_window, game_state->block_db, game_state->queued_block, &dummy_grid);
+    //
+
+    // TODO: Lock in / calculate these values separately based on sidebar size
+    int cell_width = 50;
+    int cell_height = 50;
+    BlockDb_drawBlock(
+        block_db, game_state->queued_block, rend, (Point){grid_draw_width, yoffset},
+        cell_width, cell_height
+    );
 
 
     SDL_DestroyTexture(texture);
     SDL_DestroyTexture(lvl_texture);
     SDL_FreeSurface(surf);
     SDL_FreeSurface(lvl_surf);
-
 
 }
 
