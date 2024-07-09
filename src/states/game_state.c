@@ -328,6 +328,7 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     const int grid_draw_height = (3 * window_h) / 4;
     const int cell_size =  grid_draw_height / GRID_HEIGHT;
     const int grid_draw_width = GRID_WIDTH * cell_size;
+    int yoffset = 0;
 
 
     // TODO: Cache this as as texture and only recalculate on a score
@@ -341,6 +342,7 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     SDL_Rect dstrect = {.x=grid_draw_width, .y=0};
     SDL_QueryTexture(texture, NULL, NULL, &dstrect.w, &dstrect.h);
     SDL_RenderCopy(rend, texture, NULL, &dstrect);
+    yoffset += dstrect.h;
 
     // TODO: Same as above
     snprintf(level_buffer, 16, "Level: %d", level);
@@ -349,10 +351,16 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     );
     SDL_Texture *lvl_texture = SDL_CreateTextureFromSurface(rend, lvl_surf);
 
-    dstrect = (SDL_Rect){.x=grid_draw_width};
-    SDL_QueryTexture(texture, NULL, NULL, NULL, &dstrect.y);
+    dstrect = (SDL_Rect){.x=grid_draw_width, .y=yoffset};
     SDL_QueryTexture(lvl_texture, NULL, NULL, &dstrect.w, &dstrect.h);
     SDL_RenderCopy(rend, lvl_texture, NULL, &dstrect);
+    yoffset += dstrect.h;
+
+
+    // TODO: Refactor drawBlock to make this part make more sense
+    GameGrid dummy_grid = {.width=4, .height=4};
+    SDL_Rect display_window = {.x=grid_draw_width, .y=yoffset, .w=50, .h=50};
+    drawBlock(rend, display_window, game_state->block_db, game_state->queued_block, &dummy_grid);
 
 
     SDL_DestroyTexture(texture);
