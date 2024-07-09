@@ -363,14 +363,14 @@ void testGameGridAnimation() {
 
     ASSERT_TRUE(grid->is_animating);
 
-    // 4 to remove, 10 frames per removal
-    for (int i = 0; i < 39; i++) {
+    // 4 to remove, 10 frames per removal + hand on last frame for 10
+    for (int i = 0; i < 49; i++) {
         retval = GameGrid_runAnimationFrame(grid);
         ASSERT_EQUAL_INT(retval, 0);
         ASSERT_TRUE(grid->is_animating);
     }
 
-    // #40, now done
+    // #50, now done
     retval = GameGrid_runAnimationFrame(grid);
     ASSERT_EQUAL_INT(retval, 0);
     ASSERT_FALSE(grid->is_animating);

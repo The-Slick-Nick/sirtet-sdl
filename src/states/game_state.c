@@ -183,7 +183,6 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     // Must clear first due to animation timing
     GameGrid_resolveRows(grid, db);
 
-    // generate a new block if current is invalid
     if (*primary_block == INVALID_BLOCK_ID) {
 
         // determine new content
@@ -195,7 +194,9 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
             pallette[rand_idx]
         );
 
-        assert(*primary_block != INVALID_BLOCK_ID);
+        if (*primary_block == INVALID_BLOCK_ID) {
+            return STATEFUNC_ERROR;
+        }
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
             printf("Game over!\n");
@@ -255,6 +256,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
         }
     }
 
+    game_state->move_counter++;
     if (
         Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN)
         || game_state->move_counter > (TARGET_FPS / (1 + game_state->level))
