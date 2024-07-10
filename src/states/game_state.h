@@ -50,6 +50,9 @@ typedef struct {
     /* State/structs for alternate versions of state */
     SDL_Texture *pause_texture; // Texture with "pause" text
 
+    SDL_Texture *score_label;
+    SDL_Texture *level_label;
+
 } GameState;
 
 

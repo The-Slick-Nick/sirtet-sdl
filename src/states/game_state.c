@@ -26,7 +26,7 @@
 
 
 // For dimension calculations
-#define GAMEAREA_WEIGHT_W 3
+#define GAMEAREA_WEIGHT_W 4
 #define SIDEBAR_WEIGHT_W 1
 
 #define TOTAL_WEIGHT_W (GAMEAREA_WEIGHT_W + SIDEBAR_WEIGHT_W)
@@ -105,7 +105,9 @@ GameState* GameState_init(ApplicationState *app_state) {
 
         .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
 
-        .pause_texture=texture
+        .pause_texture=texture,
+        .score_label=NULL,
+        .level_label=NULL
 
     };
 
@@ -295,6 +297,10 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     }
 
     int to_inc = GameGrid_assessScore(grid, game_state->level);
+    if (to_inc > 0) {
+        SDL_DestroyTexture(game_state->score_label);
+        game_state->score_label = NULL;
+    }
     game_state->score += to_inc;
 
     GameGrid_prepareAnimation(grid, 3);
@@ -328,8 +334,6 @@ void drawInterface(ApplicationState *app_state, GameState *game_state) {
     int wind_w, wind_h;
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
-    // TODO: Modify this once a settings config for sizes is decided on
-
     const int sidebar_w = (SIDEBAR_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W;
     const int sidebar_h = wind_h;
     const Point sidebar_origin = {
@@ -339,32 +343,35 @@ void drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     int yoffset = 0;
 
-
-    // TODO: Cache this as as texture and only recalculate on a score
-    // recalculation
-    snprintf(score_buffer, 32, "Score: %d", score);
-    SDL_Surface *surf = TTF_RenderText_Solid(
-        menu_font, score_buffer, (SDL_Color){255, 255, 255}
-    );
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surf);
+    // NOTE: Relies on updateGame(...) invalidating score texture on score change
+    if (game_state->score_label == NULL) {
+        snprintf(score_buffer, 32, "Score: %d", score);
+        SDL_Surface *surf = TTF_RenderText_Solid(
+            menu_font, score_buffer, (SDL_Color){255, 255, 255}
+        );
+        game_state->score_label = SDL_CreateTextureFromSurface(rend, surf);
+        SDL_FreeSurface(surf);
+    }
 
     SDL_Rect dstrect = {.x=sidebar_origin.x, .y=sidebar_origin.y};
-    SDL_QueryTexture(texture, NULL, NULL, &dstrect.w, &dstrect.h);
-    SDL_RenderCopy(rend, texture, NULL, &dstrect);
+    SDL_QueryTexture(game_state->score_label, NULL, NULL, &dstrect.w, &dstrect.h);
+    SDL_RenderCopy(rend, game_state->score_label, NULL, &dstrect);
     yoffset += dstrect.h;
 
-    // TODO: Same as above
-    snprintf(level_buffer, 16, "Level: %d", level);
-    SDL_Surface *lvl_surf = TTF_RenderText_Solid(
-        menu_font, level_buffer, (SDL_Color){255, 255, 255}
-    );
-    SDL_Texture *lvl_texture = SDL_CreateTextureFromSurface(rend, lvl_surf);
+    // NOTE: Relies on updateGame(...) invalidating level texture on level change
+    if (game_state->level_label == NULL) {
+        snprintf(level_buffer, 16, "Level: %d", level);
+        SDL_Surface *lvl_surf = TTF_RenderText_Solid(
+            menu_font, level_buffer, (SDL_Color){255, 255, 255}
+        );
+        game_state->level_label = SDL_CreateTextureFromSurface(rend, lvl_surf);
+        SDL_FreeSurface(lvl_surf);
+    }
 
     dstrect = (SDL_Rect){.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
-    SDL_QueryTexture(lvl_texture, NULL, NULL, &dstrect.w, &dstrect.h);
-    SDL_RenderCopy(rend, lvl_texture, NULL, &dstrect);
+    SDL_QueryTexture(game_state->level_label, NULL, NULL, &dstrect.w, &dstrect.h);
+    SDL_RenderCopy(rend, game_state->level_label, NULL, &dstrect);
     yoffset += dstrect.h;
-
 
     const int block_size = BlockDb_getBlockSize(game_state->block_db, game_state->queued_block);
     const int cell_size = sidebar_w / block_size;
@@ -372,12 +379,6 @@ void drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     Point topleft = {.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
     BlockDb_drawBlock(block_db, game_state->queued_block, rend, topleft, cell_size, cell_size);
-
-
-    SDL_DestroyTexture(texture);
-    SDL_DestroyTexture(lvl_texture);
-    SDL_FreeSurface(surf);
-    SDL_FreeSurface(lvl_surf);
 
 }
 
