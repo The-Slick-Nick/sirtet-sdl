@@ -177,13 +177,13 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 
     // TODO: Incorporate this into game_state later
     SDL_Color pallette[7] = {
-        (SDL_Color){155, 0, 0},
-        (SDL_Color){155, 155, 0},
-        (SDL_Color){155, 0, 155},
-        (SDL_Color){155, 155, 155},
-        (SDL_Color){0, 155, 0},
-        (SDL_Color){0, 155, 155},
-        (SDL_Color){0, 0, 155}
+        (SDL_Color){190,83,28},
+        (SDL_Color){218,170,0},
+        (SDL_Color){101,141,27},
+        (SDL_Color){0,95,134},
+        (SDL_Color){155,0,0},
+        (SDL_Color){0,155,0},
+        (SDL_Color){0,0,155}
     };
 
     // Must clear first due to animation timing

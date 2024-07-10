@@ -15,6 +15,10 @@
 #include "block.h"
 #include "grid.h"
 
+#ifndef INT_MIN
+#define INT_MIN(a, b) ((a) > (b) ? (b) : (a))
+#endif
+
 
 int divround(int num, int denom) {
 
@@ -65,9 +69,9 @@ int drawBlockCell(
     };
 
     SDL_Color nw_color = (SDL_Color){
-        .r=12*base_color.r / 10,
-        .g=12*base_color.g / 10,
-        .b =12* base_color.b / 10,
+        .r=INT_MIN(255, 12*base_color.r / 10),
+        .g=INT_MIN(255, 12*base_color.g / 10),
+        .b=INT_MIN(255, 12* base_color.b / 10),
         .a=255
     };
 
