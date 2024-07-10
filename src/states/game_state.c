@@ -318,7 +318,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 =============================================================================*/
 
 // Draw supplmental game info (Score, on deck, flair, etc.)
-void drawInterface(ApplicationState *app_state, GameState *game_state) {
+int drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     // Convenience unpacking
     SDL_Renderer *rend = app_state->rend;
@@ -376,15 +376,14 @@ void drawInterface(ApplicationState *app_state, GameState *game_state) {
     const int block_size = BlockDb_getBlockSize(game_state->block_db, game_state->queued_block);
     const int cell_size = sidebar_w / block_size;
 
-
     Point topleft = {.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
-    BlockDb_drawBlock(block_db, game_state->queued_block, rend, topleft, cell_size, cell_size);
-
+    int retval = BlockDb_drawBlock(block_db, game_state->queued_block, rend, topleft, cell_size, cell_size);
+    if (retval < 0) { return retval; }
+    return 0;
 }
 
-// TODO: Return an integer status code
 // Draw game area, including primary block and grid
-void drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect draw_window) {
+int drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect draw_window) {
 
     SDL_Renderer *rend = app_state->rend;
     int primary_block = game_state->primary_block;
@@ -394,20 +393,26 @@ void drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect d
     int cellsize_w = draw_window.w / grid->width;
     int cellsize_h = draw_window.h / grid->height;
 
-    // TODO: Reconfigure "draw window" - can just adjust origin here
     Point origin = {.x=draw_window.x, .y=draw_window.y};
 
-
+    int retval;
     if (primary_block != INVALID_BLOCK_ID) {
 
-        BlockDb_drawBlockOnGrid(db, primary_block, rend, origin, cellsize_w, cellsize_h);
+        retval = BlockDb_drawBlockOnGrid(db, primary_block, rend, origin, cellsize_w, cellsize_h);
+        if (retval < 0) {
+            return retval;
+        }
     }
 
-    GameGrid_drawGrid(grid, rend, db, origin, cellsize_w, cellsize_h);
+    retval = GameGrid_drawGrid(grid, rend, db, origin, cellsize_w, cellsize_h);
+    if (retval < 0) {
+        return retval;
+    }
+    return 0;
 }
 
 // Base draw method for GameState - draws game area and sidebar information
-void drawGame(ApplicationState *app_state, GameState *game_state) {
+int drawGame(ApplicationState *app_state, GameState *game_state) {
 
     SDL_Renderer *rend = app_state->rend;
 
@@ -418,6 +423,9 @@ void drawGame(ApplicationState *app_state, GameState *game_state) {
     int wind_w, wind_h;
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
+
+    int retval = 0;
+
     SDL_Rect game_area = {
         .x=0, .y=0,
         .w=(GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W,
@@ -425,9 +433,13 @@ void drawGame(ApplicationState *app_state, GameState *game_state) {
     };
 
 
-    drawGameArea(app_state, game_state, game_area);
-    drawInterface(app_state, game_state);
+    retval = drawGameArea(app_state, game_state, game_area);
+    if (retval < 0) { return retval; }
 
+    retval = drawInterface(app_state, game_state);
+    if (retval < 0) { return retval; }
+
+    return 0;
 }
 
 
