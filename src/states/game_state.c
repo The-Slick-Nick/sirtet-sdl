@@ -306,7 +306,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 
 // TODO: Reorder arguments here (not major, but app_state comes first
 // Draw supplmental game info (Score, on deck, flair, etc.)
-void drawInterface(GameState *game_state, ApplicationState *app_state) {
+void drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     // Convenience unpacking
     SDL_Renderer *rend = app_state->rend;
@@ -318,13 +318,15 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     // helper vars
     char score_buffer[32];  // 32 is overkill but just in case...
     char level_buffer[16];  
-    int window_w;
-    int window_h;
-    SDL_GetWindowSize(app_state->wind, &window_w, &window_h);
 
-    const int grid_draw_height = (3 * window_h) / 4;
-    const int cell_size =  grid_draw_height / GRID_HEIGHT;
-    const int grid_draw_width = GRID_WIDTH * cell_size;
+    int wind_w, wind_h;
+    SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
+
+    // TODO: Modify this once a settings config for sizes is decided on
+    const int sidebar_w = wind_w / 4;
+    const int sidebar_h = wind_h;
+    const Point sidebar_origin = {.x=((3 * wind_w) / 4), .y=0};
+
     int yoffset = 0;
 
 
@@ -336,7 +338,7 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     );
     SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surf);
 
-    SDL_Rect dstrect = {.x=grid_draw_width, .y=0};
+    SDL_Rect dstrect = {.x=sidebar_origin.x, .y=sidebar_origin.y};
     SDL_QueryTexture(texture, NULL, NULL, &dstrect.w, &dstrect.h);
     SDL_RenderCopy(rend, texture, NULL, &dstrect);
     yoffset += dstrect.h;
@@ -348,25 +350,18 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
     );
     SDL_Texture *lvl_texture = SDL_CreateTextureFromSurface(rend, lvl_surf);
 
-    dstrect = (SDL_Rect){.x=grid_draw_width, .y=yoffset};
+    dstrect = (SDL_Rect){.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
     SDL_QueryTexture(lvl_texture, NULL, NULL, &dstrect.w, &dstrect.h);
     SDL_RenderCopy(rend, lvl_texture, NULL, &dstrect);
     yoffset += dstrect.h;
 
 
-    // // TODO: Refactor drawBlock to make this part make more sense
-    // GameGrid dummy_grid = {.width=4, .height=4};
-    // SDL_Rect display_window = {.x=grid_draw_width, .y=yoffset, .w=50, .h=50};
-    // drawBlock(rend, display_window, game_state->block_db, game_state->queued_block, &dummy_grid);
-    //
+    const int block_size = BlockDb_getBlockSize(game_state->block_db, game_state->queued_block);
+    const int cell_size = sidebar_w / block_size;
 
-    // TODO: Lock in / calculate these values separately based on sidebar size
-    int cell_width = 50;
-    int cell_height = 50;
-    BlockDb_drawBlock(
-        block_db, game_state->queued_block, rend, (Point){grid_draw_width, yoffset},
-        cell_width, cell_height
-    );
+
+    Point topleft = {.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
+    BlockDb_drawBlock(block_db, game_state->queued_block, rend, topleft, cell_size, cell_size);
 
 
     SDL_DestroyTexture(texture);
@@ -415,15 +410,14 @@ void drawGame(ApplicationState *app_state, GameState *game_state) {
 
     // TODO: More clever math for width and height - I'm hardcoding test values for now
     SDL_Rect game_area = {
-        .x=wind_w / 8,
-        .y=wind_h / 8,
+        .x=0, .y=0,
         .w=6 * wind_w / 8,
-        .h=6 * wind_h / 8
+        .h=wind_h
     };
 
 
     drawGameArea(app_state, game_state, game_area);
-    drawInterface(game_state, app_state);
+    drawInterface(app_state, game_state);
 
 }
 
