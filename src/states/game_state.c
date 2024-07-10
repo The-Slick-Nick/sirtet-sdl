@@ -24,6 +24,13 @@
 #include "inputs.h"
 #include "state_runner.h"
 
+
+// For dimension calculations
+#define GAMEAREA_WEIGHT_W 3
+#define SIDEBAR_WEIGHT_W 1
+
+#define TOTAL_WEIGHT_W (GAMEAREA_WEIGHT_W + SIDEBAR_WEIGHT_W)
+
 /*=============================================================================
  State Struct creation & destruction
 =============================================================================*/
@@ -304,7 +311,6 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
  * Draw Components
 =============================================================================*/
 
-// TODO: Reorder arguments here (not major, but app_state comes first
 // Draw supplmental game info (Score, on deck, flair, etc.)
 void drawInterface(ApplicationState *app_state, GameState *game_state) {
 
@@ -323,9 +329,13 @@ void drawInterface(ApplicationState *app_state, GameState *game_state) {
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
     // TODO: Modify this once a settings config for sizes is decided on
-    const int sidebar_w = wind_w / 4;
+
+    const int sidebar_w = (SIDEBAR_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W;
     const int sidebar_h = wind_h;
-    const Point sidebar_origin = {.x=((3 * wind_w) / 4), .y=0};
+    const Point sidebar_origin = {
+        .x=((GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W),
+        .y=0
+    };
 
     int yoffset = 0;
 
@@ -407,11 +417,9 @@ void drawGame(ApplicationState *app_state, GameState *game_state) {
     int wind_w, wind_h;
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
-
-    // TODO: More clever math for width and height - I'm hardcoding test values for now
     SDL_Rect game_area = {
         .x=0, .y=0,
-        .w=6 * wind_w / 8,
+        .w=(GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W,
         .h=wind_h
     };
 
