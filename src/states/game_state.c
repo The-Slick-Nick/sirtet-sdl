@@ -95,11 +95,6 @@ GameState* GameState_init(ApplicationState *app_state) {
         .game_grid = GameGrid_init(GRID_WIDTH, GRID_HEIGHT),
 
         .keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS),
-        .draw_window=(SDL_Rect){
-            .x=10, .y=10,
-            .w=grid_draw_width,
-            .h=grid_draw_height
-        },
 
         .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
 
@@ -304,16 +299,17 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     return STATEFUNC_CONTINUE;
 }
 
+
 /*=============================================================================
  * Draw Components
 =============================================================================*/
 
+// TODO: Reorder arguments here (not major, but app_state comes first
 // Draw supplmental game info (Score, on deck, flair, etc.)
 void drawInterface(GameState *game_state, ApplicationState *app_state) {
 
     // Convenience unpacking
     SDL_Renderer *rend = app_state->rend;
-    SDL_Rect draw_window = game_state->draw_window;
     TTF_Font *menu_font = app_state->menu_font;
     int score = game_state->score;
     int level = game_state->level;
@@ -380,21 +376,21 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
 
 }
 
-
 // TODO: Return an integer status code
 // Draw game area, including primary block and grid
-void drawGameArea(ApplicationState *app_state, GameState *game_state) {
+void drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect draw_window) {
 
     SDL_Renderer *rend = app_state->rend;
     int primary_block = game_state->primary_block;
     BlockDb *db = game_state->block_db;
     GameGrid *grid = game_state->game_grid;
 
-    int cellsize_w = game_state->draw_window.w / grid->width;
-    int cellsize_h = game_state->draw_window.h / grid->height;
+    int cellsize_w = draw_window.w / grid->width;
+    int cellsize_h = draw_window.h / grid->height;
 
     // TODO: Reconfigure "draw window" - can just adjust origin here
-    Point origin = {.x=game_state->draw_window.x, .y=game_state->draw_window.y};
+    Point origin = {.x=draw_window.x, .y=draw_window.y};
+
 
     if (primary_block != INVALID_BLOCK_ID) {
 
@@ -402,6 +398,33 @@ void drawGameArea(ApplicationState *app_state, GameState *game_state) {
     }
 
     GameGrid_drawGrid(grid, rend, db, origin, cellsize_w, cellsize_h);
+}
+
+// Base draw method for GameState - draws game area and sidebar information
+void drawGame(ApplicationState *app_state, GameState *game_state) {
+
+    SDL_Renderer *rend = app_state->rend;
+
+
+    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
+    SDL_RenderClear(rend);
+
+    int wind_w, wind_h;
+    SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
+
+
+    // TODO: More clever math for width and height - I'm hardcoding test values for now
+    SDL_Rect game_area = {
+        .x=wind_w / 8,
+        .y=wind_h / 8,
+        .w=6 * wind_w / 8,
+        .h=6 * wind_h / 8
+    };
+
+
+    drawGameArea(app_state, game_state, game_area);
+    drawInterface(game_state, app_state);
+
 }
 
 
@@ -426,8 +449,6 @@ StateFuncStatus GameState_run(
     GamecodeMap *keymaps = game_state->keymaps;
     BlockDb *db = game_state->block_db;
 
-    SDL_Rect draw_window = game_state->draw_window;
-
 
     /***** PROCESS INPUTS *****/
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
@@ -438,6 +459,7 @@ StateFuncStatus GameState_run(
         return STATEFUNC_QUIT;
     }
 
+    // TODO: Add a StateRunner_setPopCount(...) method or something to replace status codes
     StateFuncStatus update_status = updateGame(state_runner, game_state);
 
 
@@ -446,14 +468,7 @@ StateFuncStatus GameState_run(
     }
 
     /***** DRAW *****/
-
-    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
-    SDL_RenderClear(rend);
-
-    drawGameArea(application_state, game_state);
-
-    drawInterface(game_state, application_state);
-
+    drawGame(application_state, game_state);
     return update_status;
 }
 
@@ -472,7 +487,6 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     GamecodeMap *keymaps = game_state->keymaps;
     BlockDb *db = game_state->block_db;
 
-    SDL_Rect draw_window = game_state->draw_window;
 
 
     /***** PROCESS INPUTS *****/
@@ -483,12 +497,7 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     }
 
     /***** DRAWING *****/
-
-    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
-    SDL_RenderClear(rend);
-
-    drawGameArea(application_state, game_state);
-    drawInterface(game_state, application_state);
+    drawGame(application_state, game_state);
 
     // Pause overlay
     SDL_Rect dstrect = {.x=10, .y=10};
@@ -531,13 +540,7 @@ StateFuncStatus GameState_runGridAnimation(
     }
 
     /***** DRAW *****/
-    SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
-    SDL_RenderClear(rend);
-
-    drawGameArea(app_state, game_state);
-    drawInterface(game_state, app_state);
-
-
+    drawGame(app_state, game_state);
     return STATEFUNC_CONTINUE;
 }
 
