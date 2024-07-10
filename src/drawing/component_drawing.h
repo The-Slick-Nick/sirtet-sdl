@@ -21,28 +21,59 @@ int drawBlockCell(
 );
 
 
-int drawGrid(
-    SDL_Renderer *rend,
-    SDL_Rect display_window,
-    BlockDb *block_db,
-    GameGrid *grid
-);
 
-
-int drawBlock(
-    SDL_Renderer *rend,
-    SDL_Rect display_window,
-    BlockDb *block_db,
-    int block_id,
-    GameGrid *ref_grid
-);
-
-
+/**
+ * @brief Draw a block directly at the desired location
+ *        Draws from the origin (top left coordinate) of the
+ *        block's "invisible grid" of cells
+ * @param self - BlockDb pointer containing block to be drawn
+ * @param block_id - Integer block id of block to draw
+ * @param rend  - SDL_Renderer pointer to renderer object
+ * @param topleft - Top left location on window of invisble
+ *                  "block grid" -- not necessarily where the 
+ *                  block itself begins to be drawn.
+ * @param cell_width - Width, in pixels, that block cells should be
+ * @param cell_height - Height, in pixels, that block cells should be
+ */
 int BlockDb_drawBlock(
     BlockDb *self, int block_id,
-    SDL_Renderer *rend, Point origin, int cell_width, int cell_height
+    SDL_Renderer *rend, Point topleft, int cell_width, int cell_height
 );
 
+/**
+ * @brief Draw a block positioned based on a grid's origin (top left) point.
+ *        The Block's position is considered as its position within a
+ *        grid at the specified origin, and the draw location is adjusted
+ *        accordingly by this method.
+ * @param self - BlockDb pointer containing block to be drawn
+ * @param block_id - Integer block id of block to draw
+ * @param rend  - SDL_Renderer pointer to renderer object
+ * @param topleft - Top left location of the block's containing
+ *                  grid origin point.
+ *                  "block grid" -- not necessarily where the 
+ *                  block itself begins to be drawn.
+ * @param cell_width - Width, in pixels, to draw block cells
+ * @param cell_height - Height, in pixels, to draw block cells
+ */
+int BlockDb_drawBlockOnGrid(
+    BlockDb *self, int block_id,
+    SDL_Renderer *rend, Point grid_topleft, int cell_width, int cell_height
+);
+
+
+/**
+ * @brief - Draw a grid from the given top left coordinate.
+ * @param self - GameGrid pointer of grid to draw
+ * @param rend - SDL_Renderer pointer used to draw
+ * @param block_db - Pointer to BlockDb to reference for block cell draw info
+ * @param topleft - Top left Point of grid to draw
+ * @param cell_width - Width, in pixels, to draw block cells
+ * @param cell_height - Height, in pixels, to draw block cells
+ */
+int GameGrid_drawGrid(
+    GameGrid *self, SDL_Renderer *rend, BlockDb *block_db,
+    Point topleft, int cell_width, int cell_height
+);
 
 #endif
 

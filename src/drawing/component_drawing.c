@@ -28,8 +28,9 @@ int divround(int num, int denom) {
     return retval;
 }
 
-// Lowest-level unit of "draw game component"
 // TODO: ensure 'location' is top left
+
+// Lowest-level unit of "draw game component"
 int drawBlockCell(
     SDL_Renderer *rend,
     Point location, int width, int height,
@@ -103,108 +104,117 @@ SDL_Color getCellColorById(int block_id) {
     }
 }
 
-int drawGrid(
-    SDL_Renderer *rend,
-    SDL_Rect display_window,
-    BlockDb *block_db,
-    GameGrid *grid
+
+
+/**
+ * @brief - Draw a grid from the given top left coordinate.
+ * @param self - GameGrid pointer of grid to draw
+ * @param rend - SDL_Renderer pointer used to draw
+ * @param block_db - Pointer to BlockDb to reference for block cell draw info
+ * @param topleft - Top left Point of grid to draw
+ * @param cell_width - Width, in pixels, to draw block cells
+ * @param cell_height - Height, in pixels, to draw block cells
+ */
+int GameGrid_drawGrid(
+    GameGrid *self, SDL_Renderer *rend, BlockDb *block_db,
+    Point topleft, int cell_width, int cell_height
 ) {
 
-    int cell_width = display_window.w / grid->width;
-    int cell_height = display_window.h / grid->height;
+    for (int row = 0; row < self->height; row++) {
+        for (int col = 0; col < (self->width - self->removed[row]); col++) {
+            int cell_idx = col + (row * self->width);
+            int cell_id = self->contents[cell_idx];
 
-    SDL_Color body_color;
-
-    for (int row = 0; row < grid->height; row++) {
-
-        for (int col = 0; col < (grid->width - grid->removed[row]); col++) {
-
-            int cell_idx = col + (row * grid->width);
-            int cell_id = *(grid->contents + cell_idx);
-
-            // Standard solution: invalid block IDs are negative
-            if (cell_id < 0) {
+            if (cell_id == INVALID_BLOCK_ID) {
                 continue;
             }
 
-            body_color = BlockDb_getBlockColor(block_db, cell_id);
 
+            SDL_Color body_color = BlockDb_getBlockColor(block_db, cell_id);
+            Point cell_topleft = {
+                .x=topleft.x + col * cell_width,
+                .y=topleft.y + row * cell_height
+            };
+
+            // drawBlockCell(SDL_Renderer *rend, Point location, int width, int height, SDL_Color base_color)
             drawBlockCell(
-                rend, 
-                (Point){.x=display_window.x + (col * cell_width), .y=display_window.y + (row * cell_height) },
-                cell_width,
-                cell_height,
-                body_color
-            );
-         }
-    }
-    return 0;
-}
-
-
-int drawBlock(
-    SDL_Renderer *rend,
-    SDL_Rect display_window,
-    BlockDb *block_db,
-    int block_id,
-    GameGrid *ref_grid
-) {
-
-    int cell_width = display_window.w / ref_grid->width;
-    int cell_height = display_window.h / ref_grid->height;
-
-    SDL_Color base_color = BlockDb_getBlockColor(block_db, block_id);
-
-    int block_size = BlockDb_getBlockSize(block_db, block_id);
-    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
-
-        if (BlockDb_isContentBitSet(block_db, block_id, bit_num)) {
-
-            Point block_coords = blockContentBitToGridCoords(bit_num, block_size, BlockDb_getBlockPosition(block_db, block_id));
-            drawBlockCell(
-                rend, 
-                (Point){
-                     .x=display_window.x + (cell_width * block_coords.x),
-                     .y=display_window.y + (cell_height * block_coords.y)
-                },
-                cell_width,
-                cell_height,
-                base_color
+                rend, cell_topleft, cell_width, cell_height, body_color
             );
         }
     }
     return 0;
+
 }
 
 // TODO: Migrate this back into block.c?
+
+/**
+ * @brief Draw a block directly at the desired location
+ *        Draws from the origin of the blocks "invisible grid" of cells
+ * @param self - BlockDb pointer containing block to be drawn
+ * @param block_id - Integer block id of block to draw
+ * @param rend  - SDL_Renderer pointer to renderer object
+ * @param topleft - Top left location on window of invisble
+ *                  "block grid" -- not necessarily where the 
+ *                  block itself begins to be drawn.
+ * @param cell_width - Width, in pixels, that block cells should be
+ * @param cell_height - Height, in pixels, that block cells should be
+ */
 int BlockDb_drawBlock(
     BlockDb *self, int block_id,
-    SDL_Renderer *rend, Point origin, int cell_width, int cell_height
+    SDL_Renderer *rend, Point topleft, int cell_width, int cell_height
 ) {
 
     SDL_Color base_color = BlockDb_getBlockColor(self, block_id);
     int block_size = BlockDb_getBlockSize(self, block_id);
 
-    for (int bit_num = 0; bit_num < block_size * block_size; bit_num++) {
-        if (BlockDb_isContentBitSet(self, block_id, bit_num)) {
-    
-            Point block_coords = blockContentBitToGridCoords(
-                bit_num, block_size,
-                BlockDb_getBlockPosition(self, block_id)
-            );
+    for (int row = 0; row < block_size; row++) {
+        for (int col = 0; col < block_size; col++) {
+            int bit_num = col + row * block_size;
 
-            drawBlockCell(
-                rend,
-                (Point){
-                    .x=origin.x + (cell_width * (block_coords.x + block_size / 2)),
-                    .y=origin.y + (cell_height * (block_coords.y + block_size / 2))
-                },
-                cell_width,
-                cell_height,
-                base_color
-            );
+            if (!BlockDb_isContentBitSet(self, block_id, bit_num)) {
+                continue;
+            }
+
+            Point cell_loc = {
+                .x=topleft.x + col * cell_width,
+                .y=topleft.y + row * cell_height
+            };
+
+            drawBlockCell(rend, cell_loc, cell_width, cell_height, base_color);
         }
     }
     return 0;
-
 }
+
+/**
+ * @brief Draw a block positioned based on a grid's origin (top left) point.
+ *        The Block's position is considered as its position within a
+ *        grid at the specified origin, and the draw location is adjusted
+ *        accordingly by this method.
+ * @param self - BlockDb pointer containing block to be drawn
+ * @param block_id - Integer block id of block to draw
+ * @param rend  - SDL_Renderer pointer to renderer object
+ * @param topleft - Top left location of the block's containing
+ *                  grid origin point.
+ *                  "block grid" -- not necessarily where the 
+ *                  block itself begins to be drawn.
+ * @param cell_width - Width, in pixels, to draw block cells
+ * @param cell_height - Height, in pixels, to draw block cells
+ */
+int BlockDb_drawBlockOnGrid(
+    BlockDb *self, int block_id,
+    SDL_Renderer *rend, Point grid_topleft, int cell_width, int cell_height
+) {
+
+    Point block_pos = BlockDb_getBlockPosition(self, block_id);
+    int block_size = BlockDb_getBlockSize(self, block_id);
+
+    Point topleft = {
+        .x=grid_topleft.x + cell_width * (block_pos.x - block_size / 2),
+        .y=grid_topleft.y + cell_height * (block_pos.y - block_size / 2)
+    };
+
+    return BlockDb_drawBlock(self, block_id, rend, topleft, cell_width, cell_height);
+}
+

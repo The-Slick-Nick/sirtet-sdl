@@ -381,24 +381,27 @@ void drawInterface(GameState *game_state, ApplicationState *app_state) {
 }
 
 
+// TODO: Return an integer status code
 // Draw game area, including primary block and grid
 void drawGameArea(ApplicationState *app_state, GameState *game_state) {
 
     SDL_Renderer *rend = app_state->rend;
+    int primary_block = game_state->primary_block;
+    BlockDb *db = game_state->block_db;
+    GameGrid *grid = game_state->game_grid;
 
-    if (game_state->primary_block != INVALID_BLOCK_ID) {
-        drawBlock(
-            rend, game_state->draw_window, game_state->block_db,
-            game_state->primary_block,
-            game_state->game_grid
-        );
+    int cellsize_w = game_state->draw_window.w / grid->width;
+    int cellsize_h = game_state->draw_window.h / grid->height;
+
+    // TODO: Reconfigure "draw window" - can just adjust origin here
+    Point origin = {.x=game_state->draw_window.x, .y=game_state->draw_window.y};
+
+    if (primary_block != INVALID_BLOCK_ID) {
+
+        BlockDb_drawBlockOnGrid(db, primary_block, rend, origin, cellsize_w, cellsize_h);
     }
 
-    drawGrid(
-        rend, game_state->draw_window, game_state->block_db,
-        game_state->game_grid
-    );
-
+    GameGrid_drawGrid(grid, rend, db, origin, cellsize_w, cellsize_h);
 }
 
 
