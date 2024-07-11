@@ -14,17 +14,18 @@
 #include "application_state.h"
 
 // State representing the main menu
-// TODO: Once this is functioning correctly, extract
-// and split parts out into common/separate menu and menustate
-// structs or seomthing like that
 typedef struct {
 
+    MenucodeMap *menucode_map;  // Mapping collection of hardware codes to menu codes
     bool *menucode_states;      // Bool array indicating if menu signals are active
+
+    int menu_selection;         // Menu item # selected
+    int num_options;            // Number of menu options
+
+    // labels
     SDL_Texture *title_banner;  // Texture with menu title showing
-
-    MenucodeMap *menucode_map;
-
     SDL_Texture *level_label;   // Labels currently selected starting level
+    SDL_Texture *start_label;
 
 } MainMenuState;
 
