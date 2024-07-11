@@ -26,7 +26,7 @@
 
 
 // For dimension calculations
-#define GAMEAREA_WEIGHT_W 4
+#define GAMEAREA_WEIGHT_W 3
 #define SIDEBAR_WEIGHT_W 1
 
 #define TOTAL_WEIGHT_W (GAMEAREA_WEIGHT_W + SIDEBAR_WEIGHT_W)
@@ -82,10 +82,14 @@ GameState* GameState_init(
         .block_presets=(long*)malloc(preset_size * sizeof(long)),
 
         .block_db = BlockDb_init(256),
-        .game_grid = GameGrid_init(GRID_WIDTH, GRID_HEIGHT),
+        // .game_grid = GameGrid_init(GRID_WIDTH, GRID_HEIGHT),
+        // size 4 => 10wide, 24tall
+        .game_grid = GameGrid_init(
+            2 * block_size + block_size / 2,
+            6 * block_size
+        ),
 
-        // TODO: Mappings should be pre-set and passed in
-        // .keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS),
+
         .keymaps=keymaps,
         .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
 
@@ -106,17 +110,6 @@ GameState* GameState_init(
 
     // Initialize grid cells
     GameGrid_clear(retval->game_grid);
-
-    // Add some key mappings
-    int move_cd = TARGET_FPS / 15;
-    Gamecode_addMap(retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(retval->keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
-    Gamecode_addMap(retval->keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(retval->keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
-    Gamecode_addMap(retval->keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
-
 
     printf("Returning game state...\n");
     return retval;
