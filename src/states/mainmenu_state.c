@@ -168,7 +168,10 @@ StateFuncStatus MainMenuState_run(
                 7, block_presets,
                 7, palette_prototypes
             );
-            StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
+
+            // DO NOT PASS DECONSTRUCTOR HERE, the GameState will schedule it's own destruction
+            // after game over
+            StateRunner_addState(state_runner, new_state, GameState_run, NULL);
         }
     }
 

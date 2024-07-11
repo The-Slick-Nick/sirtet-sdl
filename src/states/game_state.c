@@ -31,6 +31,7 @@
 
 #define TOTAL_WEIGHT_W (GAMEAREA_WEIGHT_W + SIDEBAR_WEIGHT_W)
 
+
 /*=============================================================================
  State Struct creation & destruction
 =============================================================================*/
@@ -206,6 +207,25 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
         BlockDb_setBlockPosition(db, *primary_block, (Point){5, 5});
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
+
+
+            // TODO: Make a GameGrid_xxx method to achieve this
+            // TODO: Hacky workaround with a SPECIAL animation
+            // run call so as to not free game_state while I still need it
+            for (int i = 0; i < grid->height; i++) {
+                grid->to_remove[i] = grid->width;
+                grid->is_animating = true;
+            }
+
+            grid->framerate = 5;
+            grid->cooldown = 5;
+
+            *primary_block = INVALID_BLOCK_ID;  // to avoid drawing
+            StateRunner_addState(
+                state_runner, (void*)game_state,
+                GameState_runGameOver, GameState_deconstruct
+            );
+
             printf("Game over!\n");
             return STATEFUNC_QUIT;
         }
@@ -462,6 +482,9 @@ StateFuncStatus GameState_run(
 
     // TODO: Add a StateRunner_setPopCount(...) method or something to replace status codes
     StateFuncStatus update_status = updateGame(state_runner, game_state);
+    // if (update_status == STATEFUNC_QUIT) {
+    //     return STATEFUNC_QUIT;
+    // }
 
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
@@ -536,6 +559,38 @@ StateFuncStatus GameState_runGridAnimation(
     /***** UPDATE *****/
 
     GameGrid_runAnimationFrame(grid);
+    if (!grid->is_animating) {
+        return STATEFUNC_QUIT;
+    }
+
+    /***** DRAW *****/
+    drawGame(app_state, game_state);
+    return STATEFUNC_CONTINUE;
+}
+
+// Final state to run - plays a game over animation
+StateFuncStatus GameState_runGameOver(
+    StateRunner *state_runner, void *app_data, void *state_data
+) {
+
+    // recasting
+    GameState *game_state = (GameState*)state_data;
+    ApplicationState *app_state = (ApplicationState*)app_data;
+
+    // extraction
+    SDL_Renderer *rend = app_state->rend;
+    GameGrid *grid = game_state->game_grid;
+    int *hardware_states = app_state->hardware_states;
+    GamecodeMap *keymaps = game_state->keymaps;
+
+    /***** PROCESS INPUTS *****/
+    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
+
+    if (grid->is_animating) {
+        GameGrid_runAnimationFrame(grid);
+    }
+
+
     if (!grid->is_animating) {
         return STATEFUNC_QUIT;
     }

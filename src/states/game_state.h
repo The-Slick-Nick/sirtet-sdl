@@ -78,5 +78,6 @@ int GameState_deconstruct(void* self);
 StateFuncStatus GameState_run(StateRunner *state_runner, void *application_data, void *state_data);
 StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data);
 StateFuncStatus GameState_runGridAnimation(StateRunner *state_runner, void *app_data, void *state_data);
+StateFuncStatus GameState_runGameOver(StateRunner *state_runner, void *app_data, void *state_data);
 
 #endif
