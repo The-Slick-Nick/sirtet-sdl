@@ -1,12 +1,13 @@
 
-#include "mainmenu_state.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_ttf.h>
 #include <stdio.h>
+#include <limits.h>
 
+#include "mainmenu_state.h"
 #include "application_state.h"
 #include "state_runner.h"
 #include "inputs.h"
@@ -16,7 +17,7 @@
  * State Struct creation & destruction
 ******************************************************************************/
 
-// MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
+// TODO: Go back to not passing app_state for initialization (be explicit...)
 MainMenuState* MainMenuState_init(ApplicationState *app_state) {
 
     /* Convenience extractions */
@@ -34,7 +35,6 @@ MainMenuState* MainMenuState_init(ApplicationState *app_state) {
         menu_font, "Main Menu", (SDL_Color){255, 255, 255}
     );
 
-    // snprintf(char *, unsigned long, const char *, ...)
     snprintf(strbuffer, 32, "Level: %d", app_state->init_level);
     SDL_Surface *level_surf = TTF_RenderText_Solid(menu_font, strbuffer, (SDL_Color){255, 255, 255});
 
@@ -114,8 +114,46 @@ StateFuncStatus MainMenuState_run(
     }
 
     if (Menucode_pressed(menu_codes, MENUCODE_SELECT)) {
-        // GameState *new_state = GameState_init(rend, app_state->menu_font);
-        GameState *new_state = GameState_init(app_state);
+
+        // TODO: Add configurations for the following
+        long block_presets[7] = {
+            0b0100010001000100,
+            0b0000011001100000,
+            0b0100010001100000,
+            0b0010001001100000,
+            0b0000010011100000,
+            0b0011011000000000,
+            0b1100011000000000
+        };
+
+        SDL_Color palette_prototypes[7] = {
+            (SDL_Color){190,83,28},
+            (SDL_Color){218,170,0},
+            (SDL_Color){101,141,27},
+            (SDL_Color){0,95,134},
+            (SDL_Color){155,0,0},
+            (SDL_Color){0,155,0},
+            (SDL_Color){0,0,155}
+        };
+
+        GamecodeMap *keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS);
+
+        int move_cd = TARGET_FPS / 15;
+        Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+        Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+        Gamecode_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+        Gamecode_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
+        Gamecode_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
+        Gamecode_addMap(keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
+        Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+
+        GameState *new_state = GameState_init(
+            rend, app_state->menu_font, keymaps,
+            app_state->init_level,
+            4,
+            7, block_presets,
+            7, palette_prototypes
+        );
         StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
     }
 

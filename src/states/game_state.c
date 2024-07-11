@@ -35,51 +35,34 @@
  State Struct creation & destruction
 =============================================================================*/
 
-// Create & initialize a GameState struct, returning
-// it as a void pointer (for state-runner compatability).
-//
-// Assumes that GameState_deconstruct() is eventually called
-// on the return value
-GameState* GameState_init(ApplicationState *app_state) {
+/**
+ * @brief Initialize the GameState, returning a pointer to it
+ * @param rend - SDL_Renderer pointer used for label creation
+ * @param menu_font - TTF_Font pointer to use for creating labels
+ * @param keymaps - GamecodeMap pointer of pre-configured key mappings.
+ *                  Note that while GameState_init does not allocate this
+ *                  memory, GameState_deconstruct will free it
+ * @param init_level - Level to begin game at
+ * @param block_size - Block size to use for all blocks
+ * @param preset_size - Number of block presets defined
+ * @param block_presets - Array of bitmasks representing blocks to spawn
+ * @param palette_size - Number of colors to pull from for blocks
+ * @param palette - Array of SDL_Color to use for blocks
+ */
+GameState* GameState_init(
+    SDL_Renderer *rend, TTF_Font *menu_font, GamecodeMap *keymaps,
+    int init_level,
+    int block_size,
+    int preset_size, long *block_presets,
+    int palette_size, SDL_Color *palette
+) {
 
-
-    // NOTE: I'm on the fence about passing the whole ApplicationState
-    // into GameState constructor... it's more convenient, but does it too
-    // tightly couple things?
-
-
-    SDL_Renderer *rend = app_state->rend;
-    TTF_Font *menu_font = app_state->menu_font;
-
-    /*** Supplementary data ***/
-
-    long preset_prototypes[7] = {
-        0b0100010001000100,
-        0b0000011001100000,
-        0b0100010001100000,
-        0b0010001001100000,
-        0b0000010011100000,
-        0b0011011000000000,
-        0b1100011000000000
-    };
-
-    int window_h;
-    int window_w;
-    SDL_GetWindowSize(app_state->wind, &window_w, &window_h);
-
-    const int grid_draw_height = (3 * window_h) / 4;
-    const int cell_size =  grid_draw_height / GRID_HEIGHT;
-    const int grid_draw_width = GRID_WIDTH * cell_size;
-
-    SDL_Surface *surf = TTF_RenderText_Solid(menu_font, "Paused", (SDL_Color){255, 255, 255});
+    SDL_Surface *surf = TTF_RenderText_Solid(
+        menu_font, "Paused", (SDL_Color){255, 255, 255}
+    );
     SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surf);
 
     SDL_FreeSurface(surf);  // no longer needed
-
-
-    // Maybe this moves into the actual draw portion?
-    SDL_Rect dstrect = {.x=10, .y=10};
-    SDL_QueryTexture(texture, NULL, NULL, &dstrect.w, &dstrect.h);
 
 
     /*** Initialize struct ***/
@@ -88,22 +71,26 @@ GameState* GameState_init(ApplicationState *app_state) {
         // single values 
         .move_counter=0,
         .score=0,
-        .level=app_state->init_level,
-        .num_presets=7,
+        .level=init_level,
+        .block_size=block_size,
 
         .primary_block = INVALID_BLOCK_ID,
         .queued_block = INVALID_BLOCK_ID,
 
         // structs and arrays
-        .block_presets=(long*)malloc(7 * sizeof(long)),
+        .num_presets=preset_size,
+        .block_presets=(long*)malloc(preset_size * sizeof(long)),
 
         .block_db = BlockDb_init(256),
-
         .game_grid = GameGrid_init(GRID_WIDTH, GRID_HEIGHT),
 
-        .keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS),
-
+        // TODO: Mappings should be pre-set and passed in
+        // .keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS),
+        .keymaps=keymaps,
         .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
+
+        .palette_size=palette_size,
+        .palette=(SDL_Color*)malloc(sizeof(SDL_Color) * palette_size),
 
         .pause_texture=texture,
         .score_label=NULL,
@@ -114,7 +101,8 @@ GameState* GameState_init(ApplicationState *app_state) {
     /*** Post-creation processing ***/
 
     // Initialize block presets
-    memcpy(retval->block_presets, preset_prototypes, 7 * sizeof(long));
+    memcpy(retval->block_presets, block_presets, preset_size * sizeof(long));
+    memcpy(retval->palette, palette, palette_size * sizeof(SDL_Color));
 
     // Initialize grid cells
     GameGrid_clear(retval->game_grid);
@@ -145,12 +133,18 @@ int GameState_deconstruct(void* self) {
 
     BlockDb_deconstruct(game_state->block_db);
     GameGrid_deconstruct(game_state->game_grid);
-
-    free(game_state->block_presets);
-    free(game_state->gamecode_states);
-
     GamecodeMap_deconstruct(game_state->keymaps);
 
+    free(game_state->block_presets);
+    free(game_state->palette);
+
+    // NOTE: Memory not allocated by GameState, but still freed here.
+    // This may be bad or dangerous (?)
+    free(game_state->gamecode_states);
+
+
+    SDL_DestroyTexture(game_state->pause_texture);
+    SDL_DestroyTexture(game_state->score_label);
     SDL_DestroyTexture(game_state->pause_texture);
 
     free(self);
@@ -175,17 +169,6 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     long *block_presets = game_state->block_presets;
 
 
-    // TODO: Incorporate this into game_state later
-    SDL_Color pallette[7] = {
-        (SDL_Color){190,83,28},
-        (SDL_Color){218,170,0},
-        (SDL_Color){101,141,27},
-        (SDL_Color){0,95,134},
-        (SDL_Color){155,0,0},
-        (SDL_Color){0,155,0},
-        (SDL_Color){0,0,155}
-    };
-
     // Must clear first due to animation timing
     GameGrid_resolveRows(grid, db);
 
@@ -194,23 +177,33 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 
     if (*queued_block == INVALID_BLOCK_ID) {
 
-        rand_idx = ((rand() + game_state->num_presets) % game_state->num_presets);
-        long new_contents = block_presets[rand_idx];
+        SDL_Color *palette = game_state->palette;
+        int palette_size = game_state->palette_size;
+
+        rand_idx = ((rand() + game_state->num_presets + palette_size));
+        long new_contents = block_presets[rand_idx % game_state->num_presets];
+        // TODO: Replace stored color with stored color_idx
+        SDL_Color new_color = palette[rand_idx % palette_size];
 
         *queued_block = BlockDb_createBlock(
-            db, 4, new_contents, (Point){0, 0}, pallette[rand_idx]
+            db, game_state->block_size, new_contents, (Point){0, 0}, new_color
         );
     }
 
     if (*primary_block == INVALID_BLOCK_ID) {
-
         *primary_block = *queued_block;
 
-        rand_idx = ((rand() + game_state->num_presets) % game_state->num_presets);
-        long new_contents = block_presets[rand_idx];
+        SDL_Color *palette = game_state->palette;
+        int palette_size = game_state->palette_size;
+
+        rand_idx = ((rand() + game_state->num_presets + palette_size));
+        long new_contents = block_presets[rand_idx % game_state->num_presets];
+        // TODO: Replace stored color with stored color_idx
+        SDL_Color new_color = palette[rand_idx % palette_size];
+
 
         *queued_block = BlockDb_createBlock(
-            db, 4, new_contents, (Point){0, 0}, pallette[rand_idx]
+            db, game_state->block_size, new_contents, (Point){0, 0}, new_color
         );
 
         if (*primary_block == INVALID_BLOCK_ID || *queued_block == INVALID_BLOCK_ID) {

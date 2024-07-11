@@ -80,6 +80,7 @@ int drawBlockCell(
     return 0;
 }
 
+// TODO: Remove this (deprecated)
 SDL_Color getCellColorById(int block_id) {
 
     switch (block_id % 3) {
