@@ -12,6 +12,9 @@
 GameGrid *GameGrid_init(int width, int height) {
 
     GameGrid *retval = (GameGrid*)malloc(sizeof(GameGrid));
+    if (retval == NULL) {
+        return NULL;
+    }
     retval->width = width;
     retval->height = height;
 
@@ -24,12 +27,21 @@ GameGrid *GameGrid_init(int width, int height) {
     retval->to_remove = (int*)calloc(height, sizeof(int));
     retval->removed = (int*)calloc(height, sizeof(int));
 
+    if (
+        retval->contents == NULL
+        || retval->to_remove == NULL
+        || retval->removed == NULL
+    ) {
+        GameGrid_deconstruct(retval);
+        return NULL;
+    }
+
     GameGrid_clear(retval);
     return retval;
 } 
 
 int GameGrid_deconstruct(GameGrid *self) {
-    
+
     free(self->contents);
     free(self->to_remove);
     free(self->removed);

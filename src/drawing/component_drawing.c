@@ -20,20 +20,6 @@
 #endif
 
 
-int divround(int num, int denom) {
-
-    return num / denom;
-
-    int retval = num / denom;
-
-    if (num % denom > num / 2) {
-        return retval + 1;
-    }
-    return retval;
-}
-
-// TODO: ensure 'location' is top left
-
 // Lowest-level unit of "draw game component"
 int drawBlockCell(
     SDL_Renderer *rend,
@@ -44,8 +30,8 @@ int drawBlockCell(
     /* Draw the full box as the background color, then overwrite the middle
     * with a smaller rectange of the body color */
 
-    int offset_vertical = height / 10;
-    int offset_horizontal = width / 10;
+    const int offset_vertical = height / 10;
+    const int offset_horizontal = width / 10;
 
     SDL_Rect nw_box = {
         .x=location.x,
@@ -149,8 +135,6 @@ int GameGrid_drawGrid(
     return 0;
 
 }
-
-// TODO: Migrate this back into block.c?
 
 /**
  * @brief Draw a block directly at the desired location

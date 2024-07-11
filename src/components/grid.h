@@ -23,20 +23,16 @@ typedef struct {
     int height;
 
     // stores identifying numbers (block ids) that have 
-    // Negative numbers (usually -1) indicate an invalid/unprovisioned
+    // Negative numbers (usually -1) indicate an invalid
     // block ID (and thus that "cell" is empty)
     int *contents;
 
-    // Below is a collection of visual/animation related
-    // information
-    // TODO: Perhaps separate his into its own struct/thing
-    // later?
-    
-    // "removal" is purly visual in this instance
+    /* Visual elements/representations */
     int cooldown;       // Number of frames until the next removal
     int framerate;      // Number of frames between removals
     bool is_animating;  // Flag to indicate if animation is in progress
-    int *to_remove;     // Array (corresponding to row indices) of total number of cells needing removed
+    int *to_remove;     // Array (corresponding to row indices) of total number
+                        // of cells needing removed
     int *removed;       // Array (corresponding to row indices) of number of cells removed
 
 } GameGrid;
@@ -63,9 +59,6 @@ bool GameGrid_canBlockInfoExist(
 
 // add a block's cells to the grid. Modifies provided grid and block in place
 int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id);
-
-// TODO For the below two in-place methods, change return type
-// to an integer status code (0 = success, -1 = fail)
 
 // Reset all of a grid's contents
 int GameGrid_clear(GameGrid* grid);  
