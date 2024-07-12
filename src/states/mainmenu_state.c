@@ -25,6 +25,9 @@
 #define MAX_BLOCK_SIZE 5
 #define MIN_BLOCK_SIZE 3
 
+#define MIN_LEVEL 0
+#define MAX_LEVEL 10
+
 /**
  * @brief - Initialize state for the main menu
  * @param rend - SDL_Renderer pointer to render textures with
@@ -34,6 +37,8 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
 
     assert(INIT_BLOCK_SIZE >= MIN_BLOCK_SIZE);
     assert(INIT_BLOCK_SIZE <= MAX_BLOCK_SIZE);
+    assert(MIN_LEVEL >= 0);
+    assert(MIN_LEVEL <= MAX_LEVEL);
 
     SDL_Color col_active = {255, 255, 255};
     SDL_Color col_inactive = {155, 155, 155};
@@ -72,7 +77,7 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         .num_options=3,
         .menu_selection=0,
 
-        .init_level=0,
+        .init_level=MIN_LEVEL,
         .block_size=INIT_BLOCK_SIZE,
 
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
@@ -307,7 +312,7 @@ StateFuncStatus MainMenuState_run(
 
 
     if (Menucode_pressed(menu_codes, MENUCODE_INCREMENT_VALUE)) {
-        if (menu_state->menu_selection == 0) {
+        if (menu_state->menu_selection == 0 && menu_state->init_level < MAX_LEVEL) {
             menu_state->init_level++;
             if (menu_state->level_label != NULL) {
                 SDL_DestroyTexture(menu_state->level_label);
@@ -326,7 +331,7 @@ StateFuncStatus MainMenuState_run(
     }
 
     if (Menucode_pressed(menu_codes, MENUCODE_DECREMENT_VALUE)) {
-        if (menu_state->menu_selection == 0 && menu_state->init_level > 0) {
+        if (menu_state->menu_selection == 0 && menu_state->init_level > MIN_LEVEL) {
             menu_state->init_level--;
             if (menu_state->level_label != NULL) {
                 SDL_DestroyTexture(menu_state->level_label);
