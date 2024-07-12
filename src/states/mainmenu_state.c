@@ -169,10 +169,9 @@ StateFuncStatus MainMenuState_run(
 
         if (menu_state->menu_selection == 1) {
 
-            long block_presets[3 + 7 + 18] = {
+            long block_presets[2 + 7 + 18] = {
                 /* blocksize 3 */
                 0b010110000,
-                0b010011000,
                 0b010010010,
 
                 /* blocksize 4 */
@@ -206,17 +205,20 @@ StateFuncStatus MainMenuState_run(
             };
             int preset_offset = (
                 menu_state->block_size == 3 ? 0 :
-                menu_state->block_size == 4 ? 3 :
-                menu_state->block_size == 5 ? 10 :
+                menu_state->block_size == 4 ? 2 :
+                menu_state->block_size == 5 ? 9 :
                 -1
             );
 
             int num_presets = (
-                menu_state->block_size == 3 ? 3 :
+                menu_state->block_size == 3 ? 2 :
                 menu_state->block_size == 4 ? 7 :
                 menu_state->block_size == 5 ? 18 :
-                8
+                -1 
             );
+
+            assert(preset_offset != -1);
+            assert(num_presets != -1);
 
 
             // TODO: Add configurations for the following
@@ -312,11 +314,9 @@ StateFuncStatus MainMenuState_run(
                 menu_state->level_label = NULL;
             }
         }
-        else if (menu_state->menu_selection == 2) {
-            int adj_size = menu_state->block_size - MIN_BLOCK_SIZE;
+        else if (menu_state->menu_selection == 2 && menu_state->block_size < MAX_BLOCK_SIZE) {
 
-            int new_size = ((adj_size + 1) % (1 + MAX_BLOCK_SIZE - MIN_BLOCK_SIZE)) + MIN_BLOCK_SIZE;
-            menu_state->block_size = new_size;
+            menu_state->block_size++;
 
             if (menu_state->blocksize_label != NULL) {
                 SDL_DestroyTexture(menu_state->blocksize_label);
@@ -325,12 +325,20 @@ StateFuncStatus MainMenuState_run(
         }
     }
 
-    if (Menucode_pressed(menu_codes, MENUCODE_DECREMENT_VALUE) && menu_state->init_level > 0) {
-        if (menu_state->menu_selection == 0) {
+    if (Menucode_pressed(menu_codes, MENUCODE_DECREMENT_VALUE)) {
+        if (menu_state->menu_selection == 0 && menu_state->init_level > 0) {
             menu_state->init_level--;
             if (menu_state->level_label != NULL) {
                 SDL_DestroyTexture(menu_state->level_label);
                 menu_state->level_label = NULL;
+            }
+        }
+        else if (menu_state->menu_selection == 2 && menu_state->block_size > MIN_BLOCK_SIZE) {
+            menu_state->block_size--;
+
+            if (menu_state->blocksize_label != NULL) {
+                SDL_DestroyTexture(menu_state->blocksize_label);
+                menu_state->blocksize_label = NULL;
             }
         }
     }
