@@ -93,7 +93,26 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
     if (retval == STATEFUNC_QUIT) {
 
         if (top_decon != NULL) {
-            top_decon(top_state);
+            int refcount = 0;
+
+            // NOTE: We scan each state pointer to determine a ref count (rather than
+            // using a hashmap or similar) due to the speed of the can over a 
+            // relatively low number of states
+            for (int stack_i = 0; stack_i <= self->head; stack_i++) {
+                if (self->states[stack_i] == top_state) {
+                    refcount++;
+                }
+            }
+
+            for (int queue_i = self->buffer_tail; queue_i != self->buffer_head; queue_i = (queue_i + 1) % self->buffer_size) {
+                if (self->states_buffer[queue_i] == top_state) {
+                    refcount++;
+                }
+            }
+
+            if (refcount == 1) {
+                top_decon(top_state);
+            }
         }
         self->head--;
     }

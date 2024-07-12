@@ -15,6 +15,7 @@ typedef struct {
 } TestStruct;
 
 
+// A state runner that increments a counter but does not terminate
 StateFuncStatus runFunc(StateRunner *runner, void *app_data, void *state_data) {
 
     TestStruct *local_state = (TestStruct*)state_data;
@@ -24,6 +25,7 @@ StateFuncStatus runFunc(StateRunner *runner, void *app_data, void *state_data) {
 
 }
 
+// A state runner that increments a counter then terminates
 StateFuncStatus runFuncTerminates(StateRunner *runner, void *app_data, void *state_data) {
 
     TestStruct *local_state = (TestStruct*)state_data;
@@ -45,7 +47,6 @@ int deconFunc(void *state_data) {
 void testStateRunnerInit() {
     // initialize (and deconstruct) a
     // StateRunner
-    //
 
     StateRunner *runner = StateRunner_init(32, 16);
 
@@ -120,13 +121,15 @@ void testRunMultiple() {
     StateRunner *runner = StateRunner_init(32, 16);
     TestStruct test_struct = {0, 0};
 
-    StateRunner_addState(runner, (void*)&test_struct, runFunc, deconFunc);
+    // two deconstructors
+    StateRunner_addState(runner, (void*)&test_struct, runFuncTerminates, deconFunc);
     StateRunner_addState(runner, (void*)&test_struct, runFuncTerminates, deconFunc);
     StateRunner_commitBuffer(runner);
 
     StateRunner_runState(runner, NULL);
     ASSERT_EQUAL_INT(test_struct.run_count, 1);
-    ASSERT_EQUAL_INT(test_struct.deconstruct_count, 1);
+    // there should still be a live ref to test_struct, so no termination
+    ASSERT_EQUAL_INT(test_struct.deconstruct_count, 0);  
 
     StateRunner_runState(runner, NULL);
     ASSERT_EQUAL_INT(test_struct.run_count, 2);
