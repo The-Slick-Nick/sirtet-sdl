@@ -17,6 +17,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     assert(TTF_Init() == 0);
 
 
+    // TODO: Null allocation checking
     ApplicationState *retval = (ApplicationState*)malloc(sizeof(ApplicationState));
 
     SDL_Window *wind = SDL_CreateWindow(
@@ -40,20 +41,16 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     char buffer[1000];
     strcpy(buffer, asset_folder);
     strcat(buffer, "/Lekton-Bold.ttf");
-    // printf("path is %s\n", buffer);
 
     *(retval) = (ApplicationState){
         .rend=rend,
         .wind=wind,
         .hardware_states=hardware_states,
         .menu_font=TTF_OpenFont(buffer, 24),
-
-        .init_level = 0
     };
 
     return retval;
 }
-
 
 
 int ApplicationState_deconstruct(ApplicationState* self) {

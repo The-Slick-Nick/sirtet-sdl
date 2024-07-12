@@ -80,23 +80,6 @@ int drawBlockCell(
     return 0;
 }
 
-// TODO: Remove this (deprecated)
-SDL_Color getCellColorById(int block_id) {
-
-    switch (block_id % 3) {
-        case 0:
-            return (SDL_Color){.r=155, .g=0, .b=0, .a=255 };
-        case 1:
-            return (SDL_Color){.r=0, .g=155, .b=0, .a=255} ;
-        case 2:
-            return (SDL_Color){.r=0, .g=0, .b=155, .a=255 };
-        default:
-            assert(false);
-    }
-}
-
-
-
 /**
  * @brief - Draw a grid from the given top left coordinate.
  * @param self - GameGrid pointer of grid to draw

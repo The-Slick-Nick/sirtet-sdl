@@ -22,6 +22,8 @@ typedef struct {
     int menu_selection;         // Menu item # selected
     int num_options;            // Number of menu options
 
+    int init_level;
+
     // labels
     SDL_Texture *title_banner;  // Texture with menu title showing
     SDL_Texture *level_label;   // Labels currently selected starting level
@@ -29,7 +31,8 @@ typedef struct {
 
 } MainMenuState;
 
-MainMenuState* MainMenuState_init(ApplicationState *app_state);
+// MainMenuState* MainMenuState_init(ApplicationState *app_state);
+MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font);
 
 // Tear down a MainMenuState, following behaviour set by state_runner
 int MainMenuState_deconstruct(void* self);

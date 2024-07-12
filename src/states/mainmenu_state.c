@@ -18,35 +18,50 @@
  * State Struct creation & destruction
 ******************************************************************************/
 
-// TODO: Go back to not passing app_state for initialization (be explicit...)
-MainMenuState* MainMenuState_init(ApplicationState *app_state) {
+/**
+ * @brief - Initialize state for the main menu
+ * @param rend - SDL_Renderer pointer to render textures with
+ * @param menu_font - TTF_Font pointer to render menu options with
+ */
+MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
 
     SDL_Color col_active = {255, 255, 255};
     SDL_Color col_inactive = {155, 155, 155};
-
-    /* Convenience extractions */
-    SDL_Renderer *rend = app_state->rend;
-    TTF_Font *menu_font = app_state->menu_font;
 
     // General purpose buffer to use for strings
     char strbuffer[32];
 
     // return value
     MainMenuState *menustate = (MainMenuState*)malloc(sizeof(MainMenuState));
+    if (menustate == NULL) {
+        return NULL;
+    }
 
     // Preprocessing
     SDL_Surface *title_surf = TTF_RenderText_Solid(
         menu_font, "Main Menu", (SDL_Color){255, 255, 255}
     );
 
-    snprintf(strbuffer, 32, "Level: %d", app_state->init_level);
+    if (title_surf == NULL) {
+        free(menustate);
+        return NULL;
+    }
+
+    snprintf(strbuffer, 32, "Level: %d", 0);
     SDL_Surface *level_surf = TTF_RenderText_Solid(menu_font, strbuffer, col_active);
+
+    if (level_surf == NULL) {
+        free(menustate);
+        SDL_FreeSurface(title_surf);
+        return NULL;
+    }
 
     // Definition
     *menustate = (MainMenuState){
 
         .num_options=2,
         .menu_selection=0,
+        .init_level=0,
 
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
@@ -55,6 +70,16 @@ MainMenuState* MainMenuState_init(ApplicationState *app_state) {
         .level_label=SDL_CreateTextureFromSurface(rend, level_surf),
         .start_label=NULL
     };
+
+    if (
+        menustate->menucode_states == NULL
+        || menustate->menucode_map==NULL
+        || menustate->title_banner==NULL
+        || menustate->level_label==NULL
+    ) {
+        MainMenuState_deconstruct(menustate);
+        return NULL;
+    }
 
     // Postprocessing
     MenucodeMap *mcodes = menustate->menucode_map;
@@ -152,6 +177,7 @@ StateFuncStatus MainMenuState_run(
 
             GamecodeMap *keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS);
 
+            // TODO: Map numpad enter key
             int move_cd = TARGET_FPS / 15;
             Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
             Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
@@ -163,7 +189,7 @@ StateFuncStatus MainMenuState_run(
 
             GameState *new_state = GameState_init(
                 rend, app_state->menu_font, keymaps,
-                app_state->init_level,
+                menu_state->init_level,
                 4,
                 7, block_presets,
                 7, palette_prototypes
@@ -214,10 +240,8 @@ StateFuncStatus MainMenuState_run(
 
 
     if (Menucode_pressed(menu_codes, MENUCODE_INCREMENT_VALUE)) {
-        // TODO: Move init_level to menustate (not appstate)
-
         if (menu_state->menu_selection == 0) {
-            app_state->init_level++;
+            menu_state->init_level++;
             if (menu_state->level_label != NULL) {
                 SDL_DestroyTexture(menu_state->level_label);
                 menu_state->level_label = NULL;
@@ -225,10 +249,9 @@ StateFuncStatus MainMenuState_run(
         }
     }
 
-    if (Menucode_pressed(menu_codes, MENUCODE_DECREMENT_VALUE) && app_state->init_level > 0) {
-        // TODO: Move init_level to menustate (not appstate)
+    if (Menucode_pressed(menu_codes, MENUCODE_DECREMENT_VALUE) && menu_state->init_level > 0) {
         if (menu_state->menu_selection == 0) {
-            app_state->init_level--;
+            menu_state->init_level--;
             if (menu_state->level_label != NULL) {
                 SDL_DestroyTexture(menu_state->level_label);
                 menu_state->level_label = NULL;
@@ -242,7 +265,7 @@ StateFuncStatus MainMenuState_run(
 
         SDL_Color level_col = menu_state->menu_selection == 0 ? col_active : col_inactive;
 
-        snprintf(strbuffer, 32, "Level: %d", app_state->init_level);
+        snprintf(strbuffer, 32, "Level: %d", menu_state->init_level);
         SDL_Surface *level_surf = TTF_RenderText_Solid(app_state->menu_font, strbuffer, level_col);
         menu_state->level_label = SDL_CreateTextureFromSurface(rend, level_surf);
         SDL_FreeSurface(level_surf);

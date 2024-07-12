@@ -38,7 +38,7 @@ int run() {
     }
 
     printf("Initializing main menu...\n");
-    MainMenuState *mainmenu_state = MainMenuState_init(global_state);
+    MainMenuState *mainmenu_state = MainMenuState_init(global_state->rend, global_state->menu_font);
 
     // State runner uses stack memory, but others use heap
     printf("Initializing state runner...\n");
