@@ -178,7 +178,6 @@ StateFuncStatus MainMenuState_run(
 
             GamecodeMap *keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS);
 
-            // TODO: Map numpad enter key
             int move_cd = TARGET_FPS / 15;
             Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
             Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);

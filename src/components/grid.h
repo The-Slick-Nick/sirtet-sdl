@@ -79,6 +79,9 @@ int GameGrid_assessScore(GameGrid *self, int level);
 // Scan the grid and prepare contents for removal animation
 int GameGrid_prepareAnimation(GameGrid *self, int framerate);
 
+// Set up each grid row for animation
+int GameGrid_prepareAnimationAllRows(GameGrid *self, int framerate);
+
 // Run one frame of the GameGrid animation
 int GameGrid_runAnimationFrame(GameGrid *self);
 

@@ -327,6 +327,22 @@ int GameGrid_prepareAnimation(GameGrid *self, int framerate) {
     return 0;
 }
 
+int GameGrid_prepareAnimationAllRows(GameGrid *self, int framerate) {
+    if (self->is_animating) {
+        return -1;
+    }
+
+    for (int i = 0; i < self->height; i++) {
+        self->to_remove[i] = self->width;
+        self->is_animating = true;
+    }
+
+    self->framerate = framerate;
+    self->cooldown = framerate;
+
+    return 0;
+}
+
 // Run one frame of the current grid animation
 int GameGrid_runAnimationFrame(GameGrid *self) {
 

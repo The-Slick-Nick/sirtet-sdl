@@ -208,17 +208,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
 
-
-            // TODO: Make a GameGrid_xxx method to achieve this
-            // TODO: Hacky workaround with a SPECIAL animation
-            // run call so as to not free game_state while I still need it
-            for (int i = 0; i < grid->height; i++) {
-                grid->to_remove[i] = grid->width;
-                grid->is_animating = true;
-            }
-
-            grid->framerate = 5;
-            grid->cooldown = 5;
+            GameGrid_prepareAnimationAllRows(grid, 5);
 
             *primary_block = INVALID_BLOCK_ID;  // to avoid drawing
             StateRunner_addState(
