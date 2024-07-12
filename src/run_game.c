@@ -39,6 +39,7 @@ void run() {
     printf("Initializing main menu...\n");
     MainMenuState *mainmenu_state = MainMenuState_init(global_state->rend, global_state->menu_font);
     if (mainmenu_state == NULL) {
+        ApplicationState_deconstruct(global_state);
         exit(EXIT_FAILURE);
     }
 
@@ -46,6 +47,8 @@ void run() {
     printf("Initializing state runner...\n");
     StateRunner *state_runner = StateRunner_init(32, 16);
     if (state_runner == NULL) {
+        ApplicationState_deconstruct(global_state);
+        MainMenuState_deconstruct(mainmenu_state);
         exit(EXIT_FAILURE);
     }
 

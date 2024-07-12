@@ -37,7 +37,6 @@ int processHardwareInputs(int* hardware_states) {
         }
     }
 
-
     // process
     SDL_Event event;
     int scancode;
