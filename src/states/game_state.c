@@ -223,7 +223,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
             *primary_block = INVALID_BLOCK_ID;  // to avoid drawing
             StateRunner_addState(
                 state_runner, (void*)game_state,
-                GameState_runGameOver, GameState_deconstruct
+                GameState_runGridAnimation, GameState_deconstruct
             );
 
             printf("Game over!\n");
@@ -567,39 +567,4 @@ StateFuncStatus GameState_runGridAnimation(
     drawGame(app_state, game_state);
     return STATEFUNC_CONTINUE;
 }
-
-// Final state to run - plays a game over animation
-StateFuncStatus GameState_runGameOver(
-    StateRunner *state_runner, void *app_data, void *state_data
-) {
-
-    // recasting
-    GameState *game_state = (GameState*)state_data;
-    ApplicationState *app_state = (ApplicationState*)app_data;
-
-    // extraction
-    SDL_Renderer *rend = app_state->rend;
-    GameGrid *grid = game_state->game_grid;
-    int *hardware_states = app_state->hardware_states;
-    GamecodeMap *keymaps = game_state->keymaps;
-
-    /***** PROCESS INPUTS *****/
-    processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
-
-    if (grid->is_animating) {
-        GameGrid_runAnimationFrame(grid);
-    }
-
-
-    if (!grid->is_animating) {
-        return STATEFUNC_QUIT;
-    }
-
-    /***** DRAW *****/
-    drawGame(app_state, game_state);
-    return STATEFUNC_CONTINUE;
-}
-
-
-
 

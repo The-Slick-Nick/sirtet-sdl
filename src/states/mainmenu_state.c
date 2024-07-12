@@ -169,9 +169,7 @@ StateFuncStatus MainMenuState_run(
                 7, palette_prototypes
             );
 
-            // DO NOT PASS DECONSTRUCTOR HERE, the GameState will schedule it's own destruction
-            // after game over
-            StateRunner_addState(state_runner, new_state, GameState_run, NULL);
+            StateRunner_addState(state_runner, new_state, GameState_run, GameState_deconstruct);
         }
     }
 
