@@ -7,6 +7,7 @@
 #include <SDL2/SDL_video.h>
 #include <stdio.h>
 #include <limits.h>
+#include <assert.h>
 
 #include "mainmenu_state.h"
 #include "application_state.h"
@@ -14,9 +15,15 @@
 #include "inputs.h"
 #include "game_state.h"
 
+
 /******************************************************************************
  * State Struct creation & destruction
 ******************************************************************************/
+
+
+#define INIT_BLOCK_SIZE 4
+#define MAX_BLOCK_SIZE 5
+#define MIN_BLOCK_SIZE 3
 
 /**
  * @brief - Initialize state for the main menu
@@ -24,6 +31,9 @@
  * @param menu_font - TTF_Font pointer to render menu options with
  */
 MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
+
+    assert(INIT_BLOCK_SIZE >= MIN_BLOCK_SIZE);
+    assert(INIT_BLOCK_SIZE <= MAX_BLOCK_SIZE);
 
     SDL_Color col_active = {255, 255, 255};
     SDL_Color col_inactive = {155, 155, 155};
@@ -59,16 +69,19 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
     // Definition
     *menustate = (MainMenuState){
 
-        .num_options=2,
+        .num_options=3,
         .menu_selection=0,
+
         .init_level=0,
+        .block_size=INIT_BLOCK_SIZE,
 
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
 
         .title_banner=SDL_CreateTextureFromSurface(rend, title_surf),
         .level_label=SDL_CreateTextureFromSurface(rend, level_surf),
-        .start_label=NULL
+        .start_label=NULL,
+        .blocksize_label=NULL
     };
 
     if (
@@ -155,17 +168,52 @@ StateFuncStatus MainMenuState_run(
     if (Menucode_pressed(menu_codes, MENUCODE_SELECT)) {
 
         if (menu_state->menu_selection == 1) {
-            // TODO: Add configurations for the following
-            long block_presets[7] = {
+
+            long block_presets[3 + 7 + 12] = {
+                /* blocksize 3 */
+                0b010110000,
+                0b010011000,
+                0b010010010,
+
+                /* blocksize 4 */
                 0b0100010001000100,
                 0b0000011001100000,
                 0b0100010001100000,
                 0b0010001001100000,
                 0b0000010011100000,
                 0b0011011000000000,
-                0b1100011000000000
-            };
+                0b1100011000000000,
 
+                /* blocksize 5 */
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100,
+                0b0010000100001000010000100
+            };
+            int preset_offset = (
+                menu_state->block_size == 3 ? 0 :
+                menu_state->block_size == 4 ? 3 :
+                menu_state->block_size == 5 ? 10 :
+                -1
+            );
+
+            int num_presets = (
+                menu_state->block_size == 3 ? 3 :
+                menu_state->block_size == 4 ? 7 :
+                menu_state->block_size == 5 ? 12 :
+                8
+            );
+
+
+            // TODO: Add configurations for the following
             SDL_Color palette_prototypes[7] = {
                 (SDL_Color){190,83,28},
                 (SDL_Color){218,170,0},
@@ -190,8 +238,8 @@ StateFuncStatus MainMenuState_run(
             GameState *new_state = GameState_init(
                 rend, app_state->menu_font, keymaps,
                 menu_state->init_level,
-                4,
-                7, block_presets,
+                menu_state->block_size,
+                num_presets, (long*)(block_presets + preset_offset),
                 7, palette_prototypes
             );
 
@@ -215,6 +263,11 @@ StateFuncStatus MainMenuState_run(
             menu_state->start_label = NULL;
         }
 
+        if ((prev_menu == 2 || new_menu == 2) && menu_state->blocksize_label != NULL) {
+            SDL_DestroyTexture(menu_state->blocksize_label);
+            menu_state->blocksize_label = NULL;
+        }
+
         menu_state->menu_selection = new_menu;
 
     }
@@ -235,6 +288,12 @@ StateFuncStatus MainMenuState_run(
             menu_state->start_label = NULL;
         }
 
+        if ((prev_menu == 2 || new_menu == 2) && menu_state->blocksize_label != NULL) {
+            SDL_DestroyTexture(menu_state->blocksize_label);
+            menu_state->blocksize_label = NULL;
+        }
+
+
         menu_state->menu_selection = new_menu;
     }
 
@@ -245,6 +304,17 @@ StateFuncStatus MainMenuState_run(
             if (menu_state->level_label != NULL) {
                 SDL_DestroyTexture(menu_state->level_label);
                 menu_state->level_label = NULL;
+            }
+        }
+        else if (menu_state->menu_selection == 2) {
+            int adj_size = menu_state->block_size - MIN_BLOCK_SIZE;
+
+            int new_size = ((adj_size + 1) % (1 + MAX_BLOCK_SIZE - MIN_BLOCK_SIZE)) + MIN_BLOCK_SIZE;
+            menu_state->block_size = new_size;
+
+            if (menu_state->blocksize_label != NULL) {
+                SDL_DestroyTexture(menu_state->blocksize_label);
+                menu_state->blocksize_label = NULL;
             }
         }
     }
@@ -278,6 +348,14 @@ StateFuncStatus MainMenuState_run(
         SDL_FreeSurface(start_surf);
     }
 
+    if (menu_state->blocksize_label == NULL) {
+        SDL_Color blocksize_col = menu_state->menu_selection == 2 ? col_active : col_inactive;
+        snprintf(strbuffer, 32, "Blocksize: %d", menu_state->block_size);
+        SDL_Surface *blocksize_surf= TTF_RenderText_Solid(app_state->menu_font, strbuffer, blocksize_col);
+        menu_state->blocksize_label = SDL_CreateTextureFromSurface(rend, blocksize_surf);
+        SDL_FreeSurface(blocksize_surf);
+    }
+
     /***** Draw *****/
 
     SDL_Window *wind = app_state->wind;
@@ -308,6 +386,19 @@ StateFuncStatus MainMenuState_run(
     };
     SDL_RenderCopy(rend, menu_state->level_label, NULL, &level_loc);
     yoffset += title_loc.h;
+
+
+    // blocksize
+    int size_w, size_h;
+    SDL_QueryTexture(menu_state->blocksize_label, NULL, NULL, &size_w, &size_h);
+    SDL_Rect size_loc = {
+        .x = (wind_w / 2) - (size_w / 2),
+        .y=yoffset,
+        .w=size_w,
+        .h=size_h
+    };
+    SDL_RenderCopy(rend, menu_state->blocksize_label, NULL, &size_loc);
+    yoffset += size_loc.h;
 
     // start
     int start_w, start_h;
