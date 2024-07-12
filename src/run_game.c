@@ -53,8 +53,8 @@ int run() {
 
     clock_t frame_start;
     double elapsed;
-    double raw_fps;
-    double actual_fps;
+    double raw_fps = 0.0;
+    double actual_fps = 0.0;
 
     int frame_counter = 0;
 
@@ -80,12 +80,26 @@ int run() {
 
         /* Draw FPS overlay */
 
-        snprintf(buffer, 128, "%.2f FPS", actual_fps);
+
+        snprintf(buffer, 128, "%.2f ACTUAL FPS", actual_fps);
         SDL_Surface *fps_surf = TTF_RenderText_Solid(global_state->menu_font, buffer, (SDL_Color){.r=255});
         SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
-
+        if (fps_surf == NULL || fps_texture == NULL) {
+            return -1;
+        }
         // NOTE: We want to optimize this later to not free every frame
         SDL_FreeSurface(fps_surf);
+
+        snprintf(buffer, 128, "%.2f UNBOUNDED FPS", raw_fps);
+
+        SDL_Surface *rawfps_surf = TTF_RenderText_Solid(global_state->menu_font, buffer, (SDL_Color){.r=255});
+        SDL_Texture *rawfps_texture = SDL_CreateTextureFromSurface(global_state->rend, rawfps_surf);
+        if (rawfps_surf == NULL || rawfps_texture == NULL) {
+            return -1;
+        }
+
+        // NOTE: We want to optimize this later to not free every frame
+        SDL_FreeSurface(rawfps_surf);
 
         int txt_h, txt_w;
         SDL_QueryTexture(fps_texture, NULL, NULL, &txt_w, &txt_h);
@@ -96,10 +110,21 @@ int run() {
                 .h=txt_h
         };
         SDL_RenderCopy(global_state->rend, fps_texture, NULL, &fps_dest);
+        int yoffset = fps_dest.h;
+
+        SDL_QueryTexture(rawfps_texture, NULL, NULL, &txt_w, &txt_h);
+        SDL_Rect rawfps_dest = {
+            .x=WINDOW_WIDTH - txt_w,
+            .y=WINDOW_HEIGHT - yoffset - txt_h,
+            .w=txt_w,
+            .h=txt_h
+        };
+        SDL_RenderCopy(global_state->rend, rawfps_texture, NULL, &rawfps_dest);
 
         SDL_RenderPresent(global_state->rend);
 
         SDL_DestroyTexture(fps_texture);
+        SDL_DestroyTexture(rawfps_texture);
 
         /*********************************************************************
          * Maintenance calculations
@@ -107,6 +132,7 @@ int run() {
 
         elapsed = (double)(clock() - frame_start) / CLOCKS_PER_SEC;
         raw_fps = (1.0 / elapsed);
+
 
         while (elapsed < TARGET_SPF) {
             // Perform maintenance sorts of tasks here...
