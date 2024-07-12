@@ -11,7 +11,6 @@
 
 #include "inputs.h"
 #include "state_runner.h"
-#include "application_state.h"
 
 // State representing the main menu
 typedef struct {

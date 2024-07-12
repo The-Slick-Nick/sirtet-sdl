@@ -6,7 +6,7 @@
 #include <SDL2/SDL_scancode.h>
 #include <stdbool.h>
 
-int run();
+void run();
 
 
 

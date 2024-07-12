@@ -5,7 +5,6 @@
 ******************************************************************************/
 #include "inputs.h"
 #include "run_game.h"
-#include "game_state.h"
 #include "mainmenu_state.h"
 #include "application_state.h"
 #include "state_runner.h"
@@ -27,29 +26,38 @@
 
 
 /* Primary program runner */
-int run() {
+void run() {
 
     // Note: Also does all necessary SDL stuff here
     
     printf("Initializing application state...\n");
     ApplicationState *global_state = ApplicationState_init("assets");
     if (global_state == NULL) {
-        return -1;
+        exit(EXIT_FAILURE);
     }
 
     printf("Initializing main menu...\n");
     MainMenuState *mainmenu_state = MainMenuState_init(global_state->rend, global_state->menu_font);
+    if (mainmenu_state == NULL) {
+        exit(EXIT_FAILURE);
+    }
 
     // State runner uses stack memory, but others use heap
     printf("Initializing state runner...\n");
     StateRunner *state_runner = StateRunner_init(32, 16);
+    if (state_runner == NULL) {
+        exit(EXIT_FAILURE);
+    }
 
     printf("Pushing main menu state...\n");
     StateRunner_addState(
         state_runner, mainmenu_state, MainMenuState_run,
         MainMenuState_deconstruct
     );
-    assert(StateRunner_commitBuffer(state_runner) == 0);
+
+    if (StateRunner_commitBuffer(state_runner) != 0) {
+        exit(EXIT_FAILURE);
+    }
 
     clock_t frame_start;
     double elapsed;
@@ -85,7 +93,7 @@ int run() {
         SDL_Surface *fps_surf = TTF_RenderText_Solid(global_state->menu_font, buffer, (SDL_Color){.r=255});
         SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
         if (fps_surf == NULL || fps_texture == NULL) {
-            return -1;
+            exit(EXIT_FAILURE);
         }
         // NOTE: We want to optimize this later to not free every frame
         SDL_FreeSurface(fps_surf);
@@ -95,7 +103,7 @@ int run() {
         SDL_Surface *rawfps_surf = TTF_RenderText_Solid(global_state->menu_font, buffer, (SDL_Color){.r=255});
         SDL_Texture *rawfps_texture = SDL_CreateTextureFromSurface(global_state->rend, rawfps_surf);
         if (rawfps_surf == NULL || rawfps_texture == NULL) {
-            return -1;
+            exit(EXIT_FAILURE);
         }
 
         // NOTE: We want to optimize this later to not free every frame
@@ -154,5 +162,4 @@ int run() {
     // is the best way to do it, but it's how I'm doing it
     // for now.
     ApplicationState_deconstruct(global_state);
-    return 0;
 }
