@@ -3,6 +3,7 @@
 #include <SDL2/SDL_video.h>
 #include <limits.h>
 #include <assert.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "application_state.h"
@@ -71,24 +72,41 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
 
 
-    // Will need a slightly different solution later when more fonts are needed
-    char buffer[1000];
-    strcpy(buffer, asset_folder);
-    strcat(buffer, "/Lekton-Bold.ttf");
-
     *(retval) = (ApplicationState){
         .rend=rend,
         .wind=wind,
-        .hardware_states=hardware_states,
-        .menu_font=TTF_OpenFont(buffer, 24),
+        .hardware_states=hardware_states
     };
 
-    if (retval->menu_font == NULL) {
-        const char* errmsg = TTF_GetError();
-        printf("Error loading font: %s\n", errmsg);
-        ApplicationState_deconstruct(retval);
-        return NULL;
+    /* Load fonts */
+    char buffer[1000];
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/Lekton-Bold.ttf");
+    retval->fonts.lekton_12 = TTF_OpenFont(buffer, 12);
+    retval->fonts.lekton_24 = TTF_OpenFont(buffer, 24);
+
+    if (
+        retval->fonts.lekton_12 == NULL
+        || retval->fonts.lekton_24 == NULL
+    ) {
+        printf("Error loading fonts: %s\n", TTF_GetError());
+        exit(EXIT_FAILURE);
     }
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/VT323.ttf");
+    retval->fonts.vt323_12 = TTF_OpenFont(buffer, 12);
+    retval->fonts.vt323_24 = TTF_OpenFont(buffer, 24);
+
+    if (
+        retval->fonts.vt323_12 == NULL
+        || retval->fonts.vt323_24 == NULL
+    ) {
+        printf("Error loading fonts: %s\n", TTF_GetError());
+        exit(EXIT_FAILURE);
+    }
+
 
     if (retval->hardware_states == NULL) {
         printf("Error initializing hardware states.\n");
@@ -105,6 +123,11 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     SDL_DestroyWindow(self->wind);
     SDL_DestroyRenderer(self->rend);
     free(self->hardware_states);
+
+    TTF_CloseFont(self->fonts.lekton_24);
+    TTF_CloseFont(self->fonts.lekton_12);
+    TTF_CloseFont(self->fonts.vt323_24);
+    TTF_CloseFont(self->fonts.vt323_12);
     free(self);
 
 

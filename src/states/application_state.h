@@ -15,6 +15,14 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+
+struct fontlib {
+    TTF_Font *lekton_12;
+    TTF_Font *lekton_24;
+    TTF_Font *vt323_12;
+    TTF_Font *vt323_24;
+};
+
 // Higher-level status/state of hardware and such
 // to pass to lower-level virtual states
 typedef struct {
@@ -23,7 +31,8 @@ typedef struct {
     SDL_Renderer *rend;     // Pointer to renderer struct in use by the application
     SDL_Window *wind;       // Pointer to SDL_Window struct
 
-    TTF_Font *menu_font;    // Font pointer to use for menu things
+    struct fontlib fonts;
+    // TTF_Font *menu_font;    // Font pointer to use for menu things
 
 } ApplicationState;
 

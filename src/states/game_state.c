@@ -100,6 +100,7 @@ GameState* GameState_init(
         .palette_size=palette_size,
         .palette=(SDL_Color*)malloc(sizeof(SDL_Color) * palette_size),
 
+        .menu_font=menu_font,
         .pause_texture=texture,
         .score_label=NULL,
         .level_label=NULL
@@ -321,7 +322,8 @@ int drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     // Convenience unpacking
     SDL_Renderer *rend = app_state->rend;
-    TTF_Font *menu_font = app_state->menu_font;
+    TTF_Font *menu_font = game_state->menu_font;
+
     int score = game_state->score;
     int level = game_state->level;
     BlockDb *block_db = game_state->block_db;

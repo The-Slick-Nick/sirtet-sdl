@@ -112,15 +112,6 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         return NULL;
     }
 
-    snprintf(strbuffer, 32, "Level: %d", 0);
-    SDL_Surface *level_surf = TTF_RenderText_Solid(menu_font, strbuffer, col_active);
-
-    if (level_surf == NULL) {
-        free(menustate);
-        SDL_FreeSurface(title_surf);
-        return NULL;
-    }
-
     // Definition
     *menustate = (MainMenuState){
 
@@ -134,9 +125,10 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
 
-        // TODO: Initialze all as NULL and take advantage of lazy rendering
+        .label_font=menu_font,
         .title_banner=SDL_CreateTextureFromSurface(rend, title_surf)
     };
+    SDL_FreeSurface(title_surf);
 
     if (menustate->options == NULL) {
         printf("Error allocating options\n");
@@ -145,6 +137,7 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
     }
 
     for (int i = 0; i < menustate->num_options; i++) {
+        menustate->options[i].label = NULL;
         for (int gc = 0; gc < NUM_MENUCODES; gc++) {
             menustate->options[i].commands[gc] = NULL;
         }
@@ -294,7 +287,7 @@ void menufunc_startGame(StateRunner *state_runner, ApplicationState *app_state, 
     Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
 
     GameState *new_state = GameState_init(
-        app_state->rend, app_state->menu_font, keymaps,
+        app_state->rend, app_state->fonts.vt323_24, keymaps,
         menu_state->init_level,
         menu_state->block_size,
         num_presets, (long*)(block_presets + preset_offset),
@@ -497,12 +490,20 @@ StateFuncStatus MainMenuState_run(
         );
 
         SDL_Surface *label_surf = TTF_RenderText_Solid(
-            app_state->menu_font, opt->text, label_col
+            menu_state->label_font,
+            opt->text, label_col
         );
+
+        if (label_surf == NULL) {
+            printf(
+                "Error creating label for option %d: %s\n",
+                opt_i, TTF_GetError()
+            );
+            exit(EXIT_FAILURE);
+        }
 
         opt->label = SDL_CreateTextureFromSurface(app_state->rend, label_surf);
         SDL_FreeSurface(label_surf);
-
     }
 
     /***** Draw *****/
@@ -512,7 +513,6 @@ StateFuncStatus MainMenuState_run(
     int wind_w, wind_h;
     SDL_GetWindowSize(wind, &wind_w, &wind_h);
     int yoffset = 0;
-
 
     int title_w, title_h;
     SDL_QueryTexture(menu_state->title_banner, NULL, NULL, &title_w, &title_h);
@@ -527,12 +527,14 @@ StateFuncStatus MainMenuState_run(
 
     // options
     for (int opt_i = 0; opt_i < menu_state->num_options; opt_i++) {
+
         MenuOption *opt = &menu_state->options[opt_i];
         int label_w, label_h;
 
         if (opt->label == NULL) {
             continue;
         }
+
         SDL_QueryTexture(opt->label, NULL, NULL, &label_w, &label_h);
         SDL_Rect label_loc = {
             .x = (wind_w / 2) - (label_w / 2),
@@ -544,4 +546,8 @@ StateFuncStatus MainMenuState_run(
         SDL_RenderCopy(app_state->rend, opt->label, NULL, &label_loc);
         yoffset += label_h;
     }
+
+    return STATEFUNC_CONTINUE;
+}
+
 

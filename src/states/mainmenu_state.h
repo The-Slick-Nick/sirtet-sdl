@@ -25,8 +25,6 @@ typedef struct {
     char text[32];
     SDL_Texture *label;
     menufunc_t commands[NUM_MENUCODES];
-
-
 } MenuOption;
 
 
@@ -36,6 +34,7 @@ struct mainmenustate {
 
     MenucodeMap *menucode_map;  // Mapping collection of hardware codes to menu codes
     bool *menucode_states;      // Bool array indicating if menu signals are active
+    TTF_Font *label_font;
 
     /* Menu option meta info */
     int menu_selection;         // Menu item # selected
@@ -48,10 +47,6 @@ struct mainmenustate {
 
     /* Labels */
     SDL_Texture *title_banner;  // Texture with menu title showing
-    SDL_Texture *level_label;   // Labels currently selected starting level
-    SDL_Texture *blocksize_label;
-    SDL_Texture *start_label;
-
 };
 
 // MainMenuState* MainMenuState_init(ApplicationState *app_state);

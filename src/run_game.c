@@ -37,7 +37,7 @@ void run() {
     }
 
     printf("Initializing main menu...\n");
-    MainMenuState *mainmenu_state = MainMenuState_init(global_state->rend, global_state->menu_font);
+    MainMenuState *mainmenu_state = MainMenuState_init(global_state->rend, global_state->fonts.lekton_24);
     if (mainmenu_state == NULL) {
         ApplicationState_deconstruct(global_state);
         exit(EXIT_FAILURE);
@@ -86,14 +86,19 @@ void run() {
 
         /* Run game-state specific code */
         StateRunner_runState(state_runner, (void*)global_state);
-        assert(StateRunner_commitBuffer(state_runner) == 0);
+
+        if (StateRunner_commitBuffer(state_runner) != 0) {
+            printf("Error committing state buffer\n");
+            exit(EXIT_FAILURE);
+        }
 
 
         /* Draw FPS overlay */
 
+        TTF_Font *fps_font = global_state->fonts.vt323_12;
 
         snprintf(buffer, 128, "%.2f ACTUAL FPS", actual_fps);
-        SDL_Surface *fps_surf = TTF_RenderText_Solid(global_state->menu_font, buffer, (SDL_Color){.r=255});
+        SDL_Surface *fps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
         SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
         if (fps_surf == NULL || fps_texture == NULL) {
             exit(EXIT_FAILURE);
@@ -103,7 +108,7 @@ void run() {
 
         snprintf(buffer, 128, "%.2f UNBOUNDED FPS", raw_fps);
 
-        SDL_Surface *rawfps_surf = TTF_RenderText_Solid(global_state->menu_font, buffer, (SDL_Color){.r=255});
+        SDL_Surface *rawfps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
         SDL_Texture *rawfps_texture = SDL_CreateTextureFromSurface(global_state->rend, rawfps_surf);
         if (rawfps_surf == NULL || rawfps_texture == NULL) {
             exit(EXIT_FAILURE);

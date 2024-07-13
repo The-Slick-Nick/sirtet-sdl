@@ -52,6 +52,7 @@ typedef struct {
 
 
     /* State/structs for display */
+    TTF_Font *menu_font;
     SDL_Texture *pause_texture; // Texture with "pause" text
 
     SDL_Texture *score_label;
