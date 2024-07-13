@@ -28,6 +28,13 @@
 /* Primary program runner */
 void run() {
 
+    // (these todos are in a general location because I didn't notice
+    // specific lines of things lol)
+    // TODO: Initialize a rand seed
+    // TODO: Add "hard drop" functionality (with scoring)
+    // TODO: Add a background to main game side pane
+    // TODO: Highscores (list on main menu with extra space?)
+
     // Note: Also does all necessary SDL stuff here
     
     printf("Initializing application state...\n");
