@@ -11,9 +11,27 @@
 
 #include "inputs.h"
 #include "state_runner.h"
+#include "application_state.h"
+
+
+typedef struct mainmenustate MainMenuState;
+
+// A menufunc should know about everything its statefunc knows about
+// (so we match the argument signature)
+typedef void (*menufunc_t)(StateRunner*, ApplicationState*, MainMenuState*);
+
+
+typedef struct {
+    menufunc_t sel_func;
+    char text[32];
+    menufunc_t commands[NUM_MENUCODES];
+
+} MenuOption;
+
+
 
 // State representing the main menu
-typedef struct {
+struct mainmenustate {
 
     MenucodeMap *menucode_map;  // Mapping collection of hardware codes to menu codes
     bool *menucode_states;      // Bool array indicating if menu signals are active
@@ -21,6 +39,7 @@ typedef struct {
     /* Menu option meta info */
     int menu_selection;         // Menu item # selected
     int num_options;            // Number of menu options
+    MenuOption *options;
 
     /* Game Settings */
     int init_level;
@@ -32,7 +51,7 @@ typedef struct {
     SDL_Texture *blocksize_label;
     SDL_Texture *start_label;
 
-} MainMenuState;
+};
 
 // MainMenuState* MainMenuState_init(ApplicationState *app_state);
 MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font);
