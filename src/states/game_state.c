@@ -175,13 +175,11 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
 
     if (*queued_block == INVALID_BLOCK_ID) {
 
-        SDL_Color *palette = game_state->palette;
-        int palette_size = game_state->palette_size;
+        int preset_idx = rand() % game_state->num_presets;
+        int palette_idx = preset_idx % game_state->palette_size;
 
-        rand_idx = ((rand() + game_state->num_presets + palette_size));
-        long new_contents = block_presets[rand_idx % game_state->num_presets];
-        // TODO: Replace stored color with stored color_idx
-        SDL_Color new_color = palette[rand_idx % palette_size];
+        long new_contents = block_presets[preset_idx];
+        SDL_Color new_color = game_state->palette[palette_idx];
 
         *queued_block = BlockDb_createBlock(
             db, game_state->block_size, new_contents, (Point){0, 0}, new_color
@@ -191,14 +189,11 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
     if (*primary_block == INVALID_BLOCK_ID) {
         *primary_block = *queued_block;
 
-        SDL_Color *palette = game_state->palette;
-        int palette_size = game_state->palette_size;
+        int preset_idx = rand() % game_state->num_presets;
+        int palette_idx = preset_idx % game_state->palette_size;
 
-        rand_idx = ((rand() + game_state->num_presets + palette_size));
-        long new_contents = block_presets[rand_idx % game_state->num_presets];
-        // TODO: Replace stored color with stored color_idx
-        SDL_Color new_color = palette[rand_idx % palette_size];
-
+        long new_contents = block_presets[preset_idx];
+        SDL_Color new_color = game_state->palette[palette_idx];
 
         *queued_block = BlockDb_createBlock(
             db, game_state->block_size, new_contents, (Point){0, 0}, new_color
