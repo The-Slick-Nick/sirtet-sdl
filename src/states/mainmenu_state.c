@@ -16,6 +16,17 @@
 #include "inputs.h"
 #include "game_state.h"
 
+
+#define INIT_BLOCK_SIZE 4
+#define MAX_BLOCK_SIZE 5
+#define MIN_BLOCK_SIZE 3
+
+#define MIN_LEVEL 0
+#define MAX_LEVEL 10
+
+#define MENUCOL_ACTIVE ((SDL_Color){255, 255, 255})
+#define MENUCOL_INACTIVE ((SDL_Color){155, 155, 155})
+
 /******************************************************************************
  * menufunc predeclarations
  *
@@ -48,6 +59,17 @@ void menufunc_decBlockSize(
     MainMenuState *menu_state
 );
 
+void menufunc_incOption(
+    StateRunner *state_runner, ApplicationState *app_state,
+    MainMenuState *menu_state
+);
+
+
+void menufunc_decOption(
+    StateRunner *state_runner, ApplicationState *app_state,
+    MainMenuState *menu_state
+);
+
 
 
 /******************************************************************************
@@ -55,12 +77,6 @@ void menufunc_decBlockSize(
 ******************************************************************************/
 
 
-#define INIT_BLOCK_SIZE 4
-#define MAX_BLOCK_SIZE 5
-#define MIN_BLOCK_SIZE 3
-
-#define MIN_LEVEL 0
-#define MAX_LEVEL 10
 
 /**
  * @brief - Initialize state for the main menu
@@ -88,7 +104,7 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
 
     // Preprocessing
     SDL_Surface *title_surf = TTF_RenderText_Solid(
-        menu_font, "Main Menu", (SDL_Color){255, 255, 255}
+        menu_font, "Tetris", MENUCOL_ACTIVE
     );
 
     if (title_surf == NULL) {
@@ -119,10 +135,7 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
 
         // TODO: Initialze all as NULL and take advantage of lazy rendering
-        .title_banner=SDL_CreateTextureFromSurface(rend, title_surf),
-        .level_label=SDL_CreateTextureFromSurface(rend, level_surf),
-        .start_label=NULL,
-        .blocksize_label=NULL
+        .title_banner=SDL_CreateTextureFromSurface(rend, title_surf)
     };
 
     if (menustate->options == NULL) {
@@ -141,6 +154,8 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
     strcpy(menustate->options[1].text, "Block Size 4");
     strcpy(menustate->options[2].text, "Start Game");
 
+    /*** Assign Option Commands ***/
+
     menustate->options[0].commands[MENUCODE_INCREMENT_VALUE] = menufunc_incLevel;
     menustate->options[0].commands[MENUCODE_DECREMENT_VALUE] = menufunc_decLevel;
 
@@ -149,12 +164,15 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
 
     menustate->options[2].commands[MENUCODE_SELECT] = menufunc_startGame;
 
+    for (int opt_i = 0; opt_i < menustate->num_options; opt_i++) {
+        menustate->options[opt_i].commands[MENUCODE_MOVE_UP] = menufunc_decOption;
+        menustate->options[opt_i].commands[MENUCODE_MOVE_DOWN] = menufunc_incOption;
+    }
+
 
     if (
         menustate->menucode_states == NULL
         || menustate->menucode_map == NULL
-        || menustate->title_banner == NULL
-        || menustate->level_label == NULL
         || menustate->options == NULL
     ) {
         MainMenuState_deconstruct(menustate);
@@ -174,25 +192,19 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
     Menucode_addMap(mcodes, MENUCODE_MOVE_UP, SDL_SCANCODE_UP, 1, 1, 1);
     Menucode_addMap(mcodes, MENUCODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, 1, 1);
 
-
-
-    printf("Freeing surface...\n");
-    SDL_FreeSurface(title_surf);
-    SDL_FreeSurface(level_surf);
-
     return menustate;
-
 }
 
 int MainMenuState_deconstruct(void* self) {
 
     MainMenuState *menustate = (MainMenuState*)self;
 
+    for (int opt_i = 0; opt_i < menustate->num_options; opt_i++) {
+        SDL_DestroyTexture(menustate->options[opt_i].label);
+    }
     free(menustate->options);
 
     MenucodeMap_deconstruct(menustate->menucode_map);
-    SDL_DestroyTexture(menustate->title_banner);
-    SDL_DestroyTexture(menustate->level_label);
 
     free(self);
     return 0;
@@ -201,9 +213,9 @@ int MainMenuState_deconstruct(void* self) {
 
 /******************************************************************************
  * Menu funcs
+ *
+ * typedef void (*menufunc_t)(StateRunner*, ApplicationState*, MainMenuState*)
 ******************************************************************************/
-// typedef void (*menufunc_t)(StateRunner*, ApplicationState*, MainMenuState*);
-
 
 void menufunc_startGame(StateRunner *state_runner, ApplicationState *app_state, MainMenuState *menu_state) {
 
@@ -300,15 +312,20 @@ void menufunc_incLevel(
     MainMenuState *menu_state
 ) {
 
+
+    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
+
     if (menu_state->init_level >= MAX_LEVEL) {
         return;
     }
-
     menu_state->init_level++;
-    if (menu_state->level_label != NULL) {
-        SDL_DestroyTexture(menu_state->level_label);
-        menu_state->level_label = NULL;
+
+    if (opt->label != NULL) {
+        SDL_DestroyTexture(opt->label);
+        opt->label = NULL;
     }
+
+    snprintf(opt->text, 32, "Level %d", menu_state->init_level);
 }
 
 void menufunc_decLevel(
@@ -319,14 +336,16 @@ void menufunc_decLevel(
     if (menu_state->init_level <= MIN_LEVEL) {
         return;
     }
-
     menu_state->init_level--;
-    if (menu_state->level_label != NULL) {
-        SDL_DestroyTexture(menu_state->level_label);
-        menu_state->level_label = NULL;
+
+    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
+
+    if (opt->label != NULL) {
+        SDL_DestroyTexture(opt->label);
+        opt->label = NULL;
     }
 
-
+    snprintf(opt->text, 32, "Level %d", menu_state->init_level);
 }
 
 
@@ -340,10 +359,14 @@ void menufunc_incBlockSize(
     }
     menu_state->block_size++;
 
-    if (menu_state->blocksize_label != NULL) {
-        SDL_DestroyTexture(menu_state->blocksize_label);
-        menu_state->blocksize_label = NULL;
+    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
+
+    if (opt->label != NULL) {
+        SDL_DestroyTexture(opt->label);
+        opt->label = NULL;
     }
+
+    snprintf(opt->text, 32, "Block Size %d", menu_state->block_size);
 }
 
 void menufunc_decBlockSize(
@@ -356,10 +379,57 @@ void menufunc_decBlockSize(
     }
     menu_state->block_size--;
 
-    if (menu_state->blocksize_label != NULL) {
-        SDL_DestroyTexture(menu_state->blocksize_label);
-        menu_state->blocksize_label = NULL;
+    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
+
+    if (opt->label != NULL) {
+        SDL_DestroyTexture(opt->label);
+        opt->label = NULL;
     }
+
+    snprintf(opt->text, 32, "Block Size %d", menu_state->block_size);
+}
+
+void menufunc_incOption(
+    StateRunner *state_runner, ApplicationState *app_state,
+    MainMenuState *menu_state
+) {
+
+    if (menu_state->menu_selection >= menu_state->num_options - 1) {
+        return;
+    }
+
+    MenuOption *prev_opt = &menu_state->options[menu_state->menu_selection];
+    MenuOption *new_opt = &menu_state->options[menu_state->menu_selection + 1];
+    
+    SDL_DestroyTexture(prev_opt->label);
+    SDL_DestroyTexture(new_opt->label);
+
+    prev_opt->label = NULL;
+    new_opt->label = NULL;
+
+    menu_state->menu_selection++;
+}
+
+
+void menufunc_decOption(
+    StateRunner *state_runner, ApplicationState *app_state,
+    MainMenuState *menu_state
+) {
+
+    if (menu_state->menu_selection <= 0) {
+        return;
+    }
+
+    MenuOption *prev_opt = &menu_state->options[menu_state->menu_selection];
+    MenuOption *new_opt = &menu_state->options[menu_state->menu_selection - 1];
+    
+    SDL_DestroyTexture(prev_opt->label);
+    SDL_DestroyTexture(new_opt->label);
+
+    prev_opt->label = NULL;
+    new_opt->label = NULL;
+
+    menu_state->menu_selection--;
 }
 
 /******************************************************************************
@@ -398,6 +468,8 @@ StateFuncStatus MainMenuState_run(
     }
 
     for (int mc = 0; mc < NUM_MENUCODES; mc++) {
+
+        // use func map for given option index
         if (Menucode_pressed(menu_codes, mc)) {
 
             int selection = menu_state->menu_selection;
@@ -410,91 +482,38 @@ StateFuncStatus MainMenuState_run(
         }
     }
 
-    if (
-            Menucode_pressed(menu_codes, MENUCODE_MOVE_DOWN)
-            && menu_state->menu_selection < menu_state->num_options - 1
-    ) {
-
-        int prev_menu = menu_state->menu_selection;
-        int new_menu = prev_menu + 1;
-
-        // TODO: More generic (list of options?) when I have more options
-        if ((prev_menu == 0 || new_menu == 0) && menu_state->level_label != NULL) {
-            SDL_DestroyTexture(menu_state->level_label);
-            menu_state->level_label = NULL;
-        }
-
-        if ((prev_menu == 1 || new_menu == 1) && menu_state->blocksize_label != NULL) {
-            SDL_DestroyTexture(menu_state->blocksize_label);
-            menu_state->blocksize_label = NULL;
-        }
-
-        if ((prev_menu == 2 || new_menu == 2) && menu_state->start_label != NULL) {
-            SDL_DestroyTexture(menu_state->start_label);
-            menu_state->start_label = NULL;
-        }
-
-        menu_state->menu_selection = new_menu;
-    }
-
-    if (Menucode_pressed(menu_codes, MENUCODE_MOVE_UP) && menu_state->menu_selection > 0) {
-
-        int prev_menu = menu_state->menu_selection;
-        int new_menu = prev_menu - 1;
-
-        // TODO: More generic (list of options?) when I have more options
-        if ((prev_menu == 0 || new_menu == 0) && menu_state->level_label != NULL) {
-            SDL_DestroyTexture(menu_state->level_label);
-            menu_state->level_label = NULL;
-        }
-
-        if ((prev_menu == 1 || new_menu == 1) && menu_state->blocksize_label != NULL) {
-            SDL_DestroyTexture(menu_state->blocksize_label);
-            menu_state->blocksize_label = NULL;
-        }
-
-        if ((prev_menu == 2 || new_menu == 2) && menu_state->start_label != NULL) {
-            SDL_DestroyTexture(menu_state->start_label);
-            menu_state->start_label = NULL;
-        }
-
-        menu_state->menu_selection = new_menu;
-    }
-
     // Draw prep
-    if (menu_state->level_label == NULL) {
+    for (int opt_i = 0; opt_i < menu_state->num_options; opt_i++) {
 
-        SDL_Color level_col = menu_state->menu_selection == 0 ? col_active : col_inactive;
+        MenuOption *opt = &menu_state->options[opt_i];
+        if (opt->label != NULL) {
+            continue;
+        }
 
-        snprintf(strbuffer, 32, "Level: %d", menu_state->init_level);
-        SDL_Surface *level_surf = TTF_RenderText_Solid(app_state->menu_font, strbuffer, level_col);
-        menu_state->level_label = SDL_CreateTextureFromSurface(rend, level_surf);
-        SDL_FreeSurface(level_surf);
-    }
+        SDL_Color label_col = (
+            menu_state->menu_selection == opt_i
+            ? (SDL_Color){255, 255, 255}
+            : (SDL_Color){155, 155, 155}
+        );
 
-    if (menu_state->start_label == NULL) {
-        SDL_Color start_col = menu_state->menu_selection == 2 ? col_active : col_inactive;
-        SDL_Surface *start_surf = TTF_RenderText_Solid(app_state->menu_font, "Start", start_col);
-        menu_state->start_label = SDL_CreateTextureFromSurface(rend, start_surf);
-        SDL_FreeSurface(start_surf);
-    }
+        SDL_Surface *label_surf = TTF_RenderText_Solid(
+            app_state->menu_font, opt->text, label_col
+        );
 
-    if (menu_state->blocksize_label == NULL) {
-        SDL_Color blocksize_col = menu_state->menu_selection == 1 ? col_active : col_inactive;
-        snprintf(strbuffer, 32, "Blocksize: %d", menu_state->block_size);
-        SDL_Surface *blocksize_surf= TTF_RenderText_Solid(app_state->menu_font, strbuffer, blocksize_col);
-        menu_state->blocksize_label = SDL_CreateTextureFromSurface(rend, blocksize_surf);
-        SDL_FreeSurface(blocksize_surf);
+        opt->label = SDL_CreateTextureFromSurface(app_state->rend, label_surf);
+        SDL_FreeSurface(label_surf);
+
     }
 
     /***** Draw *****/
 
+    // title
     SDL_Window *wind = app_state->wind;
     int wind_w, wind_h;
     SDL_GetWindowSize(wind, &wind_w, &wind_h);
     int yoffset = 0;
 
-    // title
+
     int title_w, title_h;
     SDL_QueryTexture(menu_state->title_banner, NULL, NULL, &title_w, &title_h);
     SDL_Rect title_loc = {
@@ -504,45 +523,25 @@ StateFuncStatus MainMenuState_run(
         .h=title_h
     };
     SDL_RenderCopy(rend, menu_state->title_banner, NULL, &title_loc);
-    yoffset = title_loc.y + title_loc.h;
+    yoffset += title_loc.y + title_loc.h;
 
-    // level
-    int level_w, level_h;
-    SDL_QueryTexture(menu_state->level_label, NULL, NULL, &level_w, &level_h);
-    SDL_Rect level_loc = {
-        .x = (wind_w / 2) - (level_w / 2),
-        .y=yoffset,
-        .w=level_w,
-        .h=level_h
-    };
-    SDL_RenderCopy(rend, menu_state->level_label, NULL, &level_loc);
-    yoffset += title_loc.h;
+    // options
+    for (int opt_i = 0; opt_i < menu_state->num_options; opt_i++) {
+        MenuOption *opt = &menu_state->options[opt_i];
+        int label_w, label_h;
 
+        if (opt->label == NULL) {
+            continue;
+        }
+        SDL_QueryTexture(opt->label, NULL, NULL, &label_w, &label_h);
+        SDL_Rect label_loc = {
+            .x = (wind_w / 2) - (label_w / 2),
+            .y=yoffset,
+            .w=label_w,
+            .h=label_h
+        };
 
-    // blocksize
-    int size_w, size_h;
-    SDL_QueryTexture(menu_state->blocksize_label, NULL, NULL, &size_w, &size_h);
-    SDL_Rect size_loc = {
-        .x = (wind_w / 2) - (size_w / 2),
-        .y=yoffset,
-        .w=size_w,
-        .h=size_h
-    };
-    SDL_RenderCopy(rend, menu_state->blocksize_label, NULL, &size_loc);
-    yoffset += size_loc.h;
+        SDL_RenderCopy(app_state->rend, opt->label, NULL, &label_loc);
+        yoffset += label_h;
+    }
 
-    // start
-    int start_w, start_h;
-    SDL_QueryTexture(menu_state->start_label, NULL, NULL, &start_w, &start_h);
-    SDL_Rect start_loc = {
-        .x = (wind_w / 2) - (start_w / 2),
-        .y=yoffset,
-        .w=start_w,
-        .h=start_h
-    };
-    SDL_RenderCopy(rend, menu_state->start_label, NULL, &start_loc);
-    yoffset += title_loc.h;
-
-
-    return STATEFUNC_CONTINUE;
-}

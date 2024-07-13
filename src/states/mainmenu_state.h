@@ -22,9 +22,10 @@ typedef void (*menufunc_t)(StateRunner*, ApplicationState*, MainMenuState*);
 
 
 typedef struct {
-    menufunc_t sel_func;
     char text[32];
+    SDL_Texture *label;
     menufunc_t commands[NUM_MENUCODES];
+
 
 } MenuOption;
 
