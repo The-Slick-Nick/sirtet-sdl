@@ -7,9 +7,6 @@
 * for a state-runner to run
 */
 
-// TODO: Investigate spawn position for block sizes other than 4
-// (it felt weird)
-
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_surface.h>
