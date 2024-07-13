@@ -63,8 +63,6 @@ int StateRunner_commitBuffer(StateRunner *self) {
 
 }
 
-// Run an iteration of the "top" state
-
 /**
  * @brief - Run an interation of the "top" state
  * @param self - StateRunner pointer to run from
@@ -81,30 +79,37 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
     }
 
     state_func_t top_runner = self->runners[self->head];
-    deconstruct_func_t top_decon = self->deconstructors[self->head];
     void* top_state = self->states[self->head];
 
-    StateFuncStatus retval = top_runner(self, app_state, top_state);
-
-    if (retval == STATEFUNC_ERROR) {
+    self->pop_count = 0;
+    int retval = top_runner(self, app_state, top_state);
+    if (retval < 0) {
+        printf("Error running state function\n");
         return -1;
     }
 
-    if (retval == STATEFUNC_QUIT) {
+    for (int pop_i = 0; pop_i < self->pop_count && self->head >= 0; pop_i++) {
+
+        deconstruct_func_t top_decon = self->deconstructors[self->head];
+        void* top_state = self->states[self->head];
 
         if (top_decon != NULL) {
             int refcount = 0;
 
-            // NOTE: We scan each state pointer to determine a ref count (rather than
-            // using a hashmap or similar) due to the speed of the can over a 
-            // relatively low number of states
+            // NOTE: We scan each state pointer to determine a ref count
+            // (rather than using a hashmap or similar) due to the speed of the
+            // can over a relatively low number of states
             for (int stack_i = 0; stack_i <= self->head; stack_i++) {
                 if (self->states[stack_i] == top_state) {
                     refcount++;
                 }
             }
 
-            for (int queue_i = self->buffer_tail; queue_i != self->buffer_head; queue_i = (queue_i + 1) % self->buffer_size) {
+            for (
+                int queue_i = self->buffer_tail;
+                queue_i != self->buffer_head;
+                queue_i = (queue_i + 1) % self->buffer_size
+            ) {
                 if (self->states_buffer[queue_i] == top_state) {
                     refcount++;
                 }
@@ -119,6 +124,18 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
 
     return 0;
 
+}
+
+int StateRunner_getStateCount(StateRunner *self) {
+    return self->head + 1;
+}
+
+int StateRunner_setPopCount(StateRunner *self, int count) {
+    if (count < 0) {
+        return -1;
+    }
+    self->pop_count = count;
+    return 0;
 }
 
 /* ============================================================================
@@ -177,6 +194,7 @@ StateRunner* StateRunner_init(int buffer_size, int q_size) {
         .buffer_head = 0,
         .buffer_tail = 0,
         .buffer_size = q_size,
+        .pop_count = 0,
 
         .states = malloc(buffer_size * sizeof(void*)),
         .states_buffer = malloc(q_size * sizeof(void*)),

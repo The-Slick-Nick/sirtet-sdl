@@ -156,7 +156,7 @@ int GameState_deconstruct(void* self) {
 =============================================================================*/
 
 // Update portion of main game loop
-StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
+int updateGame(StateRunner *state_runner, GameState *game_state) {
 
     // relevant variable extraction - for shorthand (
     // and to save my fingers from typing a lot)
@@ -200,10 +200,9 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
         );
 
         if (*primary_block == INVALID_BLOCK_ID || *queued_block == INVALID_BLOCK_ID) {
-            return STATEFUNC_ERROR;
+            return -1;
         }
 
-        // BlockDb_setBlockPosition(db, *primary_block, (Point){5, 5});
         int init_coord = grid->width / 2;
         BlockDb_setBlockPosition(db, *primary_block, (Point){init_coord, init_coord});
 
@@ -218,7 +217,8 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
             );
 
             printf("Game over!\n");
-            return STATEFUNC_QUIT;
+            StateRunner_setPopCount(state_runner, 1);
+            return 0;
         }
 
         printf("New block id is %d\n", game_state->primary_block);
@@ -306,7 +306,7 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
             state_runner, game_state, GameState_runGridAnimation, NULL
         );
     }
-    return STATEFUNC_CONTINUE;
+    return 0;
 }
 
 
@@ -448,7 +448,7 @@ int drawGame(ApplicationState *app_state, GameState *game_state) {
 
 // Run a single frame of game
 // Primary "state-runner function" for GameState
-StateFuncStatus GameState_run(
+int GameState_run(
     StateRunner *state_runner, void *application_data, void *state_data
 ) {
 
@@ -469,14 +469,14 @@ StateFuncStatus GameState_run(
     /***** UPDATE *****/
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
         printf("Quitting...\n");
-        return STATEFUNC_QUIT;
+        StateRunner_setPopCount(state_runner, 1);
+        return 0;
     }
 
-    // TODO: Add a StateRunner_setPopCount(...) method or something to replace status codes
-    StateFuncStatus update_status = updateGame(state_runner, game_state);
-    // if (update_status == STATEFUNC_QUIT) {
-    //     return STATEFUNC_QUIT;
-    // }
+    int update_status = updateGame(state_runner, game_state);
+    if (update_status == -1) {
+        return -1;
+    }
 
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
@@ -485,13 +485,13 @@ StateFuncStatus GameState_run(
 
     /***** DRAW *****/
     drawGame(application_state, game_state);
-    return update_status;
+    return 0;
 }
 
 /**
  * @brief Runs a paused version of the game, not updating anything but drawing
  */
-StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data) {
+int GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data) {
 
     /* Recasting */
     GameState *game_state = (GameState*)state_data;
@@ -509,7 +509,8 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
-        return STATEFUNC_QUIT;
+        StateRunner_setPopCount(state_runner, 1);
+        return 0;
     }
 
     /***** DRAWING *****/
@@ -521,12 +522,12 @@ StateFuncStatus GameState_runPaused(StateRunner *state_runner, void *application
     SDL_RenderCopy(rend, game_state->pause_texture, NULL, &dstrect);
 
 
-    return STATEFUNC_CONTINUE;
+    return 0;
 }
 
 
 // Run the grid animation
-StateFuncStatus GameState_runGridAnimation(
+int GameState_runGridAnimation(
     StateRunner *state_runner, void *app_data, void *state_data
 ) {
 
@@ -552,11 +553,12 @@ StateFuncStatus GameState_runGridAnimation(
 
     GameGrid_runAnimationFrame(grid);
     if (!grid->is_animating) {
-        return STATEFUNC_QUIT;
+        StateRunner_setPopCount(state_runner, 1);
+        return 0;
     }
 
     /***** DRAW *****/
     drawGame(app_state, game_state);
-    return STATEFUNC_CONTINUE;
+    return 0;
 }
 

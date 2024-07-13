@@ -430,7 +430,7 @@ void menufunc_decOption(
 ******************************************************************************/
 
 
-StateFuncStatus MainMenuState_run(
+int MainMenuState_run(
     StateRunner *state_runner, void *application_data, void *state_data
 ) {
     
@@ -457,7 +457,8 @@ StateFuncStatus MainMenuState_run(
     /***** Process state *****/
 
     if (Menucode_pressed(menu_codes, MENUCODE_EXIT)) {
-        return STATEFUNC_QUIT;
+        StateRunner_setPopCount(state_runner, 1);
+        return 0;
     }
 
     for (int mc = 0; mc < NUM_MENUCODES; mc++) {
@@ -547,7 +548,7 @@ StateFuncStatus MainMenuState_run(
         yoffset += label_h;
     }
 
-    return STATEFUNC_CONTINUE;
+    return 0;
 }
 
 

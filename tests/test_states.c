@@ -16,22 +16,30 @@ typedef struct {
 
 
 // A state runner that increments a counter but does not terminate
-StateFuncStatus runFunc(StateRunner *runner, void *app_data, void *state_data) {
+int runFunc(StateRunner *runner, void *app_data, void *state_data) {
 
     TestStruct *local_state = (TestStruct*)state_data;
     local_state->run_count++;
 
-    return STATEFUNC_CONTINUE;
-
+    return 0;
 }
 
-// A state runner that increments a counter then terminates
-StateFuncStatus runFuncTerminates(StateRunner *runner, void *app_data, void *state_data) {
-
+// A state runner that increments a counter then increments a pop count
+int runFuncTerminates(StateRunner *runner, void *app_data, void *state_data) {
     TestStruct *local_state = (TestStruct*)state_data;
     local_state->run_count++;
 
-    return STATEFUNC_QUIT;
+    StateRunner_setPopCount(runner, 1);
+    return 0;
+}
+
+// A state runner that increments a counter then pops top 5 states
+int runFuncPop5(StateRunner *runner, void *app_data, void *state_data) {
+         TestStruct *local_state = (TestStruct*)state_data;
+         local_state->run_count++;
+
+         StateRunner_setPopCount(runner, 5);
+         return 0;
 }
 
 
@@ -87,14 +95,16 @@ void testRunState() {
     StateRunner_addState(runner, (void*)&test_struct, runFunc, deconFunc);
     StateRunner_runState(runner, NULL);
 
-    // not having commit added states, should still be 0
+    // The state has been "add"ed but not "commit"ed, therefore should be 0
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 0);
     ASSERT_EQUAL_INT(test_struct.run_count, 0);
     ASSERT_EQUAL_INT(test_struct.deconstruct_count, 0);
 
     // now it should actually run
     StateRunner_commitBuffer(runner);
-    StateRunner_runState(runner, NULL);
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 1);
 
+    StateRunner_runState(runner, NULL);
     ASSERT_EQUAL_INT(test_struct.run_count, 1);
     ASSERT_EQUAL_INT(test_struct.deconstruct_count, 0);
 }
@@ -105,10 +115,12 @@ void testRunWithDecon() {
     StateRunner *runner = StateRunner_init(32, 16);
     TestStruct test_struct = {0, 0};
 
-    StateRunner_addState(runner, (void*)&test_struct, runFuncTerminates, deconFunc);
+    StateRunner_addState(
+        runner, (void*)&test_struct, runFuncTerminates, deconFunc
+    );
     StateRunner_commitBuffer(runner);
-
     StateRunner_runState(runner, NULL);
+
     ASSERT_EQUAL_INT(test_struct.run_count, 1);
     ASSERT_EQUAL_INT(test_struct.deconstruct_count, 1);
 
@@ -122,8 +134,10 @@ void testRunMultiple() {
     TestStruct test_struct = {0, 0};
 
     // two deconstructors
-    StateRunner_addState(runner, (void*)&test_struct, runFuncTerminates, deconFunc);
-    StateRunner_addState(runner, (void*)&test_struct, runFuncTerminates, deconFunc);
+    StateRunner_addState(
+        runner, (void*)&test_struct, runFuncTerminates, deconFunc);
+    StateRunner_addState(
+        runner, (void*)&test_struct, runFuncTerminates, deconFunc);
     StateRunner_commitBuffer(runner);
 
     StateRunner_runState(runner, NULL);
@@ -131,12 +145,15 @@ void testRunMultiple() {
     // there should still be a live ref to test_struct, so no termination
     ASSERT_EQUAL_INT(test_struct.deconstruct_count, 0);  
 
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 1);
+
     StateRunner_runState(runner, NULL);
     ASSERT_EQUAL_INT(test_struct.run_count, 2);
     ASSERT_EQUAL_INT(test_struct.deconstruct_count, 1);
 
-    StateRunner_deconstruct(runner);
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 0);
 
+    StateRunner_deconstruct(runner);
 }
 
 void testNullDeconstructor() {
@@ -155,6 +172,49 @@ void testNullDeconstructor() {
 
 }
 
+void testPopcountReset() {
+
+    StateRunner *runner = StateRunner_init(32, 16);
+    TestStruct test_struct = {0, 0};
+
+    StateRunner_addState(runner, (void*)&test_struct, runFunc, NULL);
+    StateRunner_commitBuffer(runner);
+
+    StateRunner_setPopCount(runner, 1);
+    StateRunner_runState(runner, NULL);
+
+    // this should not have popped - popCount should reset between calls
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 1);
+
+
+    StateRunner_deconstruct(runner);
+}
+
+
+void testPopMultiple() {
+    // skip through more than 1 state with popping
+
+    StateRunner *runner = StateRunner_init(32, 16);
+    TestStruct test_struct = {0, 0};
+
+    for (int i = 0; i < 7; i++) {
+        StateRunner_addState(
+            runner, (void*)&test_struct, runFuncPop5, deconFunc
+        );
+    }
+    StateRunner_commitBuffer(runner);
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 7);
+
+    StateRunner_runState(runner, NULL);
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 2);
+
+    // Popping more than present simply goes to 0
+    StateRunner_runState(runner, NULL);
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 0);
+
+    StateRunner_deconstruct(runner);
+}
+
 
 
 int main() {
@@ -165,6 +225,9 @@ int main() {
     ADD_CASE(testRunWithDecon);
     ADD_CASE(testRunMultiple);
     ADD_CASE(testNullDeconstructor);
+
+    ADD_CASE(testPopcountReset);
+    ADD_CASE(testPopMultiple);
 
     EWENIT_END;
 

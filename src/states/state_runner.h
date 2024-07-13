@@ -23,10 +23,11 @@
  *          ApplicationState* (for access to global config, renderers, etc.)
  *          void* (void pointer to the state's specific data)
  *
- *      This function should also return an integer value indicating the
- *      status of this state post execution, returning 0 if it should keep
- *      updating, and -1 if its execution is complete and should be popped
- *      from the stack.
+ *      During the exeuction of this function, StateRunner_setPopCount(1)
+ *      can be called to indicate to the StateRunner that this state function
+ *      should be popped from the stack and not run any subsequent times.
+ *      Additionally, StateRunner_setPopCount(x) can be called for x values
+ *      greater than 1 to "skip down" more states in the stack.
  *
  * 3. State "deconstructors"
  *      Function points to functions that free up any memory and clear
@@ -41,12 +42,9 @@
 
 #include <stdlib.h>
 
-typedef enum {
-    STATEFUNC_CONTINUE = 0,
-    STATEFUNC_QUIT = -1,
-    STATEFUNC_ERROR = -2
-} StateFuncStatus;
-
+/******************************************************************************
+ * Type definitions
+******************************************************************************/
 
 // typedefs for convenience
 typedef struct StateRunner StateRunner;
@@ -58,7 +56,7 @@ typedef int (*deconstruct_func_t)(void*);
 // StateRunner* - Pointer to StateRunner struct (to potentially propagate new state)
 // void* - Pointer to application-level state data
 // void* - Pointer to local-level state data
-typedef StateFuncStatus (*state_func_t)(StateRunner*, void*, void*);
+typedef int (*state_func_t)(StateRunner*, void*, void*);
 
 
 // Struct to store information about states
@@ -74,6 +72,8 @@ struct StateRunner {
     // NOTE: The max that can be buffered is one less than
     // number of slots allocated, due to collision
     // detection for head & tail upon addition
+    
+    int pop_count;
 
     void **states;
     // Array of state structs, stored as void pointers.
@@ -103,24 +103,9 @@ struct StateRunner {
 };
 
 
-// Add a state to the StateRunner's buffer
-int StateRunner_addState(StateRunner *self, void* state_data, state_func_t state_runner, deconstruct_func_t state_deconstructor);
-
-// Migrate buffer states to the "live" state array
-int StateRunner_commitBuffer(StateRunner *self);
-
-/**
- * @brief - Run an interation of the "top" state
- * @param self - StateRunner pointer to run from
- * @param app_state - Pointer to some struct holding global,
- *                    application-level state. Passed as a void
- *                    pointer to make this API generic, to be
- *                    recast to whatever ApplicationState
- *                    struct implementation is used
- */
-int StateRunner_runState(StateRunner *self, void* app_state);
-
-
+/******************************************************************************
+ * Initialization and deconstruction
+******************************************************************************/
 
 /** 
  * @brief - Initialize StateRunner with heap allocated memory
@@ -170,5 +155,34 @@ int StateRunner_deconstructSingleBlock(StateRunner *self);
  * @param q_size - Integer number of in-transit states that can be maintained
  */
 int StateRunner_build(char *memory, int buffer_size, int q_size);
+
+
+/******************************************************************************
+ * State running
+******************************************************************************/
+
+
+// Add a state to the StateRunner's buffer
+int StateRunner_addState(StateRunner *self, void* state_data, state_func_t state_runner, deconstruct_func_t state_deconstructor);
+
+// Migrate buffer states to the "live" state array
+int StateRunner_commitBuffer(StateRunner *self);
+
+/**
+ * @brief - Run an interation of the "top" state
+ * @param self - StateRunner pointer to run from
+ * @param app_state - Pointer to some struct holding global,
+ *                    application-level state. Passed as a void
+ *                    pointer to make this API generic, to be
+ *                    recast to whatever ApplicationState
+ *                    struct implementation is used
+ */
+int StateRunner_runState(StateRunner *self, void* app_state);
+
+
+int StateRunner_getStateCount(StateRunner *self);
+int StateRunner_setPopCount(StateRunner *self, int count);
+
+
 
 #endif

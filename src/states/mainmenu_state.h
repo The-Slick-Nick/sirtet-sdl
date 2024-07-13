@@ -61,7 +61,7 @@ int MainMenuState_deconstruct(void* self);
  * State running
 ******************************************************************************/
 
-StateFuncStatus MainMenuState_run(
+int MainMenuState_run(
     StateRunner *state_runner, void *application_data, void *state_data
 );
 
