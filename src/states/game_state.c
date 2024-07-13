@@ -203,7 +203,9 @@ StateFuncStatus updateGame(StateRunner *state_runner, GameState *game_state) {
             return STATEFUNC_ERROR;
         }
 
-        BlockDb_setBlockPosition(db, *primary_block, (Point){5, 5});
+        // BlockDb_setBlockPosition(db, *primary_block, (Point){5, 5});
+        int init_coord = grid->width / 2;
+        BlockDb_setBlockPosition(db, *primary_block, (Point){init_coord, init_coord});
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
 
