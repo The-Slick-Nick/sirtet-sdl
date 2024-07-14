@@ -30,13 +30,18 @@ void run() {
 
     // (these todos are in a general location because I didn't notice
     // specific lines of things lol)
-    // TODO: Initialize a rand seed
     // TODO: Add "hard drop" functionality (with scoring)
     // TODO: Add a background to main game side pane
     // TODO: Highscores (list on main menu with extra space?)
+    // TODO: Implement SRS (or similar) system
+    // TODO: Hold block
+    // TODO: Block prediction overlay
+    // TODO: Sound effects and (maybe) music(?)
 
     // Note: Also does all necessary SDL stuff here
-    
+
+    srand((int)time(NULL));
+
     printf("Initializing application state...\n");
     ApplicationState *global_state = ApplicationState_init("assets");
     if (global_state == NULL) {

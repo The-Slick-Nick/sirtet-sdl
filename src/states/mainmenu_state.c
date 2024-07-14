@@ -104,7 +104,7 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
 
     // Preprocessing
     SDL_Surface *title_surf = TTF_RenderText_Solid(
-        menu_font, "Tetris", MENUCOL_ACTIVE
+        menu_font, "Sirtet", MENUCOL_ACTIVE
     );
 
     if (title_surf == NULL) {

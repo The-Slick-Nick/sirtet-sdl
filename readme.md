@@ -1,6 +1,5 @@
-# Tetris SDL
-A simple clone of tetris using C and SDL.
-
+# Sirtet
+A simple block dropping game created with SDL2
 
 
 ### Build Requirements

@@ -6,3 +6,8 @@ sandbox/*
 
 # Binaries
 build/*
+
+# Local working copies
+assets/wip/*
+/wip/*
+*.xcf
