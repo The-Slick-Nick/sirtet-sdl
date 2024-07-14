@@ -6,15 +6,15 @@
 #ifndef APPLICATION_STATE_H
 #define APPLICATION_STATE_H
 
-#define WINDOW_WIDTH 540 
-#define WINDOW_HEIGHT 720
+#define WINDOW_WIDTH 960 
+#define WINDOW_HEIGHT 960
 
 #define TARGET_FPS 60
 #define TARGET_SPF (1.0 / TARGET_FPS)
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-
+#include <SDL2/SDL_surface.h>
 
 struct fontlib {
     TTF_Font *lekton_12;
@@ -22,6 +22,11 @@ struct fontlib {
     TTF_Font *vt323_12;
     TTF_Font *vt323_24;
 };
+
+struct imglib {
+    SDL_Texture *logo;
+};
+    
 
 // Higher-level status/state of hardware and such
 // to pass to lower-level virtual states
@@ -32,7 +37,7 @@ typedef struct {
     SDL_Window *wind;       // Pointer to SDL_Window struct
 
     struct fontlib fonts;
-    // TTF_Font *menu_font;    // Font pointer to use for menu things
+    struct imglib images;
 
 } ApplicationState;
 

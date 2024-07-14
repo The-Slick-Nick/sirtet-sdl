@@ -49,7 +49,8 @@ void run() {
     }
 
     printf("Initializing main menu...\n");
-    MainMenuState *mainmenu_state = MainMenuState_init(global_state->rend, global_state->fonts.lekton_24);
+    MainMenuState *mainmenu_state = MainMenuState_init(
+        global_state->rend, global_state->fonts.vt323_24, global_state->images.logo);
     if (mainmenu_state == NULL) {
         ApplicationState_deconstruct(global_state);
         exit(EXIT_FAILURE);

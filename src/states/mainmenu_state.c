@@ -24,8 +24,9 @@
 #define MIN_LEVEL 0
 #define MAX_LEVEL 10
 
-#define MENUCOL_ACTIVE ((SDL_Color){255, 255, 255})
-#define MENUCOL_INACTIVE ((SDL_Color){155, 155, 155})
+#define MENUCOL_ACTIVE ((SDL_Color){0, 0, 0})
+#define MENUCOL_INACTIVE ((SDL_Color){100, 100, 100})
+#define BACKGROUNDCOL ((SDL_Color){155, 155, 155})
 
 /******************************************************************************
  * menufunc predeclarations
@@ -83,7 +84,8 @@ void menufunc_decOption(
  * @param rend - SDL_Renderer pointer to render textures with
  * @param menu_font - TTF_Font pointer to render menu options with
  */
-MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
+MainMenuState* MainMenuState_init(
+    SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo) {
 
     assert(INIT_BLOCK_SIZE >= MIN_BLOCK_SIZE);
     assert(INIT_BLOCK_SIZE <= MAX_BLOCK_SIZE);
@@ -126,6 +128,7 @@ MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font) {
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
 
         .label_font=menu_font,
+        .title_logo=title_logo,
         .title_banner=SDL_CreateTextureFromSurface(rend, title_surf)
     };
     SDL_FreeSurface(title_surf);
@@ -486,8 +489,8 @@ int MainMenuState_run(
 
         SDL_Color label_col = (
             menu_state->menu_selection == opt_i
-            ? (SDL_Color){255, 255, 255}
-            : (SDL_Color){155, 155, 155}
+            ? MENUCOL_ACTIVE
+            : MENUCOL_INACTIVE
         );
 
         SDL_Surface *label_surf = TTF_RenderText_Solid(
@@ -509,22 +512,30 @@ int MainMenuState_run(
 
     /***** Draw *****/
 
-    // title
+    SDL_Color bg = BACKGROUNDCOL;
+    SDL_SetRenderDrawColor(rend, bg.r, bg.g, bg.b, bg.a);
+    SDL_RenderClear(rend);
+
+
+    const int option_padding = 24;
+
     SDL_Window *wind = app_state->wind;
     int wind_w, wind_h;
     SDL_GetWindowSize(wind, &wind_w, &wind_h);
     int yoffset = 0;
 
-    int title_w, title_h;
-    SDL_QueryTexture(menu_state->title_banner, NULL, NULL, &title_w, &title_h);
+    // title
+    // aspect ratio of logo is 3:1
+    int title_w = (3 * wind_w) / 4;
+    int title_h = title_w / 3;
     SDL_Rect title_loc = {
         .x = (wind_w / 2) - (title_w / 2),
         .y=yoffset + title_h / 2,
         .w=title_w,
         .h=title_h
     };
-    SDL_RenderCopy(rend, menu_state->title_banner, NULL, &title_loc);
-    yoffset += title_loc.y + title_loc.h;
+    SDL_RenderCopy(rend, menu_state->title_logo, NULL, &title_loc);
+    yoffset += title_loc.y + title_loc.h + option_padding;
 
     // options
     for (int opt_i = 0; opt_i < menu_state->num_options; opt_i++) {
@@ -545,7 +556,7 @@ int MainMenuState_run(
         };
 
         SDL_RenderCopy(app_state->rend, opt->label, NULL, &label_loc);
-        yoffset += label_h;
+        yoffset += label_h + option_padding;
     }
 
     return 0;

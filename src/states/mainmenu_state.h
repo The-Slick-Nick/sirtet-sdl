@@ -34,7 +34,9 @@ struct mainmenustate {
 
     MenucodeMap *menucode_map;  // Mapping collection of hardware codes to menu codes
     bool *menucode_states;      // Bool array indicating if menu signals are active
+
     TTF_Font *label_font;
+    SDL_Texture *title_logo;
 
     /* Menu option meta info */
     int menu_selection;         // Menu item # selected
@@ -50,7 +52,7 @@ struct mainmenustate {
 };
 
 // MainMenuState* MainMenuState_init(ApplicationState *app_state);
-MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font);
+MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo);
 
 // Tear down a MainMenuState, following behaviour set by state_runner
 int MainMenuState_deconstruct(void* self);
