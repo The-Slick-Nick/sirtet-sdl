@@ -279,11 +279,11 @@ void menufunc_startGame(StateRunner *state_runner, ApplicationState *app_state, 
 
     int move_cd = TARGET_FPS / 15;
     Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_UP, 1, 1, 1);
+    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_DOWN, 1, 1, 1);
     Gamecode_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
     Gamecode_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
     Gamecode_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, INT_MAX, move_cd);
+    Gamecode_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
     Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
 
     GameState *new_state = GameState_init(

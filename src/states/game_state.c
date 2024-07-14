@@ -83,8 +83,6 @@ GameState* GameState_init(
         .block_presets=(long*)malloc(preset_size * sizeof(long)),
 
         .block_db = BlockDb_init(256),
-        // .game_grid = GameGrid_init(GRID_WIDTH, GRID_HEIGHT),
-        // size 4 => 10wide, 24tall
         .game_grid = GameGrid_init(
             2 * block_size + block_size / 2,
             6 * block_size
@@ -165,7 +163,6 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
 
     // Must clear first due to animation timing
-    // GameGrid_resolveRowsDown(grid, db);
     GameGrid_resolveRowsUp(grid, db);
 
     int rand_idx;
@@ -197,12 +194,18 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
             db, game_state->block_size, new_contents, (Point){0, 0}, new_color
         );
 
-        if (*primary_block == INVALID_BLOCK_ID || *queued_block == INVALID_BLOCK_ID) {
+        if (*primary_block == INVALID_BLOCK_ID
+            || *queued_block == INVALID_BLOCK_ID) {
             return -1;
         }
 
-        int init_coord = grid->width / 2;
-        BlockDb_setBlockPosition(db, *primary_block, (Point){init_coord, init_coord});
+        int block_size = BlockDb_getBlockSize(db, *primary_block);
+        Point init_coord = {
+            .x=grid->width / 2,
+            .y=grid->height - ((block_size / 2) + ((block_size & 1) == 1)) 
+        };
+
+        BlockDb_setBlockPosition(db, *primary_block, init_coord);
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
 
@@ -259,7 +262,9 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
     }
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_RIGHT)) {
-        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){1, 0});
+        Point new_pos = Point_translate(
+            BlockDb_getBlockPosition(db, *primary_block), (Point){1, 0}
+        );
         if (
             GameGrid_canBlockInfoExist(
                 grid,
@@ -274,15 +279,20 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
     game_state->move_counter++;
     if (
-        Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_DOWN)
+        Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_UP)
         || game_state->move_counter > (TARGET_FPS / (1 + game_state->level))
     ) {
         game_state->move_counter = 0;
 
-        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){0, 1});
+        Point new_pos = Point_translate(
+            BlockDb_getBlockPosition(db, *primary_block),
+            (Point){0, -1}
+        );
 
-        if (GameGrid_canBlockInfoExist(grid, BlockDb_getBlockSize(db, *primary_block), BlockDb_getBlockContents(db, *primary_block), new_pos)) {
-
+        if (GameGrid_canBlockInfoExist(
+            grid, BlockDb_getBlockSize(db, *primary_block),
+            BlockDb_getBlockContents(db, *primary_block), new_pos
+        )) {
             BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
         else {
