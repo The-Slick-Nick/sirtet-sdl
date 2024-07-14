@@ -165,7 +165,8 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
 
     // Must clear first due to animation timing
-    GameGrid_resolveRows(grid, db);
+    // GameGrid_resolveRowsDown(grid, db);
+    GameGrid_resolveRowsUp(grid, db);
 
     int rand_idx;
     long new_contents;

@@ -161,12 +161,10 @@ void testGameGridCanBlockExist() {
     GameGrid_deconstruct(grid);
 }
 
-void testGameGridResolveRows() {
+void testGameGridResolveRowsDown() {
 
     BlockDb *db = BlockDb_init(8);
 
-    // int id_arr[2] = {4, 4};
-    // BlockIds ids = {.max_ids=2, .id_array=id_arr, .head=0};
     int id1 = BlockDb_createBlock(db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
     int id2 = BlockDb_createBlock(db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
 
@@ -180,7 +178,7 @@ void testGameGridResolveRows() {
     };
     memcpy(grid->contents, grid_contents, 16 * sizeof(int));
 
-    int result = GameGrid_resolveRows(grid, db);
+    int result = GameGrid_resolveRowsDown(grid, db);
 
     ASSERT_EQUAL_INT(result, 1); // one row resolved
 
@@ -189,7 +187,7 @@ void testGameGridResolveRows() {
 
 
     /* final should be as below.
-     * Notice the floating 0s - this is an official tetris quirk
+     * Notice the floating 0s - this is an intended quirk
         -1, -1, -1, -1, 
         -1, -1, -1, -1, 
          id1,  id1, -1, -1, 
@@ -209,6 +207,64 @@ void testGameGridResolveRows() {
                 ASSERT_EQUAL_INT(grid_cell_val, id1);
             }
             else if (14 == grid_idx || 15 == grid_idx) {
+                ASSERT_EQUAL_INT(grid_cell_val, id2);
+            }
+            else {
+                ASSERT_GREATER_THAN_INT(0, grid_cell_val);  // invalid id
+            }
+        }
+    }
+    BlockDb_deconstruct(db);
+}
+
+
+void testGameGridResolveRowsUp() {
+
+
+    BlockDb *db = BlockDb_init(8);
+
+    int id1 = BlockDb_createBlock(db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
+    int id2 = BlockDb_createBlock(db, 2, 0b1111, (Point){0, 0}, (SDL_Color){});
+
+
+    GameGrid *grid = GameGrid_init(4, 4);
+    int grid_contents[16] = {
+        -1,     -1,   -1,   -1, 
+         id1,  id1,   -1,   -1,
+         id1,  id1,  id2,  id2,
+        -1,     -1,  id2,  id2
+    };
+    memcpy(grid->contents, grid_contents, 16 * sizeof(int));
+
+    int result = GameGrid_resolveRowsUp(grid, db);
+
+    ASSERT_EQUAL_INT(result, 1); // one row resolved
+
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(db, id1), 2);
+    ASSERT_EQUAL_INT(BlockDb_getCellCount(db, id2), 2);
+
+
+    /* final should be as below.
+     * Notice the floating 0s - this is an intended quirk
+        -1, -1, -1, -1, 
+         id1,  id1, -1, -1, 
+        -1, -1,  id2, id2 ,
+        -1, -1, -1, -1 
+    */
+
+    int height = grid->height;
+    int width = grid->width;
+
+    for (int grid_y = 0; grid_y < height; grid_y++) {
+        for (int grid_x = 0; grid_x < width; grid_x++) {
+            INFO_FMT("(%d, %d)", grid_x, grid_y);
+            int grid_idx = grid_x + (grid_y * width);
+            int grid_cell_val = grid->contents[grid_idx];
+
+            if (4 == grid_idx || 5 == grid_idx) {
+                ASSERT_EQUAL_INT(grid_cell_val, id1);
+            }
+            else if (10 == grid_idx || 11 == grid_idx) {
                 ASSERT_EQUAL_INT(grid_cell_val, id2);
             }
             else {
@@ -390,7 +446,8 @@ int main() {
     ADD_CASE(testGameGridClear);
     ADD_CASE(testGameGridCanBlockInfoExist);
     ADD_CASE(testGameGridCanBlockExist);
-    ADD_CASE(testGameGridResolveRows);
+    ADD_CASE(testGameGridResolveRowsDown);
+    ADD_CASE(testGameGridResolveRowsUp);
     ADD_CASE(testGameGridCommitBlock);
 
     ADD_CASE(testGameGridAssessScore);
