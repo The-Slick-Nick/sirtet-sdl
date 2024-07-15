@@ -20,8 +20,6 @@
 #include "state_runner.h"
 
 
-#define GRID_WIDTH 10
-#define GRID_HEIGHT 24
 
 
 // Structure representing current state of game.
@@ -57,8 +55,10 @@ typedef struct {
 
     SDL_Texture *score_label;
     SDL_Texture *level_label;
+    SDL_Texture *next_label;
 
 } GameState;
+
 
 
 // Initialize and return a pointer for GameState

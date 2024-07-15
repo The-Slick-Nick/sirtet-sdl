@@ -31,6 +31,12 @@
 
 #define TOTAL_WEIGHT_W (GAMEAREA_WEIGHT_W + SIDEBAR_WEIGHT_W)
 
+// Borders between the different screen areas
+#define BORDER_SIZE 24
+
+#define OUTSET_COL (SDL_Color){0, 0, 0, 255}
+#define INSET_COL (SDL_Color){50, 50, 50, 255}
+
 
 /*=============================================================================
  State Struct creation & destruction
@@ -98,8 +104,8 @@ GameState* GameState_init(
         .menu_font=menu_font,
         .pause_texture=texture,
         .score_label=NULL,
-        .level_label=NULL
-
+        .level_label=NULL,
+        .next_label=NULL
     };
 
     /*** Post-creation processing ***/
@@ -139,6 +145,7 @@ int GameState_deconstruct(void* self) {
     SDL_DestroyTexture(game_state->pause_texture);
     SDL_DestroyTexture(game_state->score_label);
     SDL_DestroyTexture(game_state->pause_texture);
+    SDL_DestroyTexture(game_state->next_label);
 
     free(self);
 
@@ -322,6 +329,31 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
  * Draw Components
 =============================================================================*/
 
+
+// Draw the next-up block from given coordinates
+void drawNextBlock(
+    ApplicationState *app_state, GameState *game_state,
+    SDL_Rect *dest
+) {
+
+    const int block_size = BlockDb_getBlockSize(
+        game_state->block_db, game_state->queued_block
+    );
+    const int cell_size = dest->w / block_size;
+
+    SDL_Color bgcol = INSET_COL;
+    SDL_SetRenderDrawColor(app_state->rend, bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    SDL_RenderFillRect(app_state->rend, dest);
+    
+    BlockDb_drawBlock(
+        game_state->block_db, game_state->queued_block,
+        app_state->rend, (Point){dest->x, dest->y},
+        cell_size, cell_size
+    );
+
+
+}
+
 // Draw supplmental game info (Score, on deck, flair, etc.)
 int drawInterface(ApplicationState *app_state, GameState *game_state) {
 
@@ -337,10 +369,15 @@ int drawInterface(ApplicationState *app_state, GameState *game_state) {
     char score_buffer[32];  // 32 is overkill but just in case...
     char level_buffer[16];  
 
-    int wind_w, wind_h;
+    SDL_Color bgcol = INSET_COL;
+    SDL_SetRenderDrawColor(rend, bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+
+    const int padding = 24;
+
+int wind_w, wind_h;
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
-    const int sidebar_w = (SIDEBAR_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W;
+    const int sidebar_w = (SIDEBAR_WEIGHT_W * (wind_w - 2 * BORDER_SIZE)) / TOTAL_WEIGHT_W;
     const int sidebar_h = wind_h;
     const Point sidebar_origin = {
         .x=((GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W),
@@ -348,6 +385,8 @@ int drawInterface(ApplicationState *app_state, GameState *game_state) {
     };
 
     int yoffset = 0;
+
+    /***** Score + Level *****/
 
     // NOTE: Relies on updateGame(...) invalidating score texture on score change
     if (game_state->score_label == NULL) {
@@ -361,6 +400,7 @@ int drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     SDL_Rect dstrect = {.x=sidebar_origin.x, .y=sidebar_origin.y};
     SDL_QueryTexture(game_state->score_label, NULL, NULL, &dstrect.w, &dstrect.h);
+    SDL_RenderFillRect(rend, &dstrect);
     SDL_RenderCopy(rend, game_state->score_label, NULL, &dstrect);
     yoffset += dstrect.h;
 
@@ -376,21 +416,44 @@ int drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     dstrect = (SDL_Rect){.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
     SDL_QueryTexture(game_state->level_label, NULL, NULL, &dstrect.w, &dstrect.h);
+    SDL_RenderFillRect(rend, &dstrect);
     SDL_RenderCopy(rend, game_state->level_label, NULL, &dstrect);
-    yoffset += dstrect.h;
+    yoffset += dstrect.h + padding;
 
-    const int block_size = BlockDb_getBlockSize(game_state->block_db, game_state->queued_block);
-    const int cell_size = sidebar_w / block_size;
 
-    Point topleft = {.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
-    int retval = BlockDb_drawBlock(block_db, game_state->queued_block, rend, topleft, cell_size, cell_size);
-    if (retval < 0) { return retval; }
+    /***** Next Up *****/
+
+    // TODO: Next up label
+    dstrect = (SDL_Rect){
+        .x=sidebar_origin.x, .y=sidebar_origin.y + yoffset,
+        .w=sidebar_w,
+        .h=sidebar_w
+    };
+    drawNextBlock(app_state, game_state, &dstrect);
     return 0;
 }
 
 // Draw game area, including primary block and grid
-int drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect draw_window) {
 
+/**
+ * @brief - Draw the game area, including the grid, primary block, and any
+ *          supplementary visual elements.
+ * @param app_state - Pointer to struct representing application-wide data
+ * @param game_state - Pointer to struct representing game-related state data
+ * @param draw_window - SDL_Rect describing the area in which to draw the grid
+ *                      Note that this method will attempt to fill the entire
+ *                      rectangle if possible, but will maintain the grid's
+ *                      aspect ratio and keep to square cells, possibly
+ *                      drawing into a smaller space than described.
+ * @param actual_draw - Pointer to SDL_Rect to write out final write dimensions
+ *                      Ignored if NULL
+ */
+int drawGameArea(
+    ApplicationState *app_state, GameState *game_state, SDL_Rect draw_window,
+    SDL_Rect *actual_draw
+) {
+
+    /* Unpacking */
     SDL_Renderer *rend = app_state->rend;
     int primary_block = game_state->primary_block;
     BlockDb *db = game_state->block_db;
@@ -398,22 +461,44 @@ int drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect dr
 
     int cellsize_w = draw_window.w / grid->width;
     int cellsize_h = draw_window.h / grid->height;
+    int cellsize = cellsize_w > cellsize_h ? cellsize_h : cellsize_w;
 
-    Point origin = {.x=draw_window.x, .y=draw_window.y};
+    SDL_Rect final_dims;
+    final_dims.w = cellsize * grid->width;
+    final_dims.h = cellsize * grid->height;
+
+    int w_pad = draw_window.w - final_dims.w;
+    int h_pad = draw_window.h - final_dims.h;
+
+    final_dims.x = draw_window.x + (w_pad / 2);
+    final_dims.y = draw_window.y + (h_pad / 2);
+
+    if (actual_draw != NULL) {
+        *actual_draw = final_dims;
+    }
+
+    Point origin = {.x=final_dims.x, .y=final_dims.y};
+
+    SDL_Color col = INSET_COL;
+    SDL_SetRenderDrawColor(rend, col.r, col.g, col.b, col.a);
+    SDL_RenderFillRect(rend, &final_dims);
 
     int retval;
+    retval = GameGrid_drawGrid(grid, rend, db, origin, cellsize, cellsize);
+    if (retval < 0) {
+        return retval;
+    }
+
     if (primary_block != INVALID_BLOCK_ID) {
 
-        retval = BlockDb_drawBlockOnGrid(db, primary_block, rend, origin, cellsize_w, cellsize_h);
+        retval = BlockDb_drawBlockOnGrid(
+            db, primary_block, rend, origin, cellsize, cellsize);
+
         if (retval < 0) {
             return retval;
         }
     }
 
-    retval = GameGrid_drawGrid(grid, rend, db, origin, cellsize_w, cellsize_h);
-    if (retval < 0) {
-        return retval;
-    }
     return 0;
 }
 
@@ -421,7 +506,6 @@ int drawGameArea(ApplicationState *app_state, GameState *game_state, SDL_Rect dr
 int drawGame(ApplicationState *app_state, GameState *game_state) {
 
     SDL_Renderer *rend = app_state->rend;
-
 
     SDL_SetRenderDrawColor(rend, 10, 20, 30, 255);
     SDL_RenderClear(rend);
@@ -432,14 +516,19 @@ int drawGame(ApplicationState *app_state, GameState *game_state) {
 
     int retval = 0;
 
-    SDL_Rect game_area = {
-        .x=0, .y=0,
-        .w=(GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W,
-        .h=wind_h
+    int area_w = (GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W;
+    int area_h = wind_h - (2 * BORDER_SIZE);
+
+    SDL_Rect game_area_request = {
+        .x=(wind_w - area_w) / 2,
+        .y=(wind_h - area_h) / 2,
+        .w=area_w,
+        .h=area_h
     };
 
 
-    retval = drawGameArea(app_state, game_state, game_area);
+    SDL_Rect game_area;
+    retval = drawGameArea(app_state, game_state, game_area_request, &game_area);
     if (retval < 0) { return retval; }
 
     retval = drawInterface(app_state, game_state);

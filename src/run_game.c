@@ -26,6 +26,7 @@
 
 
 /* Primary program runner */
+// Note: Also does all necessary SDL stuff here
 void run() {
 
     // (these todos are in a general location because I didn't notice
@@ -33,12 +34,15 @@ void run() {
     // TODO: Add "hard drop" functionality (with scoring)
     // TODO: Add a background to main game side pane
     // TODO: Highscores (list on main menu with extra space?)
-    // TODO: Implement SRS (or similar) system
+    // TODO: Implement SRS (or similar) system - with dynamic "block size"
+    //       based on content needs (some "blocksize 4" blocks can be represented
+    //       in a 3x3 grid)
     // TODO: Hold block
     // TODO: Block prediction overlay
     // TODO: Sound effects and (maybe) music(?)
+    // TODO: Settings menu (tile sizes, color schemes)
+    // TODO: Remove level as a setting - start at 0 and go up over time
 
-    // Note: Also does all necessary SDL stuff here
 
     srand((int)time(NULL));
 
