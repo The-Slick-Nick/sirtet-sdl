@@ -330,8 +330,9 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 =============================================================================*/
 
 
+// NOTE: Take dest pointer, require x, y, and w - write in final h
 // Draw the next-up block from given coordinates
-void drawNextBlock(
+int drawNextBlock(
     ApplicationState *app_state, GameState *game_state,
     SDL_Rect *dest
 ) {
@@ -350,8 +351,51 @@ void drawNextBlock(
         app_state->rend, (Point){dest->x, dest->y},
         cell_size, cell_size
     );
+    dest->h = block_size * cell_size;
+    return dest->h;
+}
 
+int drawScoreArea(
+    ApplicationState *app_state, GameState *game_state,
+    SDL_Rect *dest
+) {
 
+    int total_h = 0;
+    int max_w = 0;
+
+    int score_h, score_w;
+    SDL_QueryTexture(game_state->score_label, NULL, NULL, &score_w, &score_h);
+    max_w = score_w > max_w ? score_w : max_w;
+    total_h += score_h;
+
+    int lvl_h, lvl_w;
+    SDL_QueryTexture(game_state->level_label, NULL, NULL, &lvl_w, &lvl_h);
+    max_w = lvl_w > max_w ? lvl_w : max_w;
+    total_h += lvl_h;
+
+    SDL_Rect bgrect = {dest->x, dest->y, max_w, total_h};
+
+    SDL_Color bgcol = INSET_COL;
+    SDL_SetRenderDrawColor(app_state->rend, bgcol.r, bgcol.g, bgcol.b, bgcol.a);
+    SDL_RenderFillRect(app_state->rend, &bgrect);
+
+    // now actually draw the labels
+    int yoffset = 0;
+
+    SDL_Rect dstrect = {dest->x, dest->y};
+
+    dstrect.w = max_w;
+    // dstrect.w = score_w;
+    dstrect.h = score_h;
+    SDL_RenderCopy(app_state->rend, game_state->score_label, NULL, &dstrect);
+    dstrect.y += dstrect.h;
+
+    // dstrect.w = lvl_w;
+    dstrect.w = max_w;
+    dstrect.h = lvl_h;
+    SDL_RenderCopy(app_state->rend, game_state->level_label, NULL, &dstrect);
+
+    return total_h;
 }
 
 // Draw supplmental game info (Score, on deck, flair, etc.)
@@ -374,7 +418,7 @@ int drawInterface(ApplicationState *app_state, GameState *game_state) {
 
     const int padding = 24;
 
-int wind_w, wind_h;
+    int wind_w, wind_h;
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
     const int sidebar_w = (SIDEBAR_WEIGHT_W * (wind_w - 2 * BORDER_SIZE)) / TOTAL_WEIGHT_W;
@@ -396,16 +440,12 @@ int wind_w, wind_h;
         );
         game_state->score_label = SDL_CreateTextureFromSurface(rend, surf);
         SDL_FreeSurface(surf);
-    }
 
-    SDL_Rect dstrect = {.x=sidebar_origin.x, .y=sidebar_origin.y};
-    SDL_QueryTexture(game_state->score_label, NULL, NULL, &dstrect.w, &dstrect.h);
-    SDL_RenderFillRect(rend, &dstrect);
-    SDL_RenderCopy(rend, game_state->score_label, NULL, &dstrect);
-    yoffset += dstrect.h;
+    }
 
     // NOTE: Relies on updateGame(...) invalidating level texture on level change
     if (game_state->level_label == NULL) {
+        printf("Making level label\n");
         snprintf(level_buffer, 16, "Level: %d", level);
         SDL_Surface *lvl_surf = TTF_RenderText_Solid(
             menu_font, level_buffer, (SDL_Color){255, 255, 255}
@@ -414,13 +454,25 @@ int wind_w, wind_h;
         SDL_FreeSurface(lvl_surf);
     }
 
-    dstrect = (SDL_Rect){.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
-    SDL_QueryTexture(game_state->level_label, NULL, NULL, &dstrect.w, &dstrect.h);
-    SDL_RenderFillRect(rend, &dstrect);
-    SDL_RenderCopy(rend, game_state->level_label, NULL, &dstrect);
-    yoffset += dstrect.h + padding;
-
-
+    SDL_Rect dstrect = {
+        .x=sidebar_origin.x, .y=sidebar_origin.y, .w=sidebar_w
+    };
+    yoffset += drawScoreArea(app_state, game_state, &dstrect);
+    //
+    // SDL_Rect dstrect = {.x=sidebar_origin.x, .y=sidebar_origin.y};
+    // SDL_QueryTexture(game_state->score_label, NULL, NULL, &dstrect.w, &dstrect.h);
+    // SDL_RenderFillRect(rend, &dstrect);
+    // SDL_RenderCopy(rend, game_state->score_label, NULL, &dstrect);
+    // yoffset += dstrect.h;
+    //
+    //
+    // dstrect = (SDL_Rect){.x=sidebar_origin.x, .y=sidebar_origin.y + yoffset};
+    // SDL_QueryTexture(game_state->level_label, NULL, NULL, &dstrect.w, &dstrect.h);
+    // SDL_RenderFillRect(rend, &dstrect);
+    // SDL_RenderCopy(rend, game_state->level_label, NULL, &dstrect);
+    // yoffset += dstrect.h + padding;
+    //
+    //
     /***** Next Up *****/
 
     // TODO: Next up label
