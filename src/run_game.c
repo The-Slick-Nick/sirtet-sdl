@@ -17,6 +17,7 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <limits.h>
 #include <assert.h>
 #include <stdio.h>
@@ -56,16 +57,12 @@ void run() {
     MainMenuState *mainmenu_state = MainMenuState_init(
         global_state->rend, global_state->fonts.vt323_24, global_state->images.logo);
     if (mainmenu_state == NULL) {
-        ApplicationState_deconstruct(global_state);
         exit(EXIT_FAILURE);
     }
 
-    // State runner uses stack memory, but others use heap
     printf("Initializing state runner...\n");
     StateRunner *state_runner = StateRunner_init(32, 16);
     if (state_runner == NULL) {
-        ApplicationState_deconstruct(global_state);
-        MainMenuState_deconstruct(mainmenu_state);
         exit(EXIT_FAILURE);
     }
 
@@ -159,6 +156,9 @@ void run() {
         SDL_DestroyTexture(fps_texture);
         SDL_DestroyTexture(rawfps_texture);
 
+        fps_texture = NULL;
+        rawfps_texture = NULL;
+
         /*********************************************************************
          * Maintenance calculations
          ********************************************************************/
@@ -186,5 +186,7 @@ void run() {
     // all other such related things. I don't know if this
     // is the best way to do it, but it's how I'm doing it
     // for now.
+    
+    StateRunner_deconstruct(state_runner);
     ApplicationState_deconstruct(global_state);
 }

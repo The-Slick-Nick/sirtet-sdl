@@ -41,7 +41,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
 # Note to self: look in /usr/include for proper lib names
-CPPFLAGS := $(INC_FLAGS) -MMD -MP -lSDL2 -lSDL2_ttf
+CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -lSDL2 -lSDL2_ttf
 
 ######################
 ### Build Commands ###
@@ -62,7 +62,7 @@ $(BUILD_DIR)/lib.a: $(OBJS)
 
 # TODO: Make all of the -lSDL flags into a common $(...) syntax var
 ./main.bin: $(BUILD_DIR)/lib.a
-	gcc main.c -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a -lSDL2 -lSDL2_ttf
+	gcc main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a -lSDL2 -lSDL2_ttf
 
 ##################
 ### HIGH LEVEL ###

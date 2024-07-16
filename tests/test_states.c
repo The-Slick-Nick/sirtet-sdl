@@ -5,7 +5,6 @@
 #include "state_runner.h"
 
 
-
 // a struct for unit tests
 typedef struct {
 

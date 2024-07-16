@@ -151,14 +151,14 @@ int ApplicationState_deconstruct(ApplicationState* self) {
 
     SDL_DestroyWindow(self->wind);
     SDL_DestroyRenderer(self->rend);
-    free(self->hardware_states);
-
     SDL_DestroyTexture(self->images.logo);
 
     TTF_CloseFont(self->fonts.lekton_24);
     TTF_CloseFont(self->fonts.lekton_12);
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
+
+    free(self->hardware_states);
     free(self);
 
 
