@@ -34,11 +34,17 @@ CC = gcc
 # dependencies and generate them as -d files
 CFLAGS = -Wall --std=gnu99 $(INC_FLAGS) -MMD -MP
 
-
 all: run_tests clean
 
 run_tests: build_src build_tests  
-	for x in *.bin; do ./$$x; done
+	mkdir -p logs
+	# for x in *.bin; do ./$$x; done
+	for x in *.bin; do \
+		valgrind \
+		-s --tool=memcheck --leak-check=summary --track-origins=yes --show-reachable=yes \
+		--log-file=logs/$$x.log \
+		./$$x; \
+	done
 	@echo "Tests Complete"
 
 build_src:
@@ -62,8 +68,6 @@ $(TEST_BINS): %.bin: %.o $(LIB)/lib.a
 # object files needed by project)
 $(LIB)/lib.a:
 	@make build_lib -C ..
-
-
 
 clean:
 	@rm -f *.o

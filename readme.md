@@ -13,3 +13,8 @@ $ sudo apt install libsdl2-ttf-dev
 ```
 
 * [EWENIT](https://github.com/The-Slick-Nick/c-testsuite) (for testing)
+
+* Valgrind
+```bash
+$ sudo apt install valgrind
+```
