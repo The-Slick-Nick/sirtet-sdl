@@ -32,7 +32,7 @@ CC = gcc
 
 # Compile with -MMD and -MP flags to identify header
 # dependencies and generate them as -d files
-CFLAGS = -Wall --std=gnu99 $(INC_FLAGS) -MMD -MP
+CFLAGS = -Wall -g --std=gnu99 $(INC_FLAGS) -MMD -MP
 
 all: run_tests clean
 

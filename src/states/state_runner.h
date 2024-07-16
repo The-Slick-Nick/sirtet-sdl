@@ -180,6 +180,7 @@ int StateRunner_commitBuffer(StateRunner *self);
 int StateRunner_runState(StateRunner *self, void* app_state);
 
 
+void StateRunner_flushPop(StateRunner *self);
 int StateRunner_getStateCount(StateRunner *self);
 int StateRunner_setPopCount(StateRunner *self, int count);
 

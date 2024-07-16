@@ -176,13 +176,16 @@ void testPopcountReset() {
     TestStruct test_struct = {0, 0};
 
     StateRunner_addState(runner, (void*)&test_struct, runFunc, NULL);
+    StateRunner_addState(runner, (void*)&test_struct, runFunc, NULL);
     StateRunner_commitBuffer(runner);
 
     StateRunner_setPopCount(runner, 1);
+    ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 2);
     StateRunner_runState(runner, NULL);
 
-    // this should not have popped - popCount should reset between calls
+    // the queue is flushed before and after running
     ASSERT_EQUAL_INT(StateRunner_getStateCount(runner), 1);
+    ASSERT_EQUAL_INT(runner->pop_count, 0);
 
 
     StateRunner_deconstruct(runner);

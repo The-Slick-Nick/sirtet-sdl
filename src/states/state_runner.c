@@ -63,6 +63,43 @@ int StateRunner_commitBuffer(StateRunner *self) {
 
 }
 
+
+/**
+ * @brief Flush the StateRunner's pop buffer
+ * @param self - StateRunner pointer to clear
+ */
+void StateRunner_flushPop(StateRunner *self) {
+
+    for (;self->pop_count > 0 && self->head >= 0; self->pop_count--, self->head--) {
+
+        deconstruct_func_t decon = self->deconstructors[self->head];
+        void *state = self->states[self->head];
+
+        if (decon != NULL) {
+            int refcount = 0;
+            for (int stack_i = 0; stack_i <= self->head; stack_i++) {
+                if (self->states[stack_i] == state) {
+                    refcount++;
+                }
+            }
+
+            for (int queue_i = self->buffer_tail;
+                 queue_i != self->buffer_head;
+                 queue_i = (queue_i + 1) % self->buffer_size) {
+
+                if (self->states_buffer[queue_i] == state) {
+                    refcount++;
+                }
+            }
+
+            if (refcount == 1) {
+                decon(state);
+            }
+
+        }
+    }
+}
+
 /**
  * @brief - Run an interation of the "top" state
  * @param self - StateRunner pointer to run from
@@ -81,47 +118,13 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
     state_func_t top_runner = self->runners[self->head];
     void* top_state = self->states[self->head];
 
-    self->pop_count = 0;
+    StateRunner_flushPop(self);
     int retval = top_runner(self, app_state, top_state);
     if (retval < 0) {
         printf("Error running state function\n");
         return -1;
     }
-
-    for (int pop_i = 0; pop_i < self->pop_count && self->head >= 0; pop_i++) {
-
-        deconstruct_func_t top_decon = self->deconstructors[self->head];
-        void* top_state = self->states[self->head];
-
-        if (top_decon != NULL) {
-            int refcount = 0;
-
-            // NOTE: We scan each state pointer to determine a ref count
-            // (rather than using a hashmap or similar) due to the speed of the
-            // can over a relatively low number of states
-            for (int stack_i = 0; stack_i <= self->head; stack_i++) {
-                if (self->states[stack_i] == top_state) {
-                    refcount++;
-                }
-            }
-
-            for (
-                int queue_i = self->buffer_tail;
-                queue_i != self->buffer_head;
-                queue_i = (queue_i + 1) % self->buffer_size
-            ) {
-                if (self->states_buffer[queue_i] == top_state) {
-                    refcount++;
-                }
-            }
-
-            if (refcount == 1) {
-                top_decon(top_state);
-            }
-        }
-        self->head--;
-    }
-
+    StateRunner_flushPop(self);
     return 0;
 
 }
@@ -278,6 +281,11 @@ int StateRunner_build(char *memory, int buffer_size, int q_size) {
  * @param self - Pointer to StateRunner struct to free
  */
 int StateRunner_deconstruct(StateRunner *self) {
+
+    StateRunner_commitBuffer(self);
+    StateRunner_setPopCount(self, StateRunner_getStateCount(self));
+    StateRunner_flushPop(self);
+
 
     free(self->states);
     free(self->states_buffer);
