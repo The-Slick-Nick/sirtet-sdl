@@ -19,6 +19,7 @@
 
 #include "state_runner.h"
 
+#define LINES_PER_LEVEL 10
 
 
 
@@ -33,6 +34,7 @@ typedef struct {
     int move_counter;           // number of frames since last movement
     int score;                  // Number of points accumulated
     int level;                  // Current game level. Affects speed & score
+    int lines_this_level;      // # of lines cleared this level
     int block_size;             // Block sizing standard for this gamestate
 
     BlockDb *block_db;

@@ -67,9 +67,11 @@ int GameGrid_clear(GameGrid* grid);
 int GameGrid_reset(GameGrid* grid, BlockDb *db);  
 
 // clears full rows of committed blocks, pushing remaining blocks downward
+// Return number of lines cleared
 int GameGrid_resolveRowsDown(GameGrid* grid, BlockDb *db);
 
-// clears full rows of committed blocks, pushing remaining blocks upward
+// clears full rows of committed blocks, pushing remaining blocks upward.
+// Return number of lines cleared
 int GameGrid_resolveRowsUp(GameGrid* grid, BlockDb *db);
 
 // Calculate how many points to award based on the current grid state

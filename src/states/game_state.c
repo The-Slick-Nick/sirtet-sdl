@@ -79,6 +79,7 @@ GameState* GameState_init(
         .move_counter=0,
         .score=0,
         .level=init_level,
+        .lines_this_level=0,
         .block_size=block_size,
 
         .primary_block = INVALID_BLOCK_ID,
@@ -170,7 +171,14 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
 
     // Must clear first due to animation timing
-    GameGrid_resolveRowsUp(grid, db);
+    game_state->lines_this_level += GameGrid_resolveRowsUp(grid, db);
+    int level_ups = game_state->lines_this_level / LINES_PER_LEVEL;
+    if (level_ups > 0) {
+        game_state->level += level_ups;
+        SDL_DestroyTexture(game_state->level_label);
+        game_state->level_label = NULL;
+        game_state->lines_this_level -= (level_ups * LINES_PER_LEVEL);
+    }
 
     int rand_idx;
     long new_contents;
