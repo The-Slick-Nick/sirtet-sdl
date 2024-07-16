@@ -215,6 +215,7 @@ void testGameGridResolveRowsDown() {
         }
     }
     BlockDb_deconstruct(db);
+    GameGrid_deconstruct(grid);
 }
 
 
@@ -273,6 +274,7 @@ void testGameGridResolveRowsUp() {
         }
     }
     BlockDb_deconstruct(db);
+    GameGrid_deconstruct(grid);
 }
 
 void testGameGridCommitBlock() {
@@ -318,6 +320,7 @@ void testGameGridCommitBlock() {
 
     ASSERT_EQUAL_LONG(BlockDb_getBlockContents(db, badblock_id), content_mask);  // nochange
 
+    GameGrid_deconstruct(grid);
     BlockDb_deconstruct(db);
 }
 
@@ -383,6 +386,8 @@ void testGameGridAssessScore() {
     ASSERT_EQUAL_INT(GameGrid_assessScore(grid, 2), 3600);
     ASSERT_EQUAL_INT(GameGrid_assessScore(grid, 4), 6000);
     ASSERT_EQUAL_INT(GameGrid_assessScore(grid, 8), 10800);
+
+    GameGrid_deconstruct(grid);
 }
 
 
@@ -433,8 +438,6 @@ void testGameGridAnimation() {
 
     retval = GameGrid_runAnimationFrame(grid);
     ASSERT_EQUAL_INT(retval, -1);
-
-
 
     GameGrid_deconstruct(grid);
 }
