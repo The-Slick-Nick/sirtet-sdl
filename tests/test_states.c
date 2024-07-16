@@ -41,8 +41,7 @@ int runFuncPop5(StateRunner *runner, void *app_data, void *state_data) {
          return 0;
 }
 
-
-int deconFunc(void *state_data) {
+static int deconFunc(void *state_data) {
     TestStruct *local_state = (TestStruct*)state_data;
     local_state->deconstruct_count++;
 
@@ -215,6 +214,54 @@ void testPopMultiple() {
 }
 
 
+int actualDeconFunc(void *state_data) {
+    free(state_data);
+    return 0;
+}
+
+void testFreesMemory() {
+    // test that memory is actually freed without error
+    // the other tests call a dummy deconstructor that
+    // doens't actually free anything, this one does
+
+    // these are difficult to assert for - so thre are currently none
+    // This test case is mean to fish for errors encountered in
+    // memory profiling
+
+
+    /* Test 1 - all state data freed from staterunner calls */
+
+    StateRunner *runner1 = StateRunner_init(32, 16);
+    TestStruct *test_struct1 = malloc(sizeof(TestStruct));
+
+    StateRunner_addState(runner1, test_struct1, runFuncTerminates, actualDeconFunc);
+    StateRunner_addState(runner1, test_struct1, runFuncTerminates, actualDeconFunc);
+    StateRunner_addState(runner1, test_struct1, runFuncTerminates, actualDeconFunc);
+
+    StateRunner_runState(runner1, NULL);
+    StateRunner_runState(runner1, NULL);
+    StateRunner_runState(runner1, NULL);
+
+    StateRunner_deconstruct(runner1);
+
+
+    /* Test 2 - un-deconstructed state data when StateRunner deconstructs */
+
+    StateRunner *runner2 = StateRunner_init(32, 16);
+
+    TestStruct *test_struct2 = malloc(sizeof(TestStruct));
+    TestStruct *test_struct3 = malloc(sizeof(TestStruct));
+    TestStruct *test_struct4 = malloc(sizeof(TestStruct));
+
+    StateRunner_addState(runner2, test_struct2, runFuncTerminates, actualDeconFunc);
+    StateRunner_addState(runner2, test_struct3, runFuncTerminates, actualDeconFunc);
+    StateRunner_addState(runner2, test_struct4, runFuncTerminates, actualDeconFunc);
+
+
+    StateRunner_deconstruct(runner2);
+}
+
+
 
 int main() {
     EWENIT_START;
@@ -228,6 +275,7 @@ int main() {
     ADD_CASE(testPopcountReset);
     ADD_CASE(testPopMultiple);
 
+    ADD_CASE(testFreesMemory);
     EWENIT_END;
 
 }
