@@ -75,6 +75,10 @@ build_lib: $(BUILD_DIR)/lib.a
 run_exe: build_exe
 	./main.bin
 
+run_profile: build_exe
+	mkdir -p logs
+	valgrind -s --tool=memcheck --leak-check=summary --track-origins=yes --show-reachable=yes --log-file=logs/valgrind.log ./main.bin
+
 clean:
 	rm main.bin
 

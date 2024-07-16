@@ -38,10 +38,9 @@ all: run_tests clean
 
 run_tests: build_src build_tests  
 	mkdir -p logs
-	# for x in *.bin; do ./$$x; done
 	for x in *.bin; do \
 		valgrind \
-		-s --tool=memcheck --leak-check=summary --track-origins=yes --show-reachable=yes \
+		-s --tool=memcheck --leak-check=full --track-origins=yes --show-reachable=yes \
 		--log-file=logs/$$x.log \
 		./$$x; \
 	done
