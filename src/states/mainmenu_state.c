@@ -17,9 +17,9 @@
 #include "game_state.h"
 
 
-#define INIT_BLOCK_SIZE 4
-#define MAX_BLOCK_SIZE 5
-#define MIN_BLOCK_SIZE 3
+#define INIT_TILE_SIZE 4
+#define MAX_TILE_SIZE 5
+#define MIN_TILE_SIZE 3
 
 #define MIN_LEVEL 0
 #define MAX_LEVEL 10
@@ -36,39 +36,29 @@
  *
 ******************************************************************************/
 void menufunc_startGame(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 );
 
-void menufunc_incLevel(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+void menufunc_incTileSize(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 );
 
-void menufunc_decLevel(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
-);
-
-void menufunc_incBlockSize(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
-);
-
-void menufunc_decBlockSize(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+void menufunc_decTileSize(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 );
 
 void menufunc_incOption(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 );
 
 
 void menufunc_decOption(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 );
 
 
@@ -87,8 +77,8 @@ void menufunc_decOption(
 MainMenuState* MainMenuState_init(
     SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo) {
 
-    assert(INIT_BLOCK_SIZE >= MIN_BLOCK_SIZE);
-    assert(INIT_BLOCK_SIZE <= MAX_BLOCK_SIZE);
+    assert(INIT_TILE_SIZE >= MIN_TILE_SIZE);
+    assert(INIT_TILE_SIZE <= MAX_TILE_SIZE);
     assert(MIN_LEVEL >= 0);
     assert(MIN_LEVEL <= MAX_LEVEL);
 
@@ -117,12 +107,11 @@ MainMenuState* MainMenuState_init(
     // Definition
     *menustate = (MainMenuState){
 
-        .num_options=3,
-        .menu_selection=0,
-        .options=(MenuOption*)malloc(3 * sizeof(MenuOption)),
+        // TODO: A constant/config detail for option count?
+        .mainmenu=Menu_init(16),
 
         .init_level=MIN_LEVEL,
-        .block_size=INIT_BLOCK_SIZE,
+        .block_size=INIT_TILE_SIZE,
 
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
@@ -133,47 +122,26 @@ MainMenuState* MainMenuState_init(
     };
     SDL_FreeSurface(title_surf);
 
-    if (menustate->options == NULL) {
+    if (menustate->mainmenu == NULL) {
         printf("Error allocating options\n");
-        MainMenuState_deconstruct(menustate);
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < menustate->num_options; i++) {
-        menustate->options[i].label = NULL;
-        for (int gc = 0; gc < NUM_MENUCODES; gc++) {
-            menustate->options[i].commands[gc] = NULL;
-        }
-    }
+    Menu *mainmenu = menustate->mainmenu;
+    int tilesize_idx = Menu_addOption(mainmenu);
+    int start_idx = Menu_addOption(mainmenu);
 
-    strcpy(menustate->options[0].text, "Level 0");
-    strcpy(menustate->options[1].text, "Block Size 4");
-    strcpy(menustate->options[2].text, "Start Game");
+    menustate->menuopt_tilesize = tilesize_idx;
+    menustate->menuopt_start = start_idx;
+    
+
+    // TODO: Refactor "block_size" here to "tile size"
 
     /*** Assign Option Commands ***/
+    Menu_setCommand(mainmenu, tilesize_idx, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
+    Menu_setCommand(mainmenu, tilesize_idx, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
+    Menu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
 
-    menustate->options[0].commands[MENUCODE_INCREMENT_VALUE] = menufunc_incLevel;
-    menustate->options[0].commands[MENUCODE_DECREMENT_VALUE] = menufunc_decLevel;
-
-    menustate->options[1].commands[MENUCODE_INCREMENT_VALUE] = menufunc_incBlockSize;
-    menustate->options[1].commands[MENUCODE_DECREMENT_VALUE] = menufunc_decBlockSize;
-
-    menustate->options[2].commands[MENUCODE_SELECT] = menufunc_startGame;
-
-    for (int opt_i = 0; opt_i < menustate->num_options; opt_i++) {
-        menustate->options[opt_i].commands[MENUCODE_MOVE_UP] = menufunc_decOption;
-        menustate->options[opt_i].commands[MENUCODE_MOVE_DOWN] = menufunc_incOption;
-    }
-
-
-    if (
-        menustate->menucode_states == NULL
-        || menustate->menucode_map == NULL
-        || menustate->options == NULL
-    ) {
-        MainMenuState_deconstruct(menustate);
-        return NULL;
-    }
 
     // Postprocessing
     MenucodeMap *mcodes = menustate->menucode_map;
@@ -195,13 +163,10 @@ int MainMenuState_deconstruct(void* self) {
 
     MainMenuState *menustate = (MainMenuState*)self;
 
-    for (int opt_i = 0; opt_i < menustate->num_options; opt_i++) {
-        SDL_DestroyTexture(menustate->options[opt_i].label);
-    }
-    free(menustate->options);
-
+    SDL_DestroyTexture(menustate->title_banner);
     MenucodeMap_deconstruct(menustate->menucode_map);
-
+    free(menustate->menucode_states);
+    Menu_deconstruct(menustate->mainmenu);
     free(self);
     return 0;
 }
@@ -213,7 +178,14 @@ int MainMenuState_deconstruct(void* self) {
  * typedef void (*menufunc_t)(StateRunner*, ApplicationState*, MainMenuState*)
 ******************************************************************************/
 
-void menufunc_startGame(StateRunner *state_runner, ApplicationState *app_state, MainMenuState *menu_state) {
+void menufunc_startGame(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
+) {
+
+    MainMenuState *menu_state = (MainMenuState*)menu_data;
+    ApplicationState *app_state = (ApplicationState*)app_data;
+
 
     long block_presets[2 + 7 + 18] = {
         /* blocksize 3 */
@@ -303,129 +275,43 @@ void menufunc_startGame(StateRunner *state_runner, ApplicationState *app_state, 
 }
 
 
-void menufunc_incLevel(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+void menufunc_incTileSize(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 ) {
 
+    MainMenuState *menu_state = (MainMenuState*)menu_data;
+    ApplicationState *app_state = (ApplicationState*)app_data;
 
-    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
-
-    if (menu_state->init_level >= MAX_LEVEL) {
-        return;
-    }
-    menu_state->init_level++;
-
-    if (opt->label != NULL) {
-        SDL_DestroyTexture(opt->label);
-        opt->label = NULL;
-    }
-
-    snprintf(opt->text, 32, "Level %d", menu_state->init_level);
-}
-
-void menufunc_decLevel(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
-) {
-
-    if (menu_state->init_level <= MIN_LEVEL) {
-        return;
-    }
-    menu_state->init_level--;
-
-    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
-
-    if (opt->label != NULL) {
-        SDL_DestroyTexture(opt->label);
-        opt->label = NULL;
-    }
-
-    snprintf(opt->text, 32, "Level %d", menu_state->init_level);
-}
-
-
-void menufunc_incBlockSize(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
-) {
-
-    if (menu_state->block_size >= MAX_BLOCK_SIZE) {
+    if (menu_state->block_size >= MAX_TILE_SIZE) {
         return;
     }
     menu_state->block_size++;
 
-    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
+    int opt = menu_state->menuopt_tilesize;
+    Menu *menu = menu_state->mainmenu;
 
-    if (opt->label != NULL) {
-        SDL_DestroyTexture(opt->label);
-        opt->label = NULL;
-    }
+    Menu_clearLabel(menu, opt);
 
-    snprintf(opt->text, 32, "Block Size %d", menu_state->block_size);
 }
 
-void menufunc_decBlockSize(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
+void menufunc_decTileSize(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
 ) {
 
-    if (menu_state->block_size <= MIN_BLOCK_SIZE) {
+    MainMenuState *menu_state = (MainMenuState*)menu_data;
+    ApplicationState *app_state = (ApplicationState*)app_data;
+
+    if (menu_state->block_size <= MIN_TILE_SIZE) {
         return;
     }
     menu_state->block_size--;
 
-    MenuOption *opt = &menu_state->options[menu_state->menu_selection];
+    int opt = menu_state->menuopt_tilesize;
+    Menu *menu = menu_state->mainmenu;
 
-    if (opt->label != NULL) {
-        SDL_DestroyTexture(opt->label);
-        opt->label = NULL;
-    }
-
-    snprintf(opt->text, 32, "Block Size %d", menu_state->block_size);
-}
-
-void menufunc_incOption(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
-) {
-
-    if (menu_state->menu_selection >= menu_state->num_options - 1) {
-        return;
-    }
-
-    MenuOption *prev_opt = &menu_state->options[menu_state->menu_selection];
-    MenuOption *new_opt = &menu_state->options[menu_state->menu_selection + 1];
-    
-    SDL_DestroyTexture(prev_opt->label);
-    SDL_DestroyTexture(new_opt->label);
-
-    prev_opt->label = NULL;
-    new_opt->label = NULL;
-
-    menu_state->menu_selection++;
-}
-
-
-void menufunc_decOption(
-    StateRunner *state_runner, ApplicationState *app_state,
-    MainMenuState *menu_state
-) {
-
-    if (menu_state->menu_selection <= 0) {
-        return;
-    }
-
-    MenuOption *prev_opt = &menu_state->options[menu_state->menu_selection];
-    MenuOption *new_opt = &menu_state->options[menu_state->menu_selection - 1];
-    
-    SDL_DestroyTexture(prev_opt->label);
-    SDL_DestroyTexture(new_opt->label);
-
-    prev_opt->label = NULL;
-    new_opt->label = NULL;
-
-    menu_state->menu_selection--;
+    Menu_clearLabel(menu, opt);
 }
 
 /******************************************************************************
@@ -448,6 +334,7 @@ int MainMenuState_run(
     bool *menu_codes = menu_state->menucode_states;
     int *hardware_codes = app_state->hardware_states;
     MenucodeMap *keymaps = menu_state->menucode_map;
+    Menu *menu = menu_state->mainmenu;
 
     char strbuffer[32];  // A general-purpose string buffer
     SDL_Color col_active = {255, 255, 255};
@@ -468,46 +355,71 @@ int MainMenuState_run(
 
         // use func map for given option index
         if (Menucode_pressed(menu_codes, mc)) {
-
-            int selection = menu_state->menu_selection;
-            menufunc_t mfunc = menu_state->options[selection].commands[mc];
-
-            if (mfunc != NULL) {
-                mfunc(state_runner, app_state, menu_state);
-            }
-
+            printf("Menucode %d pressed\n", mc);
+            Menu_runCommand(
+                menu, mc, state_runner, application_data, state_data
+            );
         }
     }
 
-    // Draw prep
-    for (int opt_i = 0; opt_i < menu_state->num_options; opt_i++) {
+    if (Menucode_pressed(menu_codes, MENUCODE_MOVE_DOWN)) {
+        int cur = menu->cur_option;
+        int next = Menu_nextOption(menu);
 
-        MenuOption *opt = &menu_state->options[opt_i];
-        if (opt->label != NULL) {
-            continue;
+        if (cur != next) {
+            Menu_clearLabel(menu, cur);
+            Menu_clearLabel(menu, next);
         }
+    }
 
-        SDL_Color label_col = (
-            menu_state->menu_selection == opt_i
-            ? MENUCOL_ACTIVE
-            : MENUCOL_INACTIVE
+    if (Menucode_pressed(menu_codes, MENUCODE_MOVE_UP)) {
+        int cur = menu->cur_option;
+        int next = Menu_prevOption(menu);
+
+        if (cur != next) {
+            Menu_clearLabel(menu, cur);
+            Menu_clearLabel(menu, next);
+        }
+    }
+
+    /***** Draw Prep *****/
+
+    // manual for now, will generalize perhaps later
+    
+    int tileop = menu_state->menuopt_tilesize;
+    int startop = menu_state->menuopt_start;
+
+    if (Menu_getLabel(menu, tileop) == NULL) {
+        printf("Rerendering tilesize label\n");
+
+        SDL_Color lblcol = menu->cur_option == tileop ?
+            MENUCOL_ACTIVE : MENUCOL_INACTIVE;
+
+        char buffer[32];
+        snprintf(buffer, 32, "Tile Size %d", menu_state->block_size);
+        SDL_Surface *surf = TTF_RenderText_Solid(
+            menu_state->label_font, buffer, lblcol
+        );
+        SDL_Texture *lbl = SDL_CreateTextureFromSurface(rend, surf);
+        Menu_setLabel(menu, tileop, lbl);
+        SDL_FreeSurface(surf);
+    }
+
+    if (Menu_getLabel(menu, startop) == NULL) {
+        printf("Rerendering start label\n");
+        SDL_Color lblcol = menu->cur_option == startop ?
+            MENUCOL_ACTIVE : MENUCOL_INACTIVE;
+
+        SDL_Surface *surf = TTF_RenderText_Solid(
+            menu_state->label_font, "Start", lblcol
         );
 
-        SDL_Surface *label_surf = TTF_RenderText_Solid(
-            menu_state->label_font,
-            opt->text, label_col
+        Menu_setLabel(
+            menu, startop,
+            SDL_CreateTextureFromSurface(rend, surf)
         );
 
-        if (label_surf == NULL) {
-            printf(
-                "Error creating label for option %d: %s\n",
-                opt_i, TTF_GetError()
-            );
-            exit(EXIT_FAILURE);
-        }
-
-        opt->label = SDL_CreateTextureFromSurface(app_state->rend, label_surf);
-        SDL_FreeSurface(label_surf);
+        SDL_FreeSurface(surf);
     }
 
     /***** Draw *****/
@@ -538,26 +450,30 @@ int MainMenuState_run(
     yoffset += title_loc.y + title_loc.h + option_padding;
 
     // options
-    for (int opt_i = 0; opt_i < menu_state->num_options; opt_i++) {
+    // manual for now, to be a Menu method later
 
-        MenuOption *opt = &menu_state->options[opt_i];
-        int label_w, label_h;
+    // tile size option
+    int size_w, size_h;
+    SDL_Texture *size_tex = Menu_getLabel(menu, tileop);
+    SDL_QueryTexture(size_tex, NULL, NULL, &size_w, &size_h);
+    SDL_Rect size_loc = {
+        (wind_w / 2) - (size_w / 2),
+        yoffset + size_h / 2,
+        size_w, size_h
+    };
+    yoffset += size_loc.h;
+    SDL_RenderCopy(rend, size_tex, NULL, &size_loc);
 
-        if (opt->label == NULL) {
-            continue;
-        }
-
-        SDL_QueryTexture(opt->label, NULL, NULL, &label_w, &label_h);
-        SDL_Rect label_loc = {
-            .x = (wind_w / 2) - (label_w / 2),
-            .y=yoffset,
-            .w=label_w,
-            .h=label_h
-        };
-
-        SDL_RenderCopy(app_state->rend, opt->label, NULL, &label_loc);
-        yoffset += label_h + option_padding;
-    }
+    // start option
+    int start_w, start_h;
+    SDL_Texture *start_tex = Menu_getLabel(menu, startop);
+    SDL_QueryTexture(start_tex, NULL, NULL, &start_w, &start_h);
+    SDL_Rect start_loc = {
+        (wind_w / 2) - (start_w / 2),
+        yoffset + start_h / 2,
+        start_w, start_h
+    };
+    SDL_RenderCopy(rend, start_tex, NULL, &start_loc);
 
     return 0;
 }

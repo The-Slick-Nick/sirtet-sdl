@@ -41,12 +41,14 @@ size_t Menu_requiredBytes(int max_options);
  * Menu content operations
 ******************************************************************************/
 
-void Menu_nextOption(Menu *self);
-void Menu_prevOption(Menu *self);
+int Menu_nextOption(Menu *self);
+int Menu_prevOption(Menu *self);
+
 
 int Menu_addOption(Menu *self);
 int Menu_clearLabel(Menu* self, int index);
 SDL_Texture* Menu_getLabel(Menu *self, int index);
+int Menu_setLabel(Menu *self, int index, SDL_Texture *label);
 
 
 void Menu_setCommand(

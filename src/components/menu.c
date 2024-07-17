@@ -73,17 +73,18 @@ size_t Menu_requiredBytes(int max_options) {
  * Menu content operations
 ******************************************************************************/
 
-void Menu_nextOption(Menu *self) {
+int Menu_nextOption(Menu *self) {
     if (self->cur_option + 1 >= self->num_options) {
-        return;
+        return self->cur_option;
     }
-
-    self->cur_option++;
+    return ++self->cur_option;
 }
-void Menu_prevOption(Menu *self) {
+
+int Menu_prevOption(Menu *self) {
     if (self->cur_option > 0) {
-        self->cur_option--;
+        return --self->cur_option;
     }
+    return self->cur_option;
 }
 
 int Menu_addOption(Menu *self) {
@@ -139,4 +140,27 @@ int Menu_clearLabel(Menu* self, int index) {
     return 0;
 }
 
-SDL_Texture* Menu_getLabel(Menu *self, int index) {return NULL;}
+
+int Menu_setLabel(Menu *self, int index, SDL_Texture *label) {
+    if (index < 0 || index >= self->num_options) {
+        return -1;
+    }
+
+    if (self->labels[index] != NULL) {
+        Menu_clearLabel(self, index);
+    }
+
+    self->labels[index] = label;
+
+    return 0;
+}
+    
+
+
+SDL_Texture* Menu_getLabel(Menu *self, int index) {
+    if (index < 0 || index >= self->num_options) {
+        return NULL;
+    }
+
+    return self->labels[index];
+}
