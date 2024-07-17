@@ -21,7 +21,6 @@ static size_t labelArrSize(int max_options) {
 
 Menu* Menu_init(int max_options) {
 
-
     if (max_options < 0)
         { return NULL; }
 
@@ -163,4 +162,39 @@ SDL_Texture* Menu_getLabel(Menu *self, int index) {
     }
 
     return self->labels[index];
+}
+
+
+/******************************************************************************
+ * Menu draw operations
+******************************************************************************/
+
+void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags) {
+    
+    // NOTE: `flags` argument meant to be a bitmask of different drawing options.
+    // (centering, alignment, etc etc)
+    // I've not implemented those yet, but wanted to use this interface/argument
+    // for future use
+
+    int yoffset = 0;
+    for (int opt_i = 0; opt_i < self->num_options; opt_i++) {
+
+        SDL_Texture *label = self->labels[opt_i];
+
+        if (label == NULL) {
+            continue;
+        }
+
+        int txt_w, txt_h;
+        SDL_QueryTexture(label, NULL, NULL, &txt_w, &txt_h);
+
+        SDL_Rect dest = {
+            (draw_window->x + (draw_window->w / 2)) - (txt_w / 2),
+            (draw_window->y + yoffset) + (txt_h / 2),
+            txt_w,
+            txt_h
+        };
+        yoffset += txt_h;
+        SDL_RenderCopy(rend, label, NULL, &dest);
+    }
 }

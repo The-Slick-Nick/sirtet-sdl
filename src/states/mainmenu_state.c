@@ -355,7 +355,6 @@ int MainMenuState_run(
 
         // use func map for given option index
         if (Menucode_pressed(menu_codes, mc)) {
-            printf("Menucode %d pressed\n", mc);
             Menu_runCommand(
                 menu, mc, state_runner, application_data, state_data
             );
@@ -390,7 +389,6 @@ int MainMenuState_run(
     int startop = menu_state->menuopt_start;
 
     if (Menu_getLabel(menu, tileop) == NULL) {
-        printf("Rerendering tilesize label\n");
 
         SDL_Color lblcol = menu->cur_option == tileop ?
             MENUCOL_ACTIVE : MENUCOL_INACTIVE;
@@ -406,7 +404,6 @@ int MainMenuState_run(
     }
 
     if (Menu_getLabel(menu, startop) == NULL) {
-        printf("Rerendering start label\n");
         SDL_Color lblcol = menu->cur_option == startop ?
             MENUCOL_ACTIVE : MENUCOL_INACTIVE;
 
@@ -450,30 +447,8 @@ int MainMenuState_run(
     yoffset += title_loc.y + title_loc.h + option_padding;
 
     // options
-    // manual for now, to be a Menu method later
-
-    // tile size option
-    int size_w, size_h;
-    SDL_Texture *size_tex = Menu_getLabel(menu, tileop);
-    SDL_QueryTexture(size_tex, NULL, NULL, &size_w, &size_h);
-    SDL_Rect size_loc = {
-        (wind_w / 2) - (size_w / 2),
-        yoffset + size_h / 2,
-        size_w, size_h
-    };
-    yoffset += size_loc.h;
-    SDL_RenderCopy(rend, size_tex, NULL, &size_loc);
-
-    // start option
-    int start_w, start_h;
-    SDL_Texture *start_tex = Menu_getLabel(menu, startop);
-    SDL_QueryTexture(start_tex, NULL, NULL, &start_w, &start_h);
-    SDL_Rect start_loc = {
-        (wind_w / 2) - (start_w / 2),
-        yoffset + start_h / 2,
-        start_w, start_h
-    };
-    SDL_RenderCopy(rend, start_tex, NULL, &start_loc);
+    SDL_Rect draw_window = {0, yoffset, wind_w, wind_h - yoffset};
+    Menu_draw(menu, rend, &draw_window, 0);
 
     return 0;
 }

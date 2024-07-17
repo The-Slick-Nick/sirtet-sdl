@@ -4,6 +4,7 @@
 #include "state_runner.h"
 #include "inputs.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_render.h>
 
 /******************************************************************************
  * Type declarations
@@ -19,11 +20,8 @@ typedef struct {
     int num_options;
     int max_options;
 
-
     menufunc_t *commands;  // 2D array of a menucode mapped to an option
     SDL_Texture **labels;
-    
-
 } Menu;
 
 /******************************************************************************
@@ -66,5 +64,6 @@ void Menu_runCommand(
  * Menu draw operations
 ******************************************************************************/
 
+void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags);
 
 #endif
