@@ -68,6 +68,43 @@ size_t Menu_requiredBytes(int max_options) {
 }
 
 
+// TextMenu* TextMenu_init(
+//     size_t max_options, size_t max_lbl_size, TTF_Font *active_font, SDL_Color *active_col, TTF_Font *inactive_font, SDL_Color *inactive_col
+// );
+//
+// void TextMenu_deconstruct(TextMenu* self);
+TextMenu* TextMenu_init(
+    size_t max_options, size_t max_lbl_size,
+    TTF_Font *active_font, SDL_Color *active_col,
+    TTF_Font *inactive_font, SDL_Color *inactive_col
+) {
+
+    TextMenu *menu = (TextMenu*)malloc(sizeof(TextMenu));
+
+    menu->menu = Menu_init(max_options);
+    menu->active_font = active_font;
+    menu->active_col = *active_col;
+    
+    menu->inactive_font = inactive_font;
+    menu->inactive_col = *inactive_col;
+
+    menu->label_w = max_lbl_size;   
+    menu->label_text = (char*)malloc(
+        (1 + max_lbl_size)
+        * max_options
+        * sizeof(char)
+    );
+    return menu;
+}
+
+void TextMenu_deconstruct(TextMenu *self) {
+
+    Menu_deconstruct(self->menu);
+    free(self->label_text);
+    free(self);
+}
+
+
 /******************************************************************************
  * Menu content operations
 ******************************************************************************/
@@ -92,8 +129,6 @@ int Menu_addOption(Menu *self) {
     }
     return self->num_options++;
 }
-
-
 
 void Menu_setCommand(
     Menu *self, int index, Menucode menucode, menufunc_t command
@@ -164,6 +199,77 @@ SDL_Texture* Menu_getLabel(Menu *self, int index) {
     return self->labels[index];
 }
 
+/******************************************************************************
+ * TextMenu content operations
+******************************************************************************/
+
+// NOTE: Do I wrap EVERY Menu method with a TextMenu equivalent,
+// or only those where I need to do something special?
+
+int TextMenu_nextOption(TextMenu *self) {
+    int prev = self->menu->cur_option;
+    int next = Menu_nextOption(self->menu);
+
+    if (prev != next) {
+        Menu_clearLabel(self->menu, prev);
+        Menu_clearLabel(self->menu, next);
+    }
+    return next;
+}
+
+int TextMenu_prevOption(TextMenu *self) {
+    int prev = self->menu->cur_option;
+    int next = Menu_prevOption(self->menu);
+
+    if (prev != next) {
+        Menu_clearLabel(self->menu, prev);
+        Menu_clearLabel(self->menu, next);
+    }
+    return next;
+}
+
+int TextMenu_addOption(TextMenu *self, char *txt) {
+    int new_opt = Menu_addOption(self->menu);
+    if (new_opt == -1) { 
+        return -1;
+    }
+
+    if (strlen(txt) > self->label_w) {
+        return -1;
+    }
+
+    return TextMenu_updateText(self, new_opt, txt);
+}
+
+
+void TextMenu_setCommand(
+    TextMenu *self, int index, Menucode menucode, menufunc_t command
+) {
+    Menu_setCommand(self->menu, index, menucode, command);
+}
+
+
+// run command on the currenctly selected option
+void TextMenu_runCommand(
+    TextMenu *self, Menucode menucode, StateRunner *runner,
+    void *app_data, void *state_data
+) {
+    Menu_runCommand(self->menu, menucode, runner, app_data, state_data);
+}
+
+int TextMenu_updateText(
+    TextMenu *self, int optnum, const char* text
+) {
+    if (strlen(text) > self->label_w) {
+        return -1;
+    }
+
+    char *idx = self->label_text + (optnum * (self->label_w + 1));
+    strcpy(idx, text);
+
+    Menu_clearLabel(self->menu, optnum);
+    return 0;
+}
 
 /******************************************************************************
  * Menu draw operations
@@ -197,4 +303,14 @@ void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags)
         yoffset += txt_h;
         SDL_RenderCopy(rend, label, NULL, &dest);
     }
+}
+
+/******************************************************************************
+ * TextMenu draw operations
+******************************************************************************/
+void TextMenu_draw(
+    TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags
+) {
+    // TODO: Custom logic to turn NULLs into textures
+    Menu_draw(self->menu, rend, draw_window, flags);
 }
