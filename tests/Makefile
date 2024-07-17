@@ -3,7 +3,7 @@
 # NOTE: I could just search for any ".c" file in this directory,
 # but something about this feels nicer
 
-TEST_SUITES = test_block.c test_coordinates.c test_grid.c test_states.c
+TEST_SUITES = $(shell find . -name 'test*.c')
 ############################################################
 
 
@@ -54,12 +54,14 @@ build_tests: $(TEST_BINS)
 
 # For each test suite, .c -> .o
 $(TEST_OBJS): %.o: %.c
+	@echo $(TEST_SUITES)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link each suite's .o file to lib.a (compiled from project root)
 # to create each suite's binary
 $(TEST_BINS): %.bin: %.o $(LIB)/lib.a
-	$(CC) $(CFLAGS) -o $@ $< -L$(LIB) -l:libEWENIT.a -l:lib.a
+	@echo $(TEST_SUITES)
+	$(CC) $(CFLAGS) -o $@ $< -L$(LIB) -l:libEWENIT.a -l:lib.a -lSDL2
 
 
 # NOTE: Relies on the makefile in project root having a "make build_lib"

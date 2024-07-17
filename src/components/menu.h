@@ -1,0 +1,68 @@
+#ifndef MENU_H
+#define MENU_H
+
+#include "state_runner.h"
+#include "inputs.h"
+#include <SDL2/SDL.h>
+
+/******************************************************************************
+ * Type declarations
+******************************************************************************/
+
+
+// Takes a StateRunner, pointer to "global" state, and pointer to "local" state
+typedef void (*menufunc_t)(StateRunner*, void*, void*);
+
+typedef struct {
+
+    int cur_option;
+    int num_options;
+    int max_options;
+
+
+    menufunc_t *commands;  // 2D array of a menucode mapped to an option
+    SDL_Texture **labels;
+    
+
+} Menu;
+
+/******************************************************************************
+ * Initialization & deconstruction
+******************************************************************************/
+
+
+Menu* Menu_init(int max_options);
+void Menu_deconstruct(Menu* self);
+Menu* Menu_build(void *data, size_t data_size, int max_options);
+size_t Menu_requiredBytes(int max_options);
+
+
+/******************************************************************************
+ * Menu content operations
+******************************************************************************/
+
+void Menu_nextOption(Menu *self);
+void Menu_prevOption(Menu *self);
+
+int Menu_addOption(Menu *self);
+int Menu_clearLabel(Menu* self, int index);
+SDL_Texture* Menu_getLabel(Menu *self, int index);
+
+
+void Menu_setCommand(
+    Menu *self, int index, Menucode menucode, menufunc_t command
+);
+// run command on the currenctly selected option
+void Menu_runCommand(
+    Menu *self, Menucode menucode, StateRunner *runner,
+    void *app_data, void *state_data
+);
+
+
+
+/******************************************************************************
+ * Menu draw operations
+******************************************************************************/
+
+
+#endif
