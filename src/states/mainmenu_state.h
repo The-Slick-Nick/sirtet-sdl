@@ -24,7 +24,7 @@ typedef struct mainmenustate {
     SDL_Texture *title_logo;
 
     /* Menu option meta info */
-    Menu *mainmenu;
+    TextMenu *mainmenu;
     int menuopt_tilesize;
     int menuopt_start;
 

@@ -26,10 +26,6 @@ void incValue2(StateRunner *runner, void *app_data, void *state_data) {
 
 
 
-    
-
-
-
 void testCreation() {
 
     Menu* menu = Menu_init(4);

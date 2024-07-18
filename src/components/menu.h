@@ -105,7 +105,7 @@ void TextMenu_runCommand(
     void *app_data, void *state_data
 );
 
-
+char* TextMenu_getLabelText(TextMenu *self, int optnum);
 int TextMenu_updateText(TextMenu *self, int optnum, const char* text);
 
 /******************************************************************************

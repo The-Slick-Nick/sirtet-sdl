@@ -1,3 +1,5 @@
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_ttf.h>
 #include <string.h>
 #include <SDL2/SDL.h>
 
@@ -147,6 +149,7 @@ void Menu_runCommand(
     Menu *self, Menucode menucode, StateRunner *runner,
     void *app_data, void *state_data
 ) {
+    printf("Menu_runCommand with main optnum %d\n", self->cur_option);
 
     if (self->num_options == 0) {
         return;
@@ -238,7 +241,11 @@ int TextMenu_addOption(TextMenu *self, char *txt) {
         return -1;
     }
 
-    return TextMenu_updateText(self, new_opt, txt);
+    if (TextMenu_updateText(self, new_opt, txt) == -1) {
+        return -1;
+    }
+
+    return new_opt;
 }
 
 
@@ -254,6 +261,8 @@ void TextMenu_runCommand(
     TextMenu *self, Menucode menucode, StateRunner *runner,
     void *app_data, void *state_data
 ) {
+    printf("TextMenu_runCommand with main optnum %d\n", self->menu->cur_option);
+
     Menu_runCommand(self->menu, menucode, runner, app_data, state_data);
 }
 
@@ -269,6 +278,17 @@ int TextMenu_updateText(
 
     Menu_clearLabel(self->menu, optnum);
     return 0;
+}
+
+char* TextMenu_getLabelText(TextMenu *self, int optnum) {
+
+    if (optnum >= self->menu->num_options || optnum < 0) {
+        return NULL;
+    }
+
+    int offset = optnum * (self->label_w + 1);
+    return (char*)(self->label_text + offset);
+
 }
 
 /******************************************************************************
@@ -311,6 +331,38 @@ void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags)
 void TextMenu_draw(
     TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags
 ) {
-    // TODO: Custom logic to turn NULLs into textures
+
+    for (int optnum = 0; optnum < self->menu->num_options; optnum++) {
+        if (Menu_getLabel(self->menu, optnum) != NULL) {
+            continue;
+        }
+
+        TTF_Font *font = (
+            optnum == self->menu->cur_option ?
+            self->active_font :
+            self->inactive_font
+        );
+        SDL_Color col = (
+            optnum == self->menu->cur_option ?
+            self->active_col :
+            self->inactive_col
+        );
+        char *text = TextMenu_getLabelText(self, optnum);
+
+        SDL_Surface *lbl_surf = TTF_RenderText_Solid(font, text, col);
+        if (lbl_surf == NULL) {
+            printf("Error creating label: %s\n", TTF_GetError());
+            exit(EXIT_FAILURE);
+        }
+
+        SDL_Texture *lbl_texture = SDL_CreateTextureFromSurface(rend, lbl_surf);
+        if (lbl_texture == NULL) {
+            printf("Error creating label: %s\n", SDL_GetError());
+            exit(EXIT_FAILURE);
+        }
+
+        Menu_setLabel(self->menu, optnum, lbl_texture);
+    }
+
     Menu_draw(self->menu, rend, draw_window, flags);
 }

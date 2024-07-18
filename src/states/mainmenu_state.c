@@ -12,6 +12,7 @@
 
 #include "mainmenu_state.h"
 #include "application_state.h"
+#include "menu.h"
 #include "state_runner.h"
 #include "inputs.h"
 #include "game_state.h"
@@ -104,11 +105,17 @@ MainMenuState* MainMenuState_init(
         return NULL;
     }
 
+    SDL_Color activecol = MENUCOL_ACTIVE;
+    SDL_Color inaccol = MENUCOL_INACTIVE;
+
     // Definition
     *menustate = (MainMenuState){
 
         // TODO: A constant/config detail for option count?
-        .mainmenu=Menu_init(16),
+        .mainmenu=TextMenu_init(
+            16, 32, menu_font, &activecol, menu_font, &inaccol
+        ),
+
 
         .init_level=MIN_LEVEL,
         .block_size=INIT_TILE_SIZE,
@@ -127,9 +134,15 @@ MainMenuState* MainMenuState_init(
         exit(EXIT_FAILURE);
     }
 
-    Menu *mainmenu = menustate->mainmenu;
-    int tilesize_idx = Menu_addOption(mainmenu);
-    int start_idx = Menu_addOption(mainmenu);
+    TextMenu *mainmenu = menustate->mainmenu;
+
+    char buffer[32];
+    snprintf(buffer, 32, "Tile Size %d", menustate->block_size);
+    int tilesize_idx = TextMenu_addOption(mainmenu, buffer);
+
+    int start_idx = TextMenu_addOption(mainmenu, "Start");
+
+    printf("tilesize_idx %d\nstart_idx %d\n", tilesize_idx, start_idx);
 
     menustate->menuopt_tilesize = tilesize_idx;
     menustate->menuopt_start = start_idx;
@@ -138,9 +151,9 @@ MainMenuState* MainMenuState_init(
     // TODO: Refactor "block_size" here to "tile size"
 
     /*** Assign Option Commands ***/
-    Menu_setCommand(mainmenu, tilesize_idx, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
-    Menu_setCommand(mainmenu, tilesize_idx, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
-    Menu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
+    TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
+    TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
+    TextMenu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
 
 
     // Postprocessing
@@ -166,7 +179,7 @@ int MainMenuState_deconstruct(void* self) {
     SDL_DestroyTexture(menustate->title_banner);
     MenucodeMap_deconstruct(menustate->menucode_map);
     free(menustate->menucode_states);
-    Menu_deconstruct(menustate->mainmenu);
+    TextMenu_deconstruct(menustate->mainmenu);
     free(self);
     return 0;
 }
@@ -282,36 +295,40 @@ void menufunc_incTileSize(
 
     MainMenuState *menu_state = (MainMenuState*)menu_data;
     ApplicationState *app_state = (ApplicationState*)app_data;
+    TextMenu *menu = menu_state->mainmenu;
 
     if (menu_state->block_size >= MAX_TILE_SIZE) {
         return;
     }
     menu_state->block_size++;
 
+    char buff[32];
+    snprintf(buff, 32, "Tile Size %d\n", menu_state->block_size);
+
     int opt = menu_state->menuopt_tilesize;
-    Menu *menu = menu_state->mainmenu;
 
-    Menu_clearLabel(menu, opt);
-
+    TextMenu_updateText(menu, opt, buff);
 }
 
 void menufunc_decTileSize(
     StateRunner *state_runner, void *app_data,
     void *menu_data
 ) {
-
     MainMenuState *menu_state = (MainMenuState*)menu_data;
     ApplicationState *app_state = (ApplicationState*)app_data;
+    TextMenu *menu = menu_state->mainmenu;
 
     if (menu_state->block_size <= MIN_TILE_SIZE) {
         return;
     }
     menu_state->block_size--;
 
-    int opt = menu_state->menuopt_tilesize;
-    Menu *menu = menu_state->mainmenu;
+    char buff[32];
+    snprintf(buff, 32, "Tile Size %d\n", menu_state->block_size);
 
-    Menu_clearLabel(menu, opt);
+    int opt = menu_state->menuopt_tilesize;
+
+    TextMenu_updateText(menu, opt, buff);
 }
 
 /******************************************************************************
@@ -334,7 +351,7 @@ int MainMenuState_run(
     bool *menu_codes = menu_state->menucode_states;
     int *hardware_codes = app_state->hardware_states;
     MenucodeMap *keymaps = menu_state->menucode_map;
-    Menu *menu = menu_state->mainmenu;
+    TextMenu *menu = menu_state->mainmenu;
 
     char strbuffer[32];  // A general-purpose string buffer
     SDL_Color col_active = {255, 255, 255};
@@ -355,69 +372,21 @@ int MainMenuState_run(
 
         // use func map for given option index
         if (Menucode_pressed(menu_codes, mc)) {
-            Menu_runCommand(
+            TextMenu_runCommand(
                 menu, mc, state_runner, application_data, state_data
             );
         }
     }
 
     if (Menucode_pressed(menu_codes, MENUCODE_MOVE_DOWN)) {
-        int cur = menu->cur_option;
-        int next = Menu_nextOption(menu);
-
-        if (cur != next) {
-            Menu_clearLabel(menu, cur);
-            Menu_clearLabel(menu, next);
-        }
+        TextMenu_nextOption(menu);
     }
 
     if (Menucode_pressed(menu_codes, MENUCODE_MOVE_UP)) {
-        int cur = menu->cur_option;
-        int next = Menu_prevOption(menu);
-
-        if (cur != next) {
-            Menu_clearLabel(menu, cur);
-            Menu_clearLabel(menu, next);
-        }
+        TextMenu_prevOption(menu);
     }
 
-    /***** Draw Prep *****/
-
-    // manual for now, will generalize perhaps later
     
-    int tileop = menu_state->menuopt_tilesize;
-    int startop = menu_state->menuopt_start;
-
-    if (Menu_getLabel(menu, tileop) == NULL) {
-
-        SDL_Color lblcol = menu->cur_option == tileop ?
-            MENUCOL_ACTIVE : MENUCOL_INACTIVE;
-
-        char buffer[32];
-        snprintf(buffer, 32, "Tile Size %d", menu_state->block_size);
-        SDL_Surface *surf = TTF_RenderText_Solid(
-            menu_state->label_font, buffer, lblcol
-        );
-        SDL_Texture *lbl = SDL_CreateTextureFromSurface(rend, surf);
-        Menu_setLabel(menu, tileop, lbl);
-        SDL_FreeSurface(surf);
-    }
-
-    if (Menu_getLabel(menu, startop) == NULL) {
-        SDL_Color lblcol = menu->cur_option == startop ?
-            MENUCOL_ACTIVE : MENUCOL_INACTIVE;
-
-        SDL_Surface *surf = TTF_RenderText_Solid(
-            menu_state->label_font, "Start", lblcol
-        );
-
-        Menu_setLabel(
-            menu, startop,
-            SDL_CreateTextureFromSurface(rend, surf)
-        );
-
-        SDL_FreeSurface(surf);
-    }
 
     /***** Draw *****/
 
@@ -448,7 +417,7 @@ int MainMenuState_run(
 
     // options
     SDL_Rect draw_window = {0, yoffset, wind_w, wind_h - yoffset};
-    Menu_draw(menu, rend, &draw_window, 0);
+    TextMenu_draw(menu, rend, &draw_window, 0);
 
     return 0;
 }
