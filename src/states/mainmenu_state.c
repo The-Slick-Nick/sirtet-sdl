@@ -51,16 +51,11 @@ void menufunc_decTileSize(
     void *menu_data
 );
 
-void menufunc_incOption(
+void menufunc_exitGame(
     StateRunner *state_runner, void *app_data,
     void *menu_data
 );
 
-
-void menufunc_decOption(
-    StateRunner *state_runner, void *app_data,
-    void *menu_data
-);
 
 
 
@@ -141,11 +136,13 @@ MainMenuState* MainMenuState_init(
     int tilesize_idx = TextMenu_addOption(mainmenu, buffer);
 
     int start_idx = TextMenu_addOption(mainmenu, "Start");
+    int exit_idx = TextMenu_addOption(mainmenu, "Exit");
 
     printf("tilesize_idx %d\nstart_idx %d\n", tilesize_idx, start_idx);
 
     menustate->menuopt_tilesize = tilesize_idx;
     menustate->menuopt_start = start_idx;
+    menustate->menuopt_exit = exit_idx;
     
 
     // TODO: Refactor "block_size" here to "tile size"
@@ -154,6 +151,7 @@ MainMenuState* MainMenuState_init(
     TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
     TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
     TextMenu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
+    TextMenu_setCommand(mainmenu, exit_idx, MENUCODE_SELECT, menufunc_exitGame);
 
 
     // Postprocessing
@@ -329,6 +327,13 @@ void menufunc_decTileSize(
     int opt = menu_state->menuopt_tilesize;
 
     TextMenu_updateText(menu, opt, buff);
+}
+
+void menufunc_exitGame(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
+) {
+    StateRunner_setPopCount(state_runner, 1);
 }
 
 /******************************************************************************

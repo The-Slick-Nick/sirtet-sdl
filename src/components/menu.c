@@ -149,7 +149,6 @@ void Menu_runCommand(
     Menu *self, Menucode menucode, StateRunner *runner,
     void *app_data, void *state_data
 ) {
-    printf("Menu_runCommand with main optnum %d\n", self->cur_option);
 
     if (self->num_options == 0) {
         return;
@@ -231,7 +230,7 @@ int TextMenu_prevOption(TextMenu *self) {
     return next;
 }
 
-int TextMenu_addOption(TextMenu *self, char *txt) {
+int TextMenu_addOption(TextMenu *self, const char *txt) {
     int new_opt = Menu_addOption(self->menu);
     if (new_opt == -1) { 
         return -1;
@@ -261,7 +260,6 @@ void TextMenu_runCommand(
     TextMenu *self, Menucode menucode, StateRunner *runner,
     void *app_data, void *state_data
 ) {
-    printf("TextMenu_runCommand with main optnum %d\n", self->menu->cur_option);
 
     Menu_runCommand(self->menu, menucode, runner, app_data, state_data);
 }

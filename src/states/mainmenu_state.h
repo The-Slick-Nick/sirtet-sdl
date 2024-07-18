@@ -27,6 +27,7 @@ typedef struct mainmenustate {
     TextMenu *mainmenu;
     int menuopt_tilesize;
     int menuopt_start;
+    int menuopt_exit;
 
     /* Game Settings */
     int init_level;
