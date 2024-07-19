@@ -110,8 +110,10 @@ MainMenuState* MainMenuState_init(
         .mainmenu=TextMenu_init(16, 32),
 
 
-        .init_level=MIN_LEVEL,
-        .block_size=INIT_TILE_SIZE,
+        .settings = {
+            .init_level=MIN_LEVEL,
+            .block_size=INIT_TILE_SIZE
+        },
 
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
@@ -130,7 +132,7 @@ MainMenuState* MainMenuState_init(
     TextMenu *mainmenu = menustate->mainmenu;
 
     char buffer[32];
-    snprintf(buffer, 32, "Tile Size %d", menustate->block_size);
+    snprintf(buffer, 32, "Tile Size %d", menustate->settings.block_size);
     int tilesize_idx = TextMenu_addOption(mainmenu, buffer);
 
     int start_idx = TextMenu_addOption(mainmenu, "Start");
@@ -231,16 +233,16 @@ void menufunc_startGame(
         0b0000001100001000011000000
     };
     int preset_offset = (
-        menu_state->block_size == 3 ? 0 :
-        menu_state->block_size == 4 ? 2 :
-        menu_state->block_size == 5 ? 9 :
+        menu_state->settings.block_size == 3 ? 0 :
+        menu_state->settings.block_size == 4 ? 2 :
+        menu_state->settings.block_size == 5 ? 9 :
         -1
     );
 
     int num_presets = (
-        menu_state->block_size == 3 ? 2 :
-        menu_state->block_size == 4 ? 7 :
-        menu_state->block_size == 5 ? 18 :
+        menu_state->settings.block_size == 3 ? 2 :
+        menu_state->settings.block_size == 4 ? 7 :
+        menu_state->settings.block_size == 5 ? 18 :
         -1 
     );
 
@@ -272,8 +274,8 @@ void menufunc_startGame(
 
     GameState *new_state = GameState_init(
         app_state->rend, app_state->fonts.vt323_24, keymaps,
-        menu_state->init_level,
-        menu_state->block_size,
+        menu_state->settings.init_level,
+        menu_state->settings.block_size,
         num_presets, (long*)(block_presets + preset_offset),
         7, palette_prototypes
     );
@@ -293,13 +295,13 @@ void menufunc_incTileSize(
     ApplicationState *app_state = (ApplicationState*)app_data;
     TextMenu *menu = menu_state->mainmenu;
 
-    if (menu_state->block_size >= MAX_TILE_SIZE) {
+    if (menu_state->settings.block_size >= MAX_TILE_SIZE) {
         return;
     }
-    menu_state->block_size++;
+    menu_state->settings.block_size++;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %d\n", menu_state->block_size);
+    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings.block_size);
 
     int opt = menu_state->menuopt_tilesize;
 
@@ -314,13 +316,13 @@ void menufunc_decTileSize(
     ApplicationState *app_state = (ApplicationState*)app_data;
     TextMenu *menu = menu_state->mainmenu;
 
-    if (menu_state->block_size <= MIN_TILE_SIZE) {
+    if (menu_state->settings.block_size <= MIN_TILE_SIZE) {
         return;
     }
-    menu_state->block_size--;
+    menu_state->settings.block_size--;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %d\n", menu_state->block_size);
+    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings.block_size);
 
     int opt = menu_state->menuopt_tilesize;
 
