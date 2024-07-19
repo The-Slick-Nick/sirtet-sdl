@@ -70,25 +70,16 @@ size_t Menu_requiredBytes(int max_options) {
 }
 
 
-// TextMenu* TextMenu_init(
-//     size_t max_options, size_t max_lbl_size, TTF_Font *active_font, SDL_Color *active_col, TTF_Font *inactive_font, SDL_Color *inactive_col
-// );
-//
-// void TextMenu_deconstruct(TextMenu* self);
-TextMenu* TextMenu_init(
-    size_t max_options, size_t max_lbl_size,
-    TTF_Font *active_font, SDL_Color *active_col,
-    TTF_Font *inactive_font, SDL_Color *inactive_col
-) {
+TextMenu* TextMenu_init(size_t max_options, size_t max_lbl_size) {
 
     TextMenu *menu = (TextMenu*)malloc(sizeof(TextMenu));
 
     menu->menu = Menu_init(max_options);
-    menu->active_font = active_font;
-    menu->active_col = *active_col;
-    
-    menu->inactive_font = inactive_font;
-    menu->inactive_col = *inactive_col;
+    menu->prev_inac_col = (SDL_Color){0, 0, 0, 0};
+    menu->prev_active_col = (SDL_Color){0, 0, 0, 0};
+
+    menu->prev_inac_font = NULL;
+    menu->prev_active_font = NULL;
 
     menu->label_w = max_lbl_size;   
     menu->label_text = (char*)malloc(
@@ -326,28 +317,71 @@ void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags)
 /******************************************************************************
  * TextMenu draw operations
 ******************************************************************************/
+
+// void TextMenu_draw(
+//     TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
+//     TTF_Font *active_font, SDL_Color *active_col,
+//     TTF_Font *inac_font, SDL_Color *inac_col,
+//     int options
+// );
 void TextMenu_draw(
-    TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags
+    TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
+    TTF_Font *active_font, SDL_Color *active_col,
+    TTF_Font *inac_font, SDL_Color *inac_col,
+    int flags
 ) {
 
+    SDL_Color default_col = {0,0,0,0};
+    if (active_col == NULL) {
+         active_col = &default_col;
+    }
+
+    if (inac_col == NULL) {
+         inac_col = &default_col;
+    }
+
+    bool rerender_active = (
+           active_col->r != self->prev_active_col.r
+        || active_col->g != self->prev_active_col.g
+        || active_col->b != self->prev_active_col.b
+        || active_col->a != self->prev_active_col.a
+    );
+
+    bool rerender_inac = (
+           inac_col->r != self->prev_inac_col.r
+        || inac_col->g != self->prev_inac_col.g
+        || inac_col->b != self->prev_inac_col.b
+        || inac_col->a != self->prev_inac_col.a
+    );
+
     for (int optnum = 0; optnum < self->menu->num_options; optnum++) {
+
+        bool isactive = (optnum == self->menu->cur_option);
+        SDL_Color rend_col;
+        TTF_Font *rend_font;
+
+        if (isactive) {
+            if (rerender_active) {
+                Menu_clearLabel(self->menu, optnum);
+            }
+            rend_col = *active_col;
+            rend_font = active_font;
+        }
+        else {
+            if (rerender_inac) {
+                Menu_clearLabel(self->menu, optnum);
+            }
+            rend_col = *inac_col;
+            rend_font = inac_font;
+        }
+
         if (Menu_getLabel(self->menu, optnum) != NULL) {
             continue;
         }
 
-        TTF_Font *font = (
-            optnum == self->menu->cur_option ?
-            self->active_font :
-            self->inactive_font
-        );
-        SDL_Color col = (
-            optnum == self->menu->cur_option ?
-            self->active_col :
-            self->inactive_col
-        );
         char *text = TextMenu_getLabelText(self, optnum);
 
-        SDL_Surface *lbl_surf = TTF_RenderText_Solid(font, text, col);
+        SDL_Surface *lbl_surf = TTF_RenderText_Solid(rend_font, text, rend_col);
         if (lbl_surf == NULL) {
             printf("Error creating label: %s\n", TTF_GetError());
             exit(EXIT_FAILURE);

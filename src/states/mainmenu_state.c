@@ -107,9 +107,7 @@ MainMenuState* MainMenuState_init(
     *menustate = (MainMenuState){
 
         // TODO: A constant/config detail for option count?
-        .mainmenu=TextMenu_init(
-            16, 32, menu_font, &activecol, menu_font, &inaccol
-        ),
+        .mainmenu=TextMenu_init(16, 32),
 
 
         .init_level=MIN_LEVEL,
@@ -422,7 +420,16 @@ int MainMenuState_run(
 
     // options
     SDL_Rect draw_window = {0, yoffset, wind_w, wind_h - yoffset};
-    TextMenu_draw(menu, rend, &draw_window, 0);
+
+    SDL_Color actcol = MENUCOL_ACTIVE;
+    SDL_Color inaccol = MENUCOL_INACTIVE;
+
+    TextMenu_draw(
+        menu, rend, &draw_window,
+        menu_state->label_font, &actcol,
+        menu_state->label_font, &inaccol,
+        0
+    );
 
     return 0;
 }

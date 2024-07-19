@@ -32,11 +32,11 @@ typedef struct {
 
     Menu *menu;
 
-    TTF_Font *active_font;
-    TTF_Font *inactive_font;
+    TTF_Font *prev_active_font;
+    TTF_Font *prev_inac_font;
 
-    SDL_Color active_col;
-    SDL_Color inactive_col;
+    SDL_Color prev_active_col;
+    SDL_Color prev_inac_col;
 
     size_t label_w;
     char *label_text;
@@ -59,9 +59,7 @@ Menu* Menu_build(void *data, size_t data_size, int max_options);
 size_t Menu_requiredBytes(int max_options);
 
 // Initialize a TextMenu struct, returning a pointer to it
-TextMenu* TextMenu_init(
-    size_t max_options, size_t max_lbl_size, TTF_Font *active_font, SDL_Color *active_col, TTF_Font *inactive_font, SDL_Color *inactive_col
-);
+TextMenu* TextMenu_init(size_t max_options, size_t max_lbl_size);
 
 // Free all memory associated with a TextMenu
 void TextMenu_deconstruct(TextMenu* self);
@@ -142,6 +140,12 @@ void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags)
 ******************************************************************************/
 
 // Draw the elements of a TextMenu within the provided region
-void TextMenu_draw(TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags);
+void TextMenu_draw(
+    TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
+    TTF_Font *active_font, SDL_Color *active_col,
+    TTF_Font *inac_font, SDL_Color *inac_col,
+    int options
+);
+
 
 #endif
