@@ -12,14 +12,8 @@
 #include "inputs.h"
 #include "state_runner.h"
 #include "menu.h"
+#include "game_state.h"
 
-
-// A struct meant to segregate game initialization settings
-typedef struct {
-    int init_level;
-    int block_size;
-
-} GameSettings;
 
 // State representing the main menu
 typedef struct mainmenustate {
@@ -37,7 +31,7 @@ typedef struct mainmenustate {
     int menuopt_exit;
 
     /* Game Settings */
-    GameSettings settings;
+    GameSettings *settings;
 
     /* Labels */
     SDL_Texture *title_banner;  // Texture with menu title showing

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "block.h"
 #include "coordinates.h"
 

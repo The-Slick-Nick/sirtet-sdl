@@ -42,27 +42,61 @@
  State Struct creation & destruction
 =============================================================================*/
 
+GameSettings* GameSettings_init(
+    size_t max_preset_sz, size_t max_palette_sz
+) {
+
+    GameSettings *retval = (GameSettings*)malloc(sizeof(GameSettings));
+
+    retval->max_preset_size = max_preset_sz;
+    retval->max_palette_size = max_palette_sz;
+
+    retval->keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS);
+    retval->block_presets = (long*)calloc(max_preset_sz, sizeof(long));
+    retval->palette = (SDL_Color*)calloc(max_palette_sz, sizeof(SDL_Color));
+
+    return retval;
+}
+
+void GameSettings_deconstruct(GameSettings *self) {
+
+    GamecodeMap_deconstruct(self->keymaps);
+    free(self->block_presets);
+    free(self->palette);
+    
+    free(self);
+}
+
+
+
 /**
  * @brief Initialize the GameState, returning a pointer to it
  * @param rend - SDL_Renderer pointer used for label creation
  * @param menu_font - TTF_Font pointer to use for creating labels
- * @param keymaps - GamecodeMap pointer of pre-configured key mappings.
- *                  Note that while GameState_init does not allocate this
- *                  memory, GameState_deconstruct will free it
- * @param init_level - Level to begin game at
- * @param block_size - Block size to use for all blocks
- * @param preset_size - Number of block presets defined
- * @param block_presets - Array of bitmasks representing blocks to spawn
- * @param palette_size - Number of colors to pull from for blocks
- * @param palette - Array of SDL_Color to use for blocks
+ * @param settings - Pointer to a GameSettings struct describing various
+ *                   details on how game should function
  */
 GameState* GameState_init(
-    SDL_Renderer *rend, TTF_Font *menu_font, GamecodeMap *keymaps,
-    int init_level,
-    int block_size,
-    int preset_size, long *block_presets,
-    int palette_size, SDL_Color *palette
+    SDL_Renderer *rend, TTF_Font *menu_font,
+    GameSettings *settings
 ) {
+
+    // TODO: Clean these up - this is a temporary thing I'm doing while
+    // extracting settings to their own struct
+    int init_level = settings->init_level;
+    int block_size = settings->block_size;
+
+    // TODO: Make a copy (or something) of this - right now keymaps
+    // is a "live reference" to memory held by settings struct that may be
+    // mid game execution
+    GamecodeMap *keymaps = settings->keymaps;
+
+    size_t palette_size = settings->palette_size;
+    SDL_Color *palette = settings->palette;
+
+    size_t preset_size = settings->preset_size;
+    long *block_presets = settings->block_presets;
+
 
     SDL_Surface *surf = TTF_RenderText_Solid(
         menu_font, "Paused", (SDL_Color){255, 255, 255}
@@ -75,6 +109,7 @@ GameState* GameState_init(
     /*** Initialize struct ***/
     GameState *retval = (GameState*)malloc(sizeof(GameState));
     *(retval) = (GameState){
+
         // single values 
         .move_counter=0,
         .score=0,
@@ -95,8 +130,7 @@ GameState* GameState_init(
             6 * block_size
         ),
 
-
-        .keymaps=keymaps,
+        .keymaps = GamecodeMap_initCopy(keymaps),
         .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
 
         .palette_size=palette_size,
@@ -112,6 +146,7 @@ GameState* GameState_init(
     /*** Post-creation processing ***/
 
     // Initialize block presets
+    
     memcpy(retval->block_presets, block_presets, preset_size * sizeof(long));
     memcpy(retval->palette, palette, palette_size * sizeof(SDL_Color));
 
@@ -133,15 +168,16 @@ int GameState_deconstruct(void* self) {
 
     BlockDb_deconstruct(game_state->block_db);
     GameGrid_deconstruct(game_state->game_grid);
-    GamecodeMap_deconstruct(game_state->keymaps);
 
+    // NOTE: Freed here, as they are alloc'd and copied from GameSettings
+    // If this ever changes to refer to a GameSettings pointer, this will
+    // need undone
     free(game_state->block_presets);
     free(game_state->palette);
+    GamecodeMap_deconstruct(game_state->keymaps);
 
-    // NOTE: Memory not allocated by GameState, but still freed here.
-    // This may be bad or dangerous (?)
+
     free(game_state->gamecode_states);
-
 
     SDL_DestroyTexture(game_state->pause_texture);
     SDL_DestroyTexture(game_state->score_label);

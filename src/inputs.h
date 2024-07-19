@@ -59,6 +59,10 @@ typedef struct {
 
 
 GamecodeMap* GamecodeMap_init(int max_maps);
+
+// Initialize a GamecodeMap as a direct copy of an existing one
+GamecodeMap* GamecodeMap_initCopy(GamecodeMap *blueprint);
+
 int GamecodeMap_deconstruct(GamecodeMap *self);
 
 

@@ -103,17 +103,13 @@ MainMenuState* MainMenuState_init(
     SDL_Color activecol = MENUCOL_ACTIVE;
     SDL_Color inaccol = MENUCOL_INACTIVE;
 
-    // Definition
+    /*** Initialization ***/
     *menustate = (MainMenuState){
 
         // TODO: A constant/config detail for option count?
         .mainmenu=TextMenu_init(16, 32),
 
-
-        .settings = {
-            .init_level=MIN_LEVEL,
-            .block_size=INIT_TILE_SIZE
-        },
+        .settings = GameSettings_init(16, 16),
 
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
@@ -129,10 +125,33 @@ MainMenuState* MainMenuState_init(
         exit(EXIT_FAILURE);
     }
 
+    /*** Settings defaults ***/
+    GameSettings *settings = menustate->settings;
+    if (settings == NULL) {
+        printf("Error allocating GameSettings\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // TODO: Add a Gamecode_clearMaps to clear all maps
+    menustate->settings->init_level = MIN_LEVEL;
+    menustate->settings->block_size = INIT_TILE_SIZE;
+
+    int move_cd = TARGET_FPS / 15;
+    GamecodeMap *keymaps = menustate->settings->keymaps;
+    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_DOWN, 1, 1, 1);
+    Gamecode_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Gamecode_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
+    Gamecode_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
+    Gamecode_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
+    Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+
+    /*** Menu configuration ***/
+
     TextMenu *mainmenu = menustate->mainmenu;
 
     char buffer[32];
-    snprintf(buffer, 32, "Tile Size %d", menustate->settings.block_size);
+    snprintf(buffer, 32, "Tile Size %d", menustate->settings->block_size);
     int tilesize_idx = TextMenu_addOption(mainmenu, buffer);
 
     int start_idx = TextMenu_addOption(mainmenu, "Start");
@@ -144,10 +163,7 @@ MainMenuState* MainMenuState_init(
     menustate->menuopt_start = start_idx;
     menustate->menuopt_exit = exit_idx;
     
-
     // TODO: Refactor "block_size" here to "tile size"
-
-    /*** Assign Option Commands ***/
     TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
     TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
     TextMenu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
@@ -178,6 +194,8 @@ int MainMenuState_deconstruct(void* self) {
     MenucodeMap_deconstruct(menustate->menucode_map);
     free(menustate->menucode_states);
     TextMenu_deconstruct(menustate->mainmenu);
+    GameSettings_deconstruct(menustate->settings);
+
     free(self);
     return 0;
 }
@@ -194,10 +212,14 @@ void menufunc_startGame(
     void *menu_data
 ) {
 
+    /*** Unwrapping ***/
     MainMenuState *menu_state = (MainMenuState*)menu_data;
     ApplicationState *app_state = (ApplicationState*)app_data;
+    GameSettings *settings = menu_state->settings;
 
-
+    // TODO: Move settings defaults into GameState_init method once
+    // I have a settings menu implemented (intent is to default on
+    // initialization, with the option to change later)
     long block_presets[2 + 7 + 18] = {
         /* blocksize 3 */
         0b010110000,
@@ -233,16 +255,16 @@ void menufunc_startGame(
         0b0000001100001000011000000
     };
     int preset_offset = (
-        menu_state->settings.block_size == 3 ? 0 :
-        menu_state->settings.block_size == 4 ? 2 :
-        menu_state->settings.block_size == 5 ? 9 :
+        menu_state->settings->block_size == 3 ? 0 :
+        menu_state->settings->block_size == 4 ? 2 :
+        menu_state->settings->block_size == 5 ? 9 :
         -1
     );
 
     int num_presets = (
-        menu_state->settings.block_size == 3 ? 2 :
-        menu_state->settings.block_size == 4 ? 7 :
-        menu_state->settings.block_size == 5 ? 18 :
+        menu_state->settings->block_size == 3 ? 2 :
+        menu_state->settings->block_size == 4 ? 7 :
+        menu_state->settings->block_size == 5 ? 18 :
         -1 
     );
 
@@ -261,24 +283,21 @@ void menufunc_startGame(
         (SDL_Color){0,0,155}
     };
 
-    GamecodeMap *keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS);
 
-    int move_cd = TARGET_FPS / 15;
-    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_DOWN, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+    settings->preset_size = num_presets;
+    memcpy(
+        settings->block_presets, (long*)(block_presets + preset_offset),
+        num_presets * sizeof(long)
+    );
+
+    settings->palette_size = 7;
+    memcpy(settings->palette, palette_prototypes, 7 * sizeof(SDL_Color));
 
     GameState *new_state = GameState_init(
-        app_state->rend, app_state->fonts.vt323_24, keymaps,
-        menu_state->settings.init_level,
-        menu_state->settings.block_size,
-        num_presets, (long*)(block_presets + preset_offset),
-        7, palette_prototypes
+        app_state->rend, app_state->fonts.vt323_24,
+        settings
     );
+
 
     StateRunner_addState(
         state_runner, new_state, GameState_run, GameState_deconstruct
@@ -295,13 +314,13 @@ void menufunc_incTileSize(
     ApplicationState *app_state = (ApplicationState*)app_data;
     TextMenu *menu = menu_state->mainmenu;
 
-    if (menu_state->settings.block_size >= MAX_TILE_SIZE) {
+    if (menu_state->settings->block_size >= MAX_TILE_SIZE) {
         return;
     }
-    menu_state->settings.block_size++;
+    menu_state->settings->block_size++;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings.block_size);
+    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
 
     int opt = menu_state->menuopt_tilesize;
 
@@ -316,13 +335,13 @@ void menufunc_decTileSize(
     ApplicationState *app_state = (ApplicationState*)app_data;
     TextMenu *menu = menu_state->mainmenu;
 
-    if (menu_state->settings.block_size <= MIN_TILE_SIZE) {
+    if (menu_state->settings->block_size <= MIN_TILE_SIZE) {
         return;
     }
-    menu_state->settings.block_size--;
+    menu_state->settings->block_size--;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings.block_size);
+    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
 
     int opt = menu_state->menuopt_tilesize;
 

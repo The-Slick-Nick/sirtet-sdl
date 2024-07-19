@@ -22,10 +22,26 @@
 #define LINES_PER_LEVEL 10
 
 
+// A struct meant to segregate game initialization settings
+typedef struct {
+
+    size_t max_preset_size;
+    size_t max_palette_size;
+
+    int init_level;
+    int block_size;
+
+    GamecodeMap *keymaps;
+    size_t preset_size;
+    long *block_presets;
+
+    size_t palette_size;
+    SDL_Color *palette;
+
+} GameSettings;
+
 
 // Structure representing current state of game.
-//
-// This struct wraps information that the game cares about
 typedef struct {
 
     GamecodeMap *keymaps;       // collection of hardware -> gamecode key mappings
@@ -63,16 +79,17 @@ typedef struct {
 } GameState;
 
 
+GameSettings* GameSettings_init(
+    size_t max_preset_sz, size_t max_palette_sz
+);
+
+void GameSettings_deconstruct(GameSettings *self);
+
 
 // Initialize and return a pointer for GameState
-// GameState* GameState_init(ApplicationState *app_state);
-
 GameState* GameState_init(
-    SDL_Renderer *rend, TTF_Font *menu_font, GamecodeMap *keymaps,
-    int init_level,
-    int block_size,
-    int preset_size, long *block_presets,
-    int palette_size, SDL_Color *palette
+    SDL_Renderer *rend, TTF_Font *menu_font,
+    GameSettings *settings
 );
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);

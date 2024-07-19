@@ -61,7 +61,7 @@ $(TEST_OBJS): %.o: %.c
 # to create each suite's binary
 $(TEST_BINS): %.bin: %.o $(LIB)/lib.a
 	@echo $(TEST_SUITES)
-	$(CC) $(CFLAGS) -o $@ $< -L$(LIB) -l:libEWENIT.a -l:lib.a -lSDL2
+	$(CC) $(CFLAGS) -o $@ $< -L$(LIB) -l:libEWENIT.a -l:lib.a -lSDL2 -l SDL2_ttf
 
 
 # NOTE: Relies on the makefile in project root having a "make build_lib"

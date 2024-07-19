@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 
 /******************************************************************************
  * Hardware Inputs
@@ -85,6 +86,22 @@ GamecodeMap* GamecodeMap_init(int max_maps) {
     return retval;
 
 }
+
+// Initialize a GamecodeMap as a direct copy of an existing one
+GamecodeMap* GamecodeMap_initCopy(GamecodeMap *blueprint) {
+
+    GamecodeMap *retval = (GamecodeMap*)malloc(sizeof(GamecodeMap));
+
+    size_t n = blueprint->size * sizeof(GamecodeMapItem);
+
+    retval->head = blueprint->head;
+    retval->size = blueprint->size;
+    retval->mappings = (GamecodeMapItem*)malloc(n);
+    memcpy(retval->mappings, blueprint->mappings, n);
+
+    return retval;
+}
+
 int GamecodeMap_deconstruct(GamecodeMap *self) {
 
     free(self->mappings);
