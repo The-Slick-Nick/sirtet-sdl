@@ -84,7 +84,7 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
 #define MAX_MENUCODE_MAPS 128 // Max number of mappings we can maintain
 
 
-// Enum of codes representing menu
+// Enum of codes representing menu operations
 typedef enum {
     MENUCODE_SELECT = 0,
     MENUCODE_MOVE_UP,
@@ -106,6 +106,7 @@ typedef struct {
     int frame_end;
     int frame_interval;
 } MenucodeMapItem;
+
 
 // Struct wrapping a list of menucode mappings
 typedef struct {

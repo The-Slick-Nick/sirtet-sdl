@@ -11,10 +11,11 @@
 #include <string.h>
 
 #include "mainmenu_state.h"
-#include "application_state.h"
 #include "menu.h"
 #include "state_runner.h"
 #include "inputs.h"
+#include "application_state.h"
+#include "settingsmenu_state.h"
 #include "game_state.h"
 
 
@@ -56,7 +57,10 @@ void menufunc_exitGame(
     void *menu_data
 );
 
-
+void menufunc_openSettings(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
+);
 
 
 /******************************************************************************
@@ -156,18 +160,18 @@ MainMenuState* MainMenuState_init(
 
     int start_idx = TextMenu_addOption(mainmenu, "Start");
     int exit_idx = TextMenu_addOption(mainmenu, "Exit");
-
-    printf("tilesize_idx %d\nstart_idx %d\n", tilesize_idx, start_idx);
+    int settings_idx = TextMenu_addOption(mainmenu, "Settings");
 
     menustate->menuopt_tilesize = tilesize_idx;
     menustate->menuopt_start = start_idx;
     menustate->menuopt_exit = exit_idx;
-    
+
     // TODO: Refactor "block_size" here to "tile size"
     TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
     TextMenu_setCommand(mainmenu, tilesize_idx, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
     TextMenu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
     TextMenu_setCommand(mainmenu, exit_idx, MENUCODE_SELECT, menufunc_exitGame);
+    TextMenu_setCommand(mainmenu, settings_idx, MENUCODE_SELECT, menufunc_openSettings);
 
 
     // Postprocessing
@@ -354,6 +358,29 @@ void menufunc_exitGame(
 ) {
     StateRunner_setPopCount(state_runner, 1);
 }
+
+void menufunc_openSettings(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
+) {
+
+    ApplicationState *app_state = (ApplicationState*)app_data;
+    MainMenuState *menu_state = (MainMenuState*)menu_data;
+
+    SDL_Renderer *rend = app_state->rend;
+
+    SettingsMenuState *new_state = SettingsMenuState_init(
+        rend, app_state->fonts.vt323_24, menu_state->settings
+    );
+
+    StateRunner_addState(
+        state_runner, (void*)new_state, 
+        SettingsMenuState_run,
+        SettingsMenuState_deconstruct
+    );
+
+}
+
 
 /******************************************************************************
  * State running
