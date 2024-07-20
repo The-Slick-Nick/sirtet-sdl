@@ -129,10 +129,12 @@ MainMenuState* MainMenuState_init(
         exit(EXIT_FAILURE);
     }
 
+    // Constants
     // TODO: Add a Gamecode_clearMaps to clear all maps
     menustate->settings->init_level = MIN_LEVEL;
     menustate->settings->block_size = INIT_TILE_SIZE;
 
+    // Key mapping
     int move_cd = TARGET_FPS / 15;
     GamecodeMap *keymaps = menustate->settings->keymaps;
     Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
@@ -142,6 +144,31 @@ MainMenuState* MainMenuState_init(
     Gamecode_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
     Gamecode_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
     Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+
+
+    // Block presets
+    settings->preset_size = 7;
+    int idx = 0;
+    settings->block_presets[idx++] = 0b0100010001000100;
+    settings->block_presets[idx++] = 0b0000011001100000;
+    settings->block_presets[idx++] = 0b0100010001100000;
+    settings->block_presets[idx++] = 0b0010001001100000;
+    settings->block_presets[idx++] = 0b0000010011100000;
+    settings->block_presets[idx++] = 0b0011011000000000;
+    settings->block_presets[idx++] = 0b1100011000000000;
+
+
+    // Color palette
+    settings->palette_size = 7;
+    idx = 0;
+    settings->palette[idx++]=(SDL_Color){190,83,28};
+    settings->palette[idx++]=(SDL_Color){218,170,0};
+    settings->palette[idx++]=(SDL_Color){101,141,27};
+    settings->palette[idx++]=(SDL_Color){0,95,134};
+    settings->palette[idx++]=(SDL_Color){155,0,0};
+    settings->palette[idx++]=(SDL_Color){0,155,0};
+    settings->palette[idx++]=(SDL_Color){0,0,155};
+
 
 
     /*** Menu configuration ***/

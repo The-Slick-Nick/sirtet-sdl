@@ -15,6 +15,7 @@
 #include <limits.h>
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "grid.h"
 #include "block.h"
@@ -55,6 +56,9 @@ GameSettings* GameSettings_init(
     retval->block_presets = (long*)calloc(max_preset_sz, sizeof(long));
     retval->palette = (SDL_Color*)calloc(max_palette_sz, sizeof(SDL_Color));
 
+    retval->preset_size=0;
+    retval->palette_size=0;
+
     return retval;
 }
 
@@ -91,9 +95,6 @@ GameState* GameState_init(
     // mid game execution
     GamecodeMap *keymaps = settings->keymaps;
 
-    size_t palette_size = settings->palette_size;
-    SDL_Color *palette = settings->palette;
-
     size_t preset_size = settings->preset_size;
     long *block_presets = settings->block_presets;
 
@@ -120,9 +121,6 @@ GameState* GameState_init(
         .primary_block = INVALID_BLOCK_ID,
         .queued_block = INVALID_BLOCK_ID,
 
-        // structs and arrays
-        .num_presets=preset_size,
-        .block_presets=(long*)malloc(preset_size * sizeof(long)),
 
         .block_db = BlockDb_init(256),
         .game_grid = GameGrid_init(
@@ -133,9 +131,6 @@ GameState* GameState_init(
         .keymaps = GamecodeMap_initCopy(keymaps),
         .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
 
-        .palette_size=palette_size,
-        .palette=(SDL_Color*)malloc(sizeof(SDL_Color) * palette_size),
-
         .menu_font=menu_font,
         .pause_texture=texture,
         .score_label=NULL,
@@ -145,10 +140,17 @@ GameState* GameState_init(
 
     /*** Post-creation processing ***/
 
-    // Initialize block presets
-    
-    memcpy(retval->block_presets, block_presets, preset_size * sizeof(long));
-    memcpy(retval->palette, palette, palette_size * sizeof(SDL_Color));
+    // Palette
+    size_t palette_n = sizeof(SDL_Color) * settings->palette_size;
+    retval->palette_size = settings->palette_size;
+    retval->palette = (SDL_Color*)malloc(palette_n);
+    memcpy(retval->palette, settings->palette, palette_n);
+
+    // Presets
+    size_t preset_n = sizeof(long) * settings->preset_size;
+    retval->num_presets = settings->preset_size;
+    retval->block_presets = (long*)malloc(preset_n);
+    memcpy(retval->block_presets, settings->block_presets, preset_n);
 
     // Initialize grid cells
     GameGrid_clear(retval->game_grid);

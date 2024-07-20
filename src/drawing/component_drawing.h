@@ -14,10 +14,20 @@
 #include "coordinates.h"
 
 
+// Draw block cell at indicated location
 int drawBlockCell(
     SDL_Renderer *rend,
     Point location, int width, int height,
     SDL_Color base_color
+);
+
+
+// Draw a blocks contents at indicated location
+void drawBlockContents(
+    SDL_Renderer *rend, 
+    int block_size,
+    long block_contents,
+    SDL_Color *color, Point *topleft, int cell_width, int cell_height
 );
 
 

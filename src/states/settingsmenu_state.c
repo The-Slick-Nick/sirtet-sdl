@@ -3,6 +3,7 @@
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
+#include "component_drawing.h"
 #include "inputs.h"
 #include "state_runner.h"
 #include "settingsmenu_state.h"
@@ -70,7 +71,7 @@ SettingsMenuState* SettingsMenuState_init(
     TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
     TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
 
-
+    // TODO: Add some kind of preset/factory thing for standard menu controls
     Menucode_addMap(retval->menucode_map, MENUCODE_EXIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
     Menucode_addMap(retval->menucode_map, MENUCODE_MOVE_UP, SDL_SCANCODE_UP, 1, 1000, 30);
     Menucode_addMap(retval->menucode_map, MENUCODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, 1000, 30);
@@ -79,6 +80,9 @@ SettingsMenuState* SettingsMenuState_init(
 
     Menucode_addMap(retval->menucode_map, MENUCODE_INCREMENT_VALUE, SDL_SCANCODE_RIGHT, 1, 1000, 30);
     Menucode_addMap(retval->menucode_map, MENUCODE_DECREMENT_VALUE, SDL_SCANCODE_LEFT, 1, 1000, 30);
+
+
+    /*** Block Display Setup ***/
     return retval;
 }
 
@@ -112,6 +116,7 @@ int SettingsMenuState_run(
 
     SDL_Renderer *rend = app_state->rend;
     SDL_Window *wind = app_state->wind;
+    GameSettings *settings = settings_state->settings;
 
 
     /*** Inputs ***/
@@ -165,15 +170,38 @@ int SettingsMenuState_run(
 
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
-    SDL_Rect draw_window = {0, 0, wind_w, wind_h};
-    SDL_Color a_col = {0, 0, 0};
-    SDL_Color i_col = {255, 255, 255};
+    // menu
+    SDL_Rect draw_window = {0, 0, wind_w / 2, wind_h};
+    SDL_Color i_col = {0, 0, 0};
+    SDL_Color a_col = {255, 255, 255};
     TextMenu_draw(
         settings_state->menu, app_state->rend, &draw_window,
         settings_state->menu_font, &a_col,
         settings_state->menu_font, &i_col,
         0
     );
+
+    int x = wind_w / 2;
+    int y = 0;
+    for (int block_num = 0; block_num < settings_state->settings->preset_size; block_num++) {
+
+        Point drawpos = {.x=x, .y=y};
+        SDL_Color drawcol = settings->palette[block_num % settings->palette_size];
+
+        // TODO: replace 10 with calculated width for area
+        drawBlockContents(
+            rend, settings->block_size, settings->block_presets[block_num],
+            &drawcol, &drawpos, 10, 10
+        );
+
+        x += wind_w / 4;
+        if (x >= wind_w) {
+            // TODO: See above
+            y += settings->block_size * 10;
+            x = wind_w / 2;
+        }
+
+    }
 
     return 0;
 }
@@ -195,6 +223,75 @@ void menufunc_exitSettings(
 
 }
 
+
+void populatePresets(GameSettings *settings) {
+
+    long block_presets[2 + 7 + 18] = {
+        /* blocksize 3 */
+        0b010110000,
+        0b010010010,
+
+        /* blocksize 4 */
+        0b0100010001000100,
+        0b0000011001100000,
+        0b0100010001100000,
+        0b0010001001100000,
+        0b0000010011100000,
+        0b0011011000000000,
+        0b1100011000000000,
+
+        /* blocksize 5 */
+        0b0000000110011000010000000,
+        0b0000001100001100010000000,
+        0b0010000100001000010000100,
+        0b0010000100001000011000000,
+        0b0010000100001000110000000,
+        0b0010000100011000100000000,
+        0b0010000100001100001000000,
+        0b0000001100011000010000000,
+        0b0000000110001100010000000,
+        0b0000001110001000010000000,
+        0b0000001010011100000000000,
+        0b0010000100001110000000000,
+        0b0000001000011000011000000,
+        0b0000000100011100010000000,
+        0b0010000100001100010000000,
+        0b0010000100011000010000000,
+        0b0000001100001000011000000,
+        0b0000001100001000011000000
+    };
+
+    int offset;
+    switch (settings->block_size) {
+        case 3:
+            settings->preset_size = 2;
+            offset = 0;
+            break;
+        case 4:
+            settings->preset_size = 7;
+            offset = 2;
+            break;
+        case 5:
+            settings->preset_size = 18;
+            offset = 9;
+            break;
+        default:
+            printf(
+                "Cannot determine a preset for tilesize %d\n",
+                settings->block_size
+            );
+            exit(EXIT_FAILURE);
+            break;
+    }
+    memcpy(
+        settings->block_presets,
+        (block_presets + offset),
+        settings->preset_size * sizeof(long)
+    );
+
+}
+
+
 void menufunc_incTileSize(
     StateRunner *state_runner, void *app_data,
     void *menu_data
@@ -208,12 +305,15 @@ void menufunc_incTileSize(
         return;
     }
     menu_state->settings->block_size++;
+    // TODO: Adjust settings block_presets and preset_size on increment
 
     char buff[32];
     snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
 
     int opt = menu_state->menuopt_tilesize;
     TextMenu_updateText(menu, opt, buff);
+
+    populatePresets(menu_state->settings);
 }
 
 void menufunc_decTileSize(
@@ -228,12 +328,14 @@ void menufunc_decTileSize(
         return;
     }
     menu_state->settings->block_size--;
+    // TODO: Adjust settings block_presets and preset_size on increment
 
     char buff[32];
     snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
 
     int opt = menu_state->menuopt_tilesize;
     TextMenu_updateText(menu, opt, buff);
+    populatePresets(menu_state->settings);
 }
 
 

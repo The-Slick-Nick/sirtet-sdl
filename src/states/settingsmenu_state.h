@@ -21,12 +21,14 @@ typedef struct {
     GameSettings *settings;
 
     // Menu 
+    TextMenu *menu;
     TTF_Font *menu_font;
     bool *menucode_states;
     MenucodeMap *menucode_map;
     int menuopt_tilesize;
 
-    TextMenu *menu;
+    // For block display
+
 
 } SettingsMenuState;
 

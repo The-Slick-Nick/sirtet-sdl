@@ -120,6 +120,34 @@ int GameGrid_drawGrid(
 
 }
 
+
+void drawBlockContents(
+    SDL_Renderer *rend, 
+    int block_size,
+    long block_contents,
+    SDL_Color *color, Point *topleft, int cell_width, int cell_height
+) {
+
+    for (int row = 0; row < block_size; row++) {
+        for (int col = 0; col < block_size; col++) {
+            int bit_num = col + row * block_size;
+
+            if ((block_contents & (1L << bit_num)) == 0) {
+                continue;
+            }
+
+            Point cell_loc = {
+                .x=topleft->x + col * cell_width,
+                .y=topleft->y + row * cell_height
+            };
+
+            drawBlockCell(rend, cell_loc, cell_width, cell_height, *color);
+
+        }
+    }
+}
+
+
 /**
  * @brief Draw a block directly at the desired location
  *        Draws from the origin of the blocks "invisible grid" of cells
@@ -139,23 +167,11 @@ int BlockDb_drawBlock(
 
     SDL_Color base_color = BlockDb_getBlockColor(self, block_id);
     int block_size = BlockDb_getBlockSize(self, block_id);
+    long contents = BlockDb_getBlockContents(self, block_id);
 
-    for (int row = 0; row < block_size; row++) {
-        for (int col = 0; col < block_size; col++) {
-            int bit_num = col + row * block_size;
-
-            if (!BlockDb_isContentBitSet(self, block_id, bit_num)) {
-                continue;
-            }
-
-            Point cell_loc = {
-                .x=topleft.x + col * cell_width,
-                .y=topleft.y + row * cell_height
-            };
-
-            drawBlockCell(rend, cell_loc, cell_width, cell_height, base_color);
-        }
-    }
+    drawBlockContents(
+        rend, block_size, contents, &base_color, &topleft, cell_width, cell_height
+    );
     return 0;
 }
 
