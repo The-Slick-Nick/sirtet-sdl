@@ -24,7 +24,7 @@ typedef struct {
     TTF_Font *menu_font;
     bool *menucode_states;
     MenucodeMap *menucode_map;
-
+    int menuopt_tilesize;
 
     TextMenu *menu;
 

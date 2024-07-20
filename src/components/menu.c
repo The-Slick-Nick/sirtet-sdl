@@ -318,12 +318,6 @@ void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags)
  * TextMenu draw operations
 ******************************************************************************/
 
-// void TextMenu_draw(
-//     TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
-//     TTF_Font *active_font, SDL_Color *active_col,
-//     TTF_Font *inac_font, SDL_Color *inac_col,
-//     int options
-// );
 void TextMenu_draw(
     TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
     TTF_Font *active_font, SDL_Color *active_col,
@@ -376,6 +370,11 @@ void TextMenu_draw(
         }
 
         if (Menu_getLabel(self->menu, optnum) != NULL) {
+            continue;
+        }
+
+        if (rend_font == NULL) {
+            Menu_clearLabel(self->menu, optnum);
             continue;
         }
 
