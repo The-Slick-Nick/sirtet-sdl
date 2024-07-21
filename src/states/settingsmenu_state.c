@@ -4,6 +4,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
 #include "component_drawing.h"
+#include "assert.h"
 #include "inputs.h"
 #include "state_runner.h"
 #include "settingsmenu_state.h"
@@ -196,7 +197,8 @@ int SettingsMenuState_run(
         SDL_Color drawcol = palette[block_num % settings->palette_size];
 
         drawBlockContents(
-            rend, settings->block_size, settings->block_presets[block_num],
+            rend, settings->block_size,
+            settings->block_presets[block_num], // <-- CULPRIT
             &drawcol, &drawpos, cell_size, cell_size
         );
 
@@ -228,7 +230,7 @@ void menufunc_exitSettings(
 }
 
 
-void populatePresets(GameSettings *settings) {
+static void populatePresets(GameSettings *settings) {
 
     long block_presets[2 + 7 + 18] = {
         /* blocksize 3 */
@@ -266,18 +268,19 @@ void populatePresets(GameSettings *settings) {
     };
 
     int offset;
+    long *preset_loc;
     switch (settings->block_size) {
         case 3:
             settings->preset_size = 2;
-            offset = 0;
+            preset_loc = block_presets;
             break;
         case 4:
             settings->preset_size = 7;
-            offset = 2;
+            preset_loc = (long*)(block_presets + 2);
             break;
         case 5:
             settings->preset_size = 18;
-            offset = 9;
+            preset_loc = (long*)(block_presets + 9);
             break;
         default:
             printf(
@@ -287,9 +290,12 @@ void populatePresets(GameSettings *settings) {
             exit(EXIT_FAILURE);
             break;
     }
+
+    assert(settings->preset_size <= settings->max_preset_size);
+
     memcpy(
         settings->block_presets,
-        (block_presets + offset),
+        preset_loc,
         settings->preset_size * sizeof(long)
     );
 
@@ -309,7 +315,6 @@ void menufunc_incTileSize(
         return;
     }
     menu_state->settings->block_size++;
-    // TODO: Adjust settings block_presets and preset_size on increment
 
     char buff[32];
     snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
@@ -332,7 +337,6 @@ void menufunc_decTileSize(
         return;
     }
     menu_state->settings->block_size--;
-    // TODO: Adjust settings block_presets and preset_size on increment
 
     char buff[32];
     snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);

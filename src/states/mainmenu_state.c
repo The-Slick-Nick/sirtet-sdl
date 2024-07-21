@@ -102,9 +102,10 @@ MainMenuState* MainMenuState_init(
 
     *menustate = (MainMenuState){
 
-        // TODO: A constant/config detail for option count?
-
-        .settings = GameSettings_init(16, 16),
+        // TODO: Add an API sort of method to GameSettings to populate presets,
+        // with an error check included that makes sure there is enough
+        // memory allocated for the presets provided. Do the same for palette
+        .settings = GameSettings_init(32, 32), 
         .mainmenu=TextMenu_init(16, 32),
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
@@ -208,6 +209,7 @@ MainMenuState* MainMenuState_init(
 
 int MainMenuState_deconstruct(void* self) {
 
+    // the error is here
     MainMenuState *menustate = (MainMenuState*)self;
 
     SDL_DestroyTexture(menustate->title_banner);

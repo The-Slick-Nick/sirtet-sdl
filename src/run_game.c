@@ -68,7 +68,7 @@ void run() {
 
     printf("Pushing main menu state...\n");
     StateRunner_addState(
-        state_runner, mainmenu_state, MainMenuState_run,
+        state_runner, (void*)mainmenu_state, MainMenuState_run,
         MainMenuState_deconstruct
     );
 
