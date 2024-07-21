@@ -25,18 +25,18 @@
 // A struct meant to segregate game initialization settings
 typedef struct {
 
-    size_t max_preset_size;
-    size_t max_palette_size;
+    size_t max_preset_size;     // Max number of block presets that can be used
+    size_t max_palette_size;    // Max number of colors in palette
 
     int init_level;
     int block_size;
 
     GamecodeMap *keymaps;
-    size_t preset_size;
-    long *block_presets;
+    size_t preset_size;         // Number of block presets in use
+    long *block_presets;        // Array of block presets
 
-    size_t palette_size;
-    SDL_Color *palette;
+    size_t palette_size;        // Number of colors in palette
+    SDL_Color *palette;         // Array of colors for tiles
 
 } GameSettings;
 
@@ -78,6 +78,10 @@ typedef struct {
 
 } GameState;
 
+/******************************************************************************
+ * GameSettings
+******************************************************************************/
+
 
 GameSettings* GameSettings_init(
     size_t max_preset_sz, size_t max_palette_sz
@@ -85,6 +89,13 @@ GameSettings* GameSettings_init(
 
 void GameSettings_deconstruct(GameSettings *self);
 
+
+void GameSettings_setPresets(GameSettings *self, size_t src_len, long *src);
+void GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src);
+
+/******************************************************************************
+ * GameState
+******************************************************************************/
 
 // Initialize and return a pointer for GameState
 GameState* GameState_init(

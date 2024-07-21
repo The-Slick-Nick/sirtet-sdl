@@ -144,28 +144,29 @@ int processGamecodes(bool *gamecode_states, int *hardware_states, GamecodeMap *a
     return 0;
 }
 
-// Add a mapping of hardware code to virtual code
-int Gamecode_addMap(
-    GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
+int GamecodeMap_addMap(
+    GamecodeMap *self, Gamecode virtual_code, SDL_Scancode hardware_code,
     int frame_start, int frame_end, int frame_interval
 ) {
 
-    if (mapping->head >= mapping->size) {
+    if (self->head >= self->size) {
         return -1;
     }
 
-    *(mapping->mappings + mapping->head) = (GamecodeMapItem){
+    *(self->mappings + self->head) = (GamecodeMapItem){
         .virtual_code=virtual_code,
         .hardware_code=hardware_code,
         .frame_start=frame_start,
         .frame_end=frame_end,
         .frame_interval=frame_interval
-
     };
-
-    mapping->head += 1;
-
+    self->head += 1;
     return 0;
+}
+
+// Clear all mapped keys from a GamecodeMap
+void GamecodeMap_reset(GamecodeMap *self) {
+    self->head = 0;
 }
 
 

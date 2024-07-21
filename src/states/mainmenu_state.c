@@ -102,9 +102,6 @@ MainMenuState* MainMenuState_init(
 
     *menustate = (MainMenuState){
 
-        // TODO: Add an API sort of method to GameSettings to populate presets,
-        // with an error check included that makes sure there is enough
-        // memory allocated for the presets provided. Do the same for palette
         .settings = GameSettings_init(32, 32), 
         .mainmenu=TextMenu_init(16, 32),
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
@@ -131,45 +128,45 @@ MainMenuState* MainMenuState_init(
     }
 
     // Constants
-    // TODO: Add a Gamecode_clearMaps to clear all maps
     menustate->settings->init_level = MIN_LEVEL;
     menustate->settings->block_size = INIT_TILE_SIZE;
 
     // Key mapping
     int move_cd = TARGET_FPS / 15;
     GamecodeMap *keymaps = menustate->settings->keymaps;
-    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_DOWN, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
-    Gamecode_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+    GamecodeMap_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
+    GamecodeMap_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_DOWN, 1, 1, 1);
+    GamecodeMap_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    GamecodeMap_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
+    GamecodeMap_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
+    GamecodeMap_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
+    GamecodeMap_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
 
 
     // Block presets
-    settings->preset_size = 7;
-    int idx = 0;
-    settings->block_presets[idx++] = 0b0100010001000100;
-    settings->block_presets[idx++] = 0b0000011001100000;
-    settings->block_presets[idx++] = 0b0100010001100000;
-    settings->block_presets[idx++] = 0b0010001001100000;
-    settings->block_presets[idx++] = 0b0000010011100000;
-    settings->block_presets[idx++] = 0b0011011000000000;
-    settings->block_presets[idx++] = 0b1100011000000000;
+    long init_presets[7] = {
+        0b0100010001000100,
+        0b0000011001100000,
+        0b0100010001100000,
+        0b0010001001100000,
+        0b0000010011100000,
+        0b0011011000000000,
+        0b1100011000000000
+    };
 
+    GameSettings_setPresets(settings, 7, init_presets);
 
     // Color palette
-    settings->palette_size = 7;
-    idx = 0;
-    settings->palette[idx++]=(SDL_Color){190,83,28};
-    settings->palette[idx++]=(SDL_Color){218,170,0};
-    settings->palette[idx++]=(SDL_Color){101,141,27};
-    settings->palette[idx++]=(SDL_Color){0,95,134};
-    settings->palette[idx++]=(SDL_Color){155,0,0};
-    settings->palette[idx++]=(SDL_Color){0,155,0};
-    settings->palette[idx++]=(SDL_Color){0,0,155};
-
+    SDL_Color init_palette[7] = {
+        (SDL_Color){190,83,28},
+        (SDL_Color){218,170,0},
+        (SDL_Color){101,141,27},
+        (SDL_Color){0,95,134},
+        (SDL_Color){155,0,0},
+        (SDL_Color){0,155,0},
+        (SDL_Color){0,0,155}
+    };
+    GameSettings_setPalette(settings, 7, init_palette);
 
 
     /*** Menu configuration ***/
@@ -187,7 +184,6 @@ MainMenuState* MainMenuState_init(
     menustate->menuopt_start = start_idx;
     menustate->menuopt_exit = exit_idx;
 
-    // TODO: Refactor "block_size" here to "tile size"
     TextMenu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
     TextMenu_setCommand(mainmenu, exit_idx, MENUCODE_SELECT, menufunc_exitGame);
     TextMenu_setCommand(mainmenu, settings_idx, MENUCODE_SELECT, menufunc_openSettings);
@@ -239,87 +235,10 @@ void menufunc_startGame(
     ApplicationState *app_state = (ApplicationState*)app_data;
     GameSettings *settings = menu_state->settings;
 
-    // TODO: Move settings defaults into GameState_init method once
-    // I have a settings menu implemented (intent is to default on
-    // initialization, with the option to change later)
-    long block_presets[2 + 7 + 18] = {
-        /* blocksize 3 */
-        0b010110000,
-        0b010010010,
-
-        /* blocksize 4 */
-        0b0100010001000100,
-        0b0000011001100000,
-        0b0100010001100000,
-        0b0010001001100000,
-        0b0000010011100000,
-        0b0011011000000000,
-        0b1100011000000000,
-
-        /* blocksize 5 */
-        0b0000000110011000010000000,
-        0b0000001100001100010000000,
-        0b0010000100001000010000100,
-        0b0010000100001000011000000,
-        0b0010000100001000110000000,
-        0b0010000100011000100000000,
-        0b0010000100001100001000000,
-        0b0000001100011000010000000,
-        0b0000000110001100010000000,
-        0b0000001110001000010000000,
-        0b0000001010011100000000000,
-        0b0010000100001110000000000,
-        0b0000001000011000011000000,
-        0b0000000100011100010000000,
-        0b0010000100001100010000000,
-        0b0010000100011000010000000,
-        0b0000001100001000011000000,
-        0b0000001100001000011000000
-    };
-    int preset_offset = (
-        menu_state->settings->block_size == 3 ? 0 :
-        menu_state->settings->block_size == 4 ? 2 :
-        menu_state->settings->block_size == 5 ? 9 :
-        -1
-    );
-
-    int num_presets = (
-        menu_state->settings->block_size == 3 ? 2 :
-        menu_state->settings->block_size == 4 ? 7 :
-        menu_state->settings->block_size == 5 ? 18 :
-        -1 
-    );
-
-    assert(preset_offset != -1);
-    assert(num_presets != -1);
-
-
-    // TODO: Add configurations for the following
-    SDL_Color palette_prototypes[7] = {
-        (SDL_Color){190,83,28},
-        (SDL_Color){218,170,0},
-        (SDL_Color){101,141,27},
-        (SDL_Color){0,95,134},
-        (SDL_Color){155,0,0},
-        (SDL_Color){0,155,0},
-        (SDL_Color){0,0,155}
-    };
-
-
-    settings->preset_size = num_presets;
-    memcpy(
-        settings->block_presets, (long*)(block_presets + preset_offset),
-        num_presets * sizeof(long)
-    );
-
-    settings->palette_size = 7;
-    memcpy(settings->palette, palette_prototypes, 7 * sizeof(SDL_Color));
-
     GameState *new_state = GameState_init(
         app_state->rend, app_state->fonts.vt323_24,
         settings
     );
-
 
     StateRunner_addState(
         state_runner, new_state, GameState_run, GameState_deconstruct

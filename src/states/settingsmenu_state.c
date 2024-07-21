@@ -5,6 +5,7 @@
 #include <SDL2/SDL_video.h>
 #include "component_drawing.h"
 #include "assert.h"
+#include "game_state.h"
 #include "inputs.h"
 #include "state_runner.h"
 #include "settingsmenu_state.h"
@@ -268,18 +269,19 @@ static void populatePresets(GameSettings *settings) {
     };
 
     int offset;
+    size_t sz;
     long *preset_loc;
     switch (settings->block_size) {
         case 3:
-            settings->preset_size = 2;
+            sz = 2;
             preset_loc = block_presets;
             break;
         case 4:
-            settings->preset_size = 7;
+            sz = 7;
             preset_loc = (long*)(block_presets + 2);
             break;
         case 5:
-            settings->preset_size = 18;
+            sz = 18;
             preset_loc = (long*)(block_presets + 9);
             break;
         default:
@@ -291,14 +293,7 @@ static void populatePresets(GameSettings *settings) {
             break;
     }
 
-    assert(settings->preset_size <= settings->max_preset_size);
-
-    memcpy(
-        settings->block_presets,
-        preset_loc,
-        settings->preset_size * sizeof(long)
-    );
-
+    GameSettings_setPresets(settings, sz, preset_loc);
 }
 
 

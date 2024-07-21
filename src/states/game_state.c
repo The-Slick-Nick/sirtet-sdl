@@ -39,9 +39,9 @@
 #define INSET_COL (SDL_Color){50, 50, 50, 255}
 
 
-/*=============================================================================
- State Struct creation & destruction
-=============================================================================*/
+/******************************************************************************
+ * GameSettings
+******************************************************************************/
 
 GameSettings* GameSettings_init(
     size_t max_preset_sz, size_t max_palette_sz
@@ -62,6 +62,35 @@ GameSettings* GameSettings_init(
     return retval;
 }
 
+// Assign block presets to settings
+void GameSettings_setPresets(GameSettings *self, size_t src_len, long *src) {
+    if (src_len > self->max_preset_size) {
+        printf(
+            "Provided preset length %ld exceeds max length of %ld\n",
+            src_len, self->max_preset_size
+        );
+        exit(EXIT_FAILURE);
+    }
+
+    self->preset_size = src_len;
+    memcpy(self->block_presets, src, src_len * sizeof(long));
+}
+
+// Assign a color palette to settings
+void GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src) {
+
+    if (src_len > self->max_palette_size) {
+        printf(
+            "Provided palette size %ld exceeds max size of %ld\n",
+            src_len, self->max_palette_size
+        );
+        exit(EXIT_FAILURE);
+    }
+
+    self->palette_size = src_len;
+    memcpy(self->palette, src, src_len * sizeof(SDL_Color));
+}
+
 void GameSettings_deconstruct(GameSettings *self) {
 
     GamecodeMap_deconstruct(self->keymaps);
@@ -72,6 +101,9 @@ void GameSettings_deconstruct(GameSettings *self) {
 }
 
 
+/******************************************************************************
+ * GameState
+******************************************************************************/
 
 /**
  * @brief Initialize the GameState, returning a pointer to it
