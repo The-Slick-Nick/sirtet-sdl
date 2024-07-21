@@ -118,6 +118,8 @@ int SettingsMenuState_run(
     SDL_Window *wind = app_state->wind;
     GameSettings *settings = settings_state->settings;
 
+    SDL_Color *palette = settings->palette;
+
 
     /*** Inputs ***/
 
@@ -181,26 +183,28 @@ int SettingsMenuState_run(
         0
     );
 
-    int x = wind_w / 2;
-    int y = 0;
-    for (int block_num = 0; block_num < settings_state->settings->preset_size; block_num++) {
 
-        Point drawpos = {.x=x, .y=y};
-        SDL_Color drawcol = settings->palette[block_num % settings->palette_size];
+    const int rows = (settings->preset_size / 2) + ((settings->preset_size & 1) == 1);
+    const int cellsize_w = (wind_w / 2) / (settings->block_size * 2);
+    const int cellsize_h = (wind_h) / (settings->block_size * rows);
 
-        // TODO: replace 10 with calculated width for area
+    const int cell_size = cellsize_h > cellsize_w ? cellsize_w : cellsize_h;
+
+    Point drawpos = {.x = wind_w / 2, .y = 0};
+    for (int block_num = 0; block_num < settings->preset_size; block_num++) {
+
+        SDL_Color drawcol = palette[block_num % settings->palette_size];
+
         drawBlockContents(
             rend, settings->block_size, settings->block_presets[block_num],
-            &drawcol, &drawpos, 10, 10
+            &drawcol, &drawpos, cell_size, cell_size
         );
 
-        x += wind_w / 4;
-        if (x >= wind_w) {
-            // TODO: See above
-            y += settings->block_size * 10;
-            x = wind_w / 2;
+        drawpos.x += wind_w / 4;
+        if (drawpos.x >= wind_w) {
+            drawpos.y += settings->block_size * cell_size;
+            drawpos.x = wind_w / 2;
         }
-
     }
 
     return 0;
