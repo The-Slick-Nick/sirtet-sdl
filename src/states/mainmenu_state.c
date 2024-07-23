@@ -134,13 +134,13 @@ MainMenuState* MainMenuState_init(
     // Key mapping
     int move_cd = TARGET_FPS / 15;
     GamecodeMap *keymaps = menustate->settings->keymaps;
-    GamecodeMap_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_SPACE, 1, 1, 1);
     GamecodeMap_addMap(keymaps, GAMECODE_ROTATE, SDL_SCANCODE_DOWN, 1, 1, 1);
     GamecodeMap_addMap(keymaps, GAMECODE_QUIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
     GamecodeMap_addMap(keymaps, GAMECODE_MOVE_LEFT, SDL_SCANCODE_LEFT, 1, INT_MAX, move_cd);
     GamecodeMap_addMap(keymaps, GAMECODE_MOVE_RIGHT, SDL_SCANCODE_RIGHT, 1, INT_MAX, move_cd);
     GamecodeMap_addMap(keymaps, GAMECODE_MOVE_UP, SDL_SCANCODE_UP, 1, INT_MAX, move_cd);
     GamecodeMap_addMap(keymaps, GAMECODE_PAUSE, SDL_SCANCODE_P, 1, 1, 1);
+    GamecodeMap_addMap(keymaps, GAMECODE_HARD_DROP, SDL_SCANCODE_SPACE, 1, 1, 1);
 
 
     // Block presets

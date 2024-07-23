@@ -325,19 +325,35 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_ROTATE)) {
 
+        int block_size = BlockDb_getBlockSize(db, *primary_block);
+        long block_contents = BlockDb_getBlockContents(db, *primary_block);
+        Point block_position = BlockDb_getBlockPosition(db, *primary_block);
+
         long rotated_contents = rotateBlockContentsCw90(
-            BlockDb_getBlockContents(db, *primary_block),
-            BlockDb_getBlockSize(db, *primary_block)
+            block_contents, block_size
         );
 
-        if (GameGrid_canBlockInfoExist(
-                grid,
-                BlockDb_getBlockSize(db, *primary_block),
-                rotated_contents,
-                BlockDb_getBlockPosition(db, *primary_block)
-            )
+        // TODO: Map C-Backspace to delete whole word (not game related,
+        // but I just though of it and don't want to forget)
+
+        // smart rotation 
+        // TODO: Research "official" srs logic - confirm this matches (or change this)
+        // TODO: Write a unit test or two for this - if more complex logic implemented
+        for (
+            int x_delta = 0;
+            x_delta <= block_size / 2;
+            x_delta = (x_delta * -1) + (x_delta <= 0)
         ) {
-            BlockDb_setBlockContents(db, *primary_block, rotated_contents);
+
+            Point proj_pos = {block_position.x + x_delta, block_position.y};
+            bool can_exist = GameGrid_canBlockInfoExist(
+                grid, block_size, rotated_contents, proj_pos
+            );
+            if (can_exist)  {
+                BlockDb_setBlockContents(db, *primary_block, rotated_contents);
+                BlockDb_setBlockPosition(db, *primary_block, proj_pos);
+                break;
+            }
         }
     }
 
@@ -371,6 +387,36 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
         ) {
             BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
+    }
+
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_HARD_DROP)) {
+        game_state->move_counter = 0;
+
+        int block_size = BlockDb_getBlockSize(db, *primary_block);
+        long block_contents = BlockDb_getBlockContents(db, *primary_block);
+        Point proj_pos = BlockDb_getBlockPosition(db, *primary_block);
+
+        // TODO: Make this a GameGrid_xxx method that returns the position
+        // of a "hard dropped" block
+        bool can_exist = true;
+        // safe alternative to `while (can_exist)`
+        for (int _ = 0; _ < grid->height && can_exist; _++) {
+            can_exist = GameGrid_canBlockInfoExist(
+                grid, block_size, block_contents,
+                (Point){proj_pos.x, proj_pos.y - 1}
+            );
+
+            if (can_exist) {
+                proj_pos.y--;
+            }
+        }
+
+        BlockDb_setBlockPosition(db, *primary_block, proj_pos);
+        GameGrid_commitBlock(grid, db, *primary_block);
+        *primary_block = INVALID_BLOCK_ID;
+        game_state->move_counter = 0;
+
+        // TODO: Award points for distance dropped
     }
 
     game_state->move_counter++;
