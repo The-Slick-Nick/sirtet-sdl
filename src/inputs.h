@@ -127,6 +127,12 @@ typedef struct {
 MenucodeMap* MenucodeMap_init(int max_maps);
 int MenucodeMap_deconstruct(MenucodeMap *self);
 
+// Set up a MenucodeMap with common standard controls (arrow keys, enter, etc.)
+void MenucodePreset_standard(MenucodeMap *map);
+
+
+
+
 // Add a mapping for a hardware input to menu input
 int Menucode_addMap(
     MenucodeMap *mapping, Menucode virtual_code, SDL_Scancode hardware_code,

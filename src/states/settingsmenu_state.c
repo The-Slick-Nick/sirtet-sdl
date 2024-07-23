@@ -73,15 +73,7 @@ SettingsMenuState* SettingsMenuState_init(
     TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
     TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
 
-    // TODO: Add some kind of preset/factory thing for standard menu controls
-    Menucode_addMap(retval->menucode_map, MENUCODE_EXIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Menucode_addMap(retval->menucode_map, MENUCODE_MOVE_UP, SDL_SCANCODE_UP, 1, 1000, 30);
-    Menucode_addMap(retval->menucode_map, MENUCODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, 1000, 30);
-    Menucode_addMap(retval->menucode_map, MENUCODE_SELECT, SDL_SCANCODE_RETURN, 1, 1000, 30);
-    Menucode_addMap(retval->menucode_map, MENUCODE_SELECT, SDL_SCANCODE_KP_ENTER, 1, 1000, 30);
-
-    Menucode_addMap(retval->menucode_map, MENUCODE_INCREMENT_VALUE, SDL_SCANCODE_RIGHT, 1, 1000, 30);
-    Menucode_addMap(retval->menucode_map, MENUCODE_DECREMENT_VALUE, SDL_SCANCODE_LEFT, 1, 1000, 30);
+    MenucodePreset_standard(retval->menucode_map);
 
 
     /*** Block Display Setup ***/

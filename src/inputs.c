@@ -195,6 +195,7 @@ int MenucodeMap_deconstruct(MenucodeMap *self) {
     return 0;
 }
 
+
 /**
  * @brief Populate menucode flag array based on key mappings and customized 
  *                          state of hardware
@@ -260,4 +261,20 @@ int Menucode_addMap(
 // Identify if a given Menucode is pressed or not
 bool Menucode_pressed(bool *menucode_arr, Menucode menucode) {
     return menucode_arr[(int)menucode];
+}
+
+
+// Set up a MenucodeMap with common standard controls (arrow keys, enter, etc.)
+void MenucodePreset_standard(MenucodeMap *map) {
+
+    Menucode_addMap(map, MENUCODE_EXIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_RETURN, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_RETURN2, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_KP_ENTER, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_INCREMENT_VALUE, SDL_SCANCODE_RIGHT, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_DECREMENT_VALUE, SDL_SCANCODE_LEFT, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_MOVE_UP, SDL_SCANCODE_UP, 1, 1, 1);
+    Menucode_addMap(map, MENUCODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, 1, 1);
+    
+
 }
