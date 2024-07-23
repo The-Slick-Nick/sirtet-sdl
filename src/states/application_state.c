@@ -60,6 +60,8 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     Uint32 render_flags = SDL_RENDERER_ACCELERATED;
     SDL_Renderer *rend = SDL_CreateRenderer(wind, -1, render_flags);
+    // for translucent drawing
+    SDL_SetRenderDrawBlendMode(rend, SDL_BLENDMODE_BLEND);
 
     if (wind == NULL) {
         const char *errmsg = SDL_GetError();

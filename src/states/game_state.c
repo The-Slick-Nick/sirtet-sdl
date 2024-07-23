@@ -250,6 +250,8 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
     int *queued_block = &game_state->queued_block;
     long *block_presets = game_state->block_presets;
 
+    int score_to_inc = 0;
+
 
     // Must clear first due to animation timing
     game_state->lines_this_level += GameGrid_resolveRowsUp(grid, db);
@@ -389,35 +391,6 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
         }
     }
 
-    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_HARD_DROP)) {
-        game_state->move_counter = 0;
-
-        int block_size = BlockDb_getBlockSize(db, *primary_block);
-        long block_contents = BlockDb_getBlockContents(db, *primary_block);
-        Point proj_pos = BlockDb_getBlockPosition(db, *primary_block);
-
-        // TODO: Make this a GameGrid_xxx method that returns the position
-        // of a "hard dropped" block
-        bool can_exist = true;
-        // safe alternative to `while (can_exist)`
-        for (int _ = 0; _ < grid->height && can_exist; _++) {
-            can_exist = GameGrid_canBlockInfoExist(
-                grid, block_size, block_contents,
-                (Point){proj_pos.x, proj_pos.y - 1}
-            );
-
-            if (can_exist) {
-                proj_pos.y--;
-            }
-        }
-
-        BlockDb_setBlockPosition(db, *primary_block, proj_pos);
-        GameGrid_commitBlock(grid, db, *primary_block);
-        *primary_block = INVALID_BLOCK_ID;
-        game_state->move_counter = 0;
-
-        // TODO: Award points for distance dropped
-    }
 
     game_state->move_counter++;
     if (
@@ -443,12 +416,39 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
         }
     }
 
-    int to_inc = GameGrid_assessScore(grid, game_state->level);
-    if (to_inc > 0) {
+    if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_HARD_DROP)) {
+        game_state->move_counter = 0;
+
+        int block_size = BlockDb_getBlockSize(db, *primary_block);
+        long block_contents = BlockDb_getBlockContents(db, *primary_block);
+        Point block_pos = BlockDb_getBlockPosition(db, *primary_block);
+
+        int dist = GameGrid_getDropDistance(
+            grid, block_size, block_contents, block_pos
+        );
+
+        if (dist >= 0) {
+            BlockDb_setBlockPosition(
+                db, *primary_block,
+                Point_translate(block_pos, (Point){0, -1 * dist})
+            );
+            GameGrid_commitBlock(grid, db, *primary_block);
+            *primary_block = INVALID_BLOCK_ID;
+            game_state->move_counter = 0;
+
+            score_to_inc += 2 * dist;
+        }
+
+
+    }
+
+    score_to_inc += GameGrid_assessScore(grid, game_state->level);
+
+    if (score_to_inc > 0) {
         SDL_DestroyTexture(game_state->score_label);
         game_state->score_label = NULL;
     }
-    game_state->score += to_inc;
+    game_state->score += score_to_inc;
 
     GameGrid_prepareAnimation(grid, 3);
     if (grid->is_animating) {
@@ -699,14 +699,38 @@ int drawGameArea(
         return retval;
     }
 
+    /*** Block drawing ***/
+
     if (primary_block != INVALID_BLOCK_ID) {
 
-        retval = BlockDb_drawBlockOnGrid(
-            db, primary_block, rend, origin, cellsize, cellsize);
 
-        if (retval < 0) {
-            return retval;
-        }
+        int block_size = BlockDb_getBlockSize(db, primary_block);
+        long block_contents = BlockDb_getBlockContents(db, primary_block);
+        Point block_pos = BlockDb_getBlockPosition(db, primary_block);
+        SDL_Color block_col = BlockDb_getBlockColor(db, primary_block);
+
+        Point topleft = {
+            .x=origin.x + cellsize * (block_pos.x - block_size / 2),
+            .y=origin.y + cellsize * (block_pos.y - block_size / 2)
+        };
+
+        // projected block
+        int dist = GameGrid_getDropDistance(grid, block_size, block_contents, block_pos);
+        SDL_Color drawcol = {block_col.r, block_col.g, block_col.b, 64};
+        Point drawpos = {topleft.x, topleft.y - (dist * cellsize)};
+
+        drawBlockContents(
+            rend, block_size, block_contents,
+            &drawcol, &drawpos,
+            cellsize, cellsize
+        );
+
+        // current block
+        drawBlockContents(
+            rend, block_size, block_contents,
+            &block_col, &topleft,
+            cellsize, cellsize
+        );
     }
 
     return 0;
@@ -795,7 +819,6 @@ int GameState_run(
     if (update_status == -1) {
         return -1;
     }
-
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
         StateRunner_addState(state_runner, game_state, GameState_runPaused, NULL);

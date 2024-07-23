@@ -127,7 +127,8 @@ bool GameGrid_canBlockInfoExist(
 int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
     
     if ( !GameGrid_canBlockExist(self, db, block_id) ) {
-        return -1;
+        printf("Attempted to commit a incompatible block");
+        exit(EXIT_FAILURE);
     }
 
     int block_size = BlockDb_getBlockSize(db, block_id);
@@ -340,6 +341,28 @@ int GameGrid_assessScore(GameGrid *self, int level) {
     );
 }
 
+// Return the amount of spaces a block can "fall", or -1 if current position
+// is invalid
+int GameGrid_getDropDistance(
+    GameGrid *self, int block_size, long contents, Point position
+) {
+
+    int dist;
+    bool can_exist = true;
+    for (dist = -1; dist < self->height; dist++) {
+
+        can_exist = GameGrid_canBlockInfoExist(
+            self, block_size, contents,
+            (Point){.x=position.x, .y=position.y - (dist + 1)}
+        );
+
+        if (!can_exist) {
+            break;
+        }
+    }
+    assert(!can_exist);
+    return dist;
+}
 
 /******************************************************************************
  * Display/animation management

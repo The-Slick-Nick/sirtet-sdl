@@ -58,14 +58,14 @@ int drawBlockCell(
         .r=INT_MIN(255, 12*base_color.r / 10),
         .g=INT_MIN(255, 12*base_color.g / 10),
         .b=INT_MIN(255, 12* base_color.b / 10),
-        .a=255
+        .a=base_color.a
     };
 
     SDL_Color se_color = (SDL_Color){
         .r=8*base_color.r / 10,
         .g=8*base_color.g / 10,
-        .b =8* base_color.b / 10,
-        .a=255
+        .b=8*base_color.b / 10,
+        .a=base_color.a
     };
 
     SDL_SetRenderDrawColor(rend, nw_color.r, nw_color.g, nw_color.b, nw_color.a);
@@ -121,6 +121,7 @@ int GameGrid_drawGrid(
 }
 
 
+// Draw a block, passing each relevant metric directly & separately
 void drawBlockContents(
     SDL_Renderer *rend, 
     int block_size,

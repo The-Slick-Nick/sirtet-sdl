@@ -77,6 +77,12 @@ int GameGrid_resolveRowsUp(GameGrid* grid, BlockDb *db);
 // Calculate how many points to award based on the current grid state
 int GameGrid_assessScore(GameGrid *self, int level);
 
+// Return the distance a block can drop from its current position, or -1 if 
+// current position is invalid.
+int GameGrid_getDropDistance(
+    GameGrid *self, int block_size, long contents, Point position
+);
+
 /******************************************************************************
  * Display/animation management
 ******************************************************************************/

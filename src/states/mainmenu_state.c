@@ -157,13 +157,13 @@ MainMenuState* MainMenuState_init(
 
     // Color palette
     SDL_Color init_palette[7] = {
-        (SDL_Color){190,83,28},
-        (SDL_Color){218,170,0},
-        (SDL_Color){101,141,27},
-        (SDL_Color){0,95,134},
-        (SDL_Color){155,0,0},
-        (SDL_Color){0,155,0},
-        (SDL_Color){0,0,155}
+        (SDL_Color){190,83,28, 255},
+        (SDL_Color){218,170,0, 255},
+        (SDL_Color){101,141,27, 255},
+        (SDL_Color){0,95,134, 255},
+        (SDL_Color){155,0,0, 255},
+        (SDL_Color){0,155,0, 255},
+        (SDL_Color){0,0,155, 255}
     };
     GameSettings_setPalette(settings, 7, init_palette);
 
