@@ -7,6 +7,7 @@
 * for a state-runner to run
 */
 
+#include <SDL2/SDL_error.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_surface.h>
@@ -117,60 +118,42 @@ GameState* GameState_init(
     GameSettings *settings
 ) {
 
-    // TODO: Clean these up - this is a temporary thing I'm doing while
-    // extracting settings to their own struct
+    // settings extraction
     int init_level = settings->init_level;
     int block_size = settings->block_size;
-
-    // TODO: Make a copy (or something) of this - right now keymaps
-    // is a "live reference" to memory held by settings struct that may be
-    // mid game execution
-    GamecodeMap *keymaps = settings->keymaps;
 
     size_t preset_size = settings->preset_size;
     long *block_presets = settings->block_presets;
 
-
-    SDL_Surface *surf = TTF_RenderText_Solid(
-        menu_font, "Paused", (SDL_Color){255, 255, 255}
-    );
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surf);
-
-    SDL_FreeSurface(surf);  // no longer needed
+    size_t palette_size = settings->preset_size;
+    SDL_Color *palette = settings->palette;
+    GamecodeMap *keymaps = settings->keymaps;
 
 
     /*** Initialize struct ***/
+
     GameState *retval = (GameState*)malloc(sizeof(GameState));
-    *(retval) = (GameState){
-
-        // single values 
-        .move_counter=0,
-        .score=0,
-        .level=init_level,
-        .lines_this_level=0,
-        .block_size=block_size,
-
-        .primary_block = INVALID_BLOCK_ID,
-        .queued_block = INVALID_BLOCK_ID,
 
 
-        .block_db = BlockDb_init(256),
-        .game_grid = GameGrid_init(
-            2 * block_size + block_size / 2,
-            6 * block_size
-        ),
+    /*** Tracking ***/
 
-        .keymaps = GamecodeMap_initCopy(keymaps),
-        .gamecode_states=(bool*)calloc((int)NUM_GAMECODES, sizeof(bool)),
+    retval->move_counter = 0;
+    retval->score = 0;
+    retval->level = init_level;
+    retval->lines_this_level = 0;
 
-        .menu_font=menu_font,
-        .pause_texture=texture,
-        .score_label=NULL,
-        .level_label=NULL,
-        .next_label=NULL
-    };
 
-    /*** Post-creation processing ***/
+    /*** Block config ***/ 
+
+    retval->block_db = BlockDb_init(256);
+    retval->game_grid = GameGrid_init(
+        2 * block_size + block_size / 2,
+        6 * block_size
+    );
+
+    retval->block_size = block_size;
+    retval->primary_block = INVALID_BLOCK_ID;
+    retval->queued_block = INVALID_BLOCK_ID;
 
     // Palette
     size_t palette_n = sizeof(SDL_Color) * settings->palette_size;
@@ -187,8 +170,36 @@ GameState* GameState_init(
     // Initialize grid cells
     GameGrid_clear(retval->game_grid);
 
+
+    /*** Controls ***/
+
+    retval->keymaps = GamecodeMap_initCopy(keymaps);
+    retval->gamecode_states = (bool*)calloc((int)NUM_GAMECODES, sizeof(bool));
+
+
+
+    /*** Labels and such ***/
+
+    retval->menu_font = menu_font;
+
+    SDL_Surface *p_surf = TTF_RenderText_Solid(
+        menu_font, "Paused", (SDL_Color){255, 255, 255}
+    );
+    SDL_Surface *n_surf = TTF_RenderText_Solid(
+        menu_font, "Next", (SDL_Color){255, 255, 255}
+    );
+    retval->pause_texture = SDL_CreateTextureFromSurface(rend, p_surf);
+    retval->next_label = SDL_CreateTextureFromSurface(rend, n_surf);
+    SDL_FreeSurface(p_surf);
+    SDL_FreeSurface(n_surf);
+
+    // Re-renderable lables, that render at display time
+    retval->score_label = NULL;
+    retval->level_label = NULL;
+
     printf("Returning game state...\n");
     return retval;
+
 }
 
 // Go through process of deconstructing a GameState struct,
@@ -527,12 +538,22 @@ int drawInterface(
 
     // NOTE: Relies on updateGame(...) invalidating level texture on level change
     if (game_state->level_label == NULL) {
-        printf("Making level label\n");
         snprintf(level_buffer, 16, "Level: %d", level);
+
         SDL_Surface *lvl_surf = TTF_RenderText_Solid(
             menu_font, level_buffer, (SDL_Color){255, 255, 255}
         );
+        if (lvl_surf == NULL) {
+            printf("Error rendering level surface: %s\n", TTF_GetError());
+            exit(EXIT_FAILURE);
+        }
+
+
         game_state->level_label = SDL_CreateTextureFromSurface(rend, lvl_surf);
+        if (game_state->level_label == NULL) {
+            printf("Error rendering level label: %s\n", SDL_GetError());
+            exit(EXIT_FAILURE);
+        }
         SDL_FreeSurface(lvl_surf);
     }
 
@@ -548,7 +569,15 @@ int drawInterface(
 
     /***** Next Up *****/
 
-    // TODO: Next up label
+    dstrect = (SDL_Rect){.x=draw_window->x, .y=yoffset};
+    SDL_QueryTexture(
+        game_state->next_label, NULL, NULL, &dstrect.w, &dstrect.h
+    );
+    SDL_RenderCopy(rend, game_state->next_label, NULL, &dstrect);
+
+    yoffset += dstrect.h;
+
+
     dstrect = (SDL_Rect){
         .x=draw_window->x, .y=yoffset,
         .w=draw_window->w,
@@ -661,7 +690,6 @@ int drawGame(ApplicationState *app_state, GameState *game_state) {
         .w=area_w,
         .h=area_h
     };
-
 
 
     SDL_Rect game_area;

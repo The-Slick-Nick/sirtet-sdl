@@ -153,7 +153,6 @@ MainMenuState* MainMenuState_init(
         0b0011011000000000,
         0b1100011000000000
     };
-
     GameSettings_setPresets(settings, 7, init_presets);
 
     // Color palette
