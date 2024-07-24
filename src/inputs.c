@@ -209,9 +209,11 @@ int processMenucodes(
     bool *menucode_states, int *hardware_states, MenucodeMap *all_mappings
 ) {
 
-    for (int int_menu = 0; int_menu < (int)NUM_MENUCODES; int_menu++) {
-        menucode_states[int_menu] = false;
-    }
+    // memset(void *s, int c, size_t n)
+    memset(menucode_states, 0, (int)NUM_MENUCODES * sizeof(bool));
+    // for (int int_menu = 0; int_menu < (int)NUM_MENUCODES; int_menu++) {
+    //     menucode_states[int_menu] = false;
+    // }
 
     MenucodeMapItem map_itm;
     for (int map_i = 0; map_i < all_mappings->head; map_i++) {

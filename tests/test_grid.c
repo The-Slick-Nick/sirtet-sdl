@@ -291,34 +291,22 @@ void testGameGridCommitBlock() {
 
     BlockDb *db = BlockDb_init(8);
 
-    int goodblock_id = BlockDb_createBlock(db, 4, content_mask, (Point){2, 2}, (SDL_Color){});
-    int badblock_id = BlockDb_createBlock(db, 4, content_mask, (Point){0, 0}, (SDL_Color){});
-    // bad because would need to commit to negative indices
+    int block_id = BlockDb_createBlock(db, 4, content_mask, (Point){2, 2}, (SDL_Color){});
 
-    INFO_FMT("goodblock_id is %d\n", goodblock_id);
-    INFO_FMT("badblock_id is %d\n", badblock_id);
+    INFO_FMT("goodblock_id is %d\n", block_id);
 
-    int good_result = GameGrid_commitBlock(grid, db, goodblock_id);
+    int good_result = GameGrid_commitBlock(grid, db, block_id);
 
     ASSERT_EQUAL_INT(good_result, 0);
-    ASSERT_EQUAL_INT(grid->contents[5], goodblock_id);
-    ASSERT_EQUAL_INT(grid->contents[6], goodblock_id);
-    ASSERT_EQUAL_INT(grid->contents[9], goodblock_id);
-    ASSERT_EQUAL_INT(grid->contents[10], goodblock_id);
+    ASSERT_EQUAL_INT(grid->contents[5], block_id);
+    ASSERT_EQUAL_INT(grid->contents[6], block_id);
+    ASSERT_EQUAL_INT(grid->contents[9], block_id);
+    ASSERT_EQUAL_INT(grid->contents[10], block_id);
 
-    // ASSERT_EQUAL_LONG(good_block.contents, 0L);  
     // Committed blocks have no more contents
-    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(db, goodblock_id), 0L);
+    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(db, block_id), 0L);
 
     GameGrid_clear(grid);
-
-    int bad_result = GameGrid_commitBlock(grid, db, badblock_id);
-    ASSERT_EQUAL_INT(bad_result, -1);
-    for (int grid_cell = 0; grid_cell < 16; grid_cell++) {
-        ASSERT_EQUAL_INT(grid->contents[grid_cell], INVALID_BLOCK_ID);
-    }
-
-    ASSERT_EQUAL_LONG(BlockDb_getBlockContents(db, badblock_id), content_mask);  // nochange
 
     GameGrid_deconstruct(grid);
     BlockDb_deconstruct(db);

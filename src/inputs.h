@@ -132,8 +132,6 @@ int MenucodeMap_deconstruct(MenucodeMap *self);
 void MenucodePreset_standard(MenucodeMap *map);
 
 
-
-
 // Add a mapping for a hardware input to menu input
 int Menucode_addMap(
     MenucodeMap *mapping, Menucode virtual_code, SDL_Scancode hardware_code,
@@ -143,19 +141,8 @@ int Menucode_addMap(
 // Identify if a given menucode is active by parsing an boolean array indexed by menucodes
 bool Menucode_pressed(bool *menucode_arr, Menucode menucode);
 
+
 int processMenucodes(bool *menucode_states, int *hardware_states, MenucodeMap *all_mappings);
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

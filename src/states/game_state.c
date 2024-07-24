@@ -33,11 +33,11 @@
 
 #define TOTAL_WEIGHT_W (GAMEAREA_WEIGHT_W + SIDEBAR_WEIGHT_W)
 
-// Borders between the different screen areas
-#define BORDER_SIZE 24
 
 #define OUTSET_COL (SDL_Color){0, 0, 0, 255}
 #define INSET_COL (SDL_Color){50, 50, 50, 255}
+
+#define BORDER_SIZE 24
 
 
 /******************************************************************************
@@ -335,9 +335,6 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
             block_contents, block_size
         );
 
-        // TODO: Map C-Backspace to delete whole word (not game related,
-        // but I just though of it and don't want to forget)
-
         // smart rotation 
         // TODO: Research "official" srs logic - confirm this matches (or change this)
         // TODO: Write a unit test or two for this - if more complex logic implemented
@@ -361,7 +358,9 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_LEFT)) {
 
-        Point new_pos = Point_translate(BlockDb_getBlockPosition(db, *primary_block), (Point){-1, 0});
+        Point new_pos = Point_translate(
+            BlockDb_getBlockPosition(db, *primary_block), (Point){-1, 0}
+        );
 
         if (
             GameGrid_canBlockInfoExist(
@@ -438,8 +437,6 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
             score_to_inc += 2 * dist;
         }
-
-
     }
 
     score_to_inc += GameGrid_assessScore(grid, game_state->level);
@@ -491,6 +488,7 @@ int drawNextBlock(
     return block_size * cell_size;
 }
 
+// Draw the interface area displaying level & score, returning height taken
 int drawScoreArea(
     ApplicationState *app_state, GameState *game_state,
     SDL_Rect *dest

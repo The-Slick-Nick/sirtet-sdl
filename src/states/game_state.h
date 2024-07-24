@@ -71,7 +71,6 @@ typedef struct {
     TTF_Font *menu_font;
     SDL_Texture *pause_texture; // Texture with "pause" text
 
-    // TODO: Different textures for LABEL and VALUE
     SDL_Texture *score_label;
     SDL_Texture *level_label;
     SDL_Texture *next_label;
