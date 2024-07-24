@@ -1,5 +1,8 @@
 /******************************************************************************
+ * TODO: Replace/rename this file to Sirtet.c (with corresponding header)
+ *
  * run_game.c
+ *
  *
  * This file defines the main application runner in function run()
 ******************************************************************************/
@@ -26,19 +29,19 @@
 
 
 
+
 /* Primary program runner */
 void run() {
 
     // (these todos are in a general location because I didn't notice
     // specific lines of things lol)
-    // TODO: Add "hard drop" functionality (with scoring)
     // TODO: Highscores (list on main menu with extra space?)
     // TODO: Implement SRS (or similar) system - with dynamic "block size"
     //       based on content needs (some "blocksize 4" blocks can be represented
     //       in a 3x3 grid)
     // TODO: Block prediction overlay
     // TODO: Sound effects and (maybe) music(?)
-    // TODO: Settings menu (tile sizes, color schemes)
+    // TODO: Changable color palettes in settings
 
 
     srand((int)time(NULL));

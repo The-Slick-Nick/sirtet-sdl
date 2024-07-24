@@ -74,13 +74,6 @@ int GamecodeMap_addMap(
 int GamecodeMap_deconstruct(GamecodeMap *self);
 
 
-// TODO: Shouldn't this be prefixed with GamecodeMap?
-// int Gamecode_addMap(
-//     GamecodeMap *mapping, Gamecode virtual_code, SDL_Scancode hardware_code,
-//     int frame_start, int frame_end, int frame_interval
-// );
-
-
 // Identify if a given gamecode is active by parsing an boolean array indexed by gamecodes
 bool Gamecode_pressed(bool *gamecode_arr, Gamecode gamecode);
 

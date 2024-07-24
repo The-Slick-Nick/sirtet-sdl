@@ -380,6 +380,10 @@ void TextMenu_draw(
 
         char *text = TextMenu_getLabelText(self, optnum);
 
+        // TODO: Replace instances of exit(EXIT_FAILURE) with
+        // (1) Setting a global error message accessible through Sirtet_getError()
+        // (2) Returning an error code (null, -1, etc.)
+
         SDL_Surface *lbl_surf = TTF_RenderText_Solid(rend_font, text, rend_col);
         if (lbl_surf == NULL) {
             printf("Error creating label: %s\n", TTF_GetError());
