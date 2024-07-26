@@ -1,13 +1,13 @@
 /******************************************************************************
  * TODO: Replace/rename this file to Sirtet.c (with corresponding header)
  *
- * run_game.c
+ * sirtet.c
  *
  *
  * This file defines the main application runner in function run()
 ******************************************************************************/
 #include "inputs.h"
-#include "run_game.h"
+#include "sirtet.h"
 #include "mainmenu_state.h"
 #include "application_state.h"
 #include "state_runner.h"
@@ -25,9 +25,28 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 
+#define ERRMSG_SZ 128
+static char glob_errmsg[ERRMSG_SZ] = {0};
+
+void Sirtet_setError(const char *errmsg) {
+
+
+    size_t errlen = strlen(errmsg);
+    size_t copylen = errlen > ERRMSG_SZ - 1 ? ERRMSG_SZ - 1 : errlen;
+
+    // memcpy instead of strcpy for custom truncation logic
+    memcpy(glob_errmsg, errmsg, copylen);
+    glob_errmsg[copylen + 1] = '\0';
+}
+
+char* Sirtet_getError() {
+    return glob_errmsg;
+
+}
 
 
 /* Primary program runner */

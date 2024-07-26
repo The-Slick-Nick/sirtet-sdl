@@ -7,7 +7,8 @@
 #include <stdbool.h>
 
 void run();
-
+void Sirtet_setError(const char *errmsg);
+char* Sirtet_getError();
 
 
 #endif
