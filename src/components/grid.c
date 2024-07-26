@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <assert.h>
 #include <stdio.h>
+
+#include "sirtet.h"
 #include "grid.h"
 #include "block.h"
 
@@ -127,8 +129,8 @@ bool GameGrid_canBlockInfoExist(
 int GameGrid_commitBlock(GameGrid *self, BlockDb *db, int block_id) {
     
     if ( !GameGrid_canBlockExist(self, db, block_id) ) {
-        printf("Attempted to commit a incompatible block");
-        exit(EXIT_FAILURE);
+        Sirtet_setError("GameGrid attempted to commit an incompatible block\n");
+        return -1;
     }
 
     int block_size = BlockDb_getBlockSize(db, block_id);

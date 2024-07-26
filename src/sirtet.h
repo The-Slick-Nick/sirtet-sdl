@@ -6,7 +6,7 @@
 #include <SDL2/SDL_scancode.h>
 #include <stdbool.h>
 
-void run();
+int run();
 void Sirtet_setError(const char *errmsg);
 char* Sirtet_getError();
 

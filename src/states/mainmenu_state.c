@@ -1,4 +1,3 @@
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_scancode.h>
@@ -10,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "sirtet.h"
 #include "mainmenu_state.h"
 #include "menu.h"
 #include "state_runner.h"
@@ -81,6 +81,7 @@ MainMenuState* MainMenuState_init(
     // return value
     MainMenuState *menustate = (MainMenuState*)malloc(sizeof(MainMenuState));
     if (menustate == NULL) {
+        Sirtet_setError("Error initializing MainMenuState memory\n");
         return NULL;
     }
 
@@ -90,6 +91,10 @@ MainMenuState* MainMenuState_init(
     );
 
     if (title_surf == NULL) {
+        char buff[64];
+        // snprintf(char *restrict s, size_t maxlen, const char *restrict format, ...)
+        snprintf(buff, 64, "Error rendering text: %s\n", SDL_GetError());
+        Sirtet_setError(buff);
         free(menustate);
         return NULL;
     }
@@ -114,8 +119,8 @@ MainMenuState* MainMenuState_init(
     SDL_FreeSurface(title_surf);
 
     if (menustate->mainmenu == NULL) {
-        printf("Error allocating options\n");
-        exit(EXIT_FAILURE);
+        Sirtet_setError("Error allocating memory for options\n");
+        return NULL;
     }
 
 
@@ -123,8 +128,8 @@ MainMenuState* MainMenuState_init(
 
     GameSettings *settings = menustate->settings;
     if (settings == NULL) {
-        printf("Error allocating GameSettings\n");
-        exit(EXIT_FAILURE);
+        Sirtet_setError("Error allocating memory for GameSettings\n");
+        return NULL;
     }
 
     // Constants

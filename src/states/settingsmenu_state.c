@@ -4,6 +4,8 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
 #include <string.h>
+
+#include "sirtet.h"
 #include "component_drawing.h"
 #include "assert.h"
 #include "game_state.h"
@@ -291,7 +293,7 @@ void menufunc_exitSettings(
 }
 
 
-static void populatePresets(GameSettings *settings) {
+static int populatePresets(GameSettings *settings) {
 
     long block_presets[2 + 7 + 18] = {
         /* blocksize 3 */
@@ -329,6 +331,7 @@ static void populatePresets(GameSettings *settings) {
     };
 
     int offset;
+    char buff[64];
     size_t sz;
     long *preset_loc;
     switch (settings->block_size) {
@@ -345,15 +348,17 @@ static void populatePresets(GameSettings *settings) {
             preset_loc = (long*)(block_presets + 9);
             break;
         default:
-            printf(
-                "Cannot determine a preset for tilesize %d\n",
+            snprintf(
+                buff, 64, "Cannot determine a preset for tilesize %d\n",
                 settings->block_size
             );
-            exit(EXIT_FAILURE);
-            break;
+            Sirtet_setError(buff);
+            // TODO: Identify a proper error return
+            return -1;
     }
 
     GameSettings_setPresets(settings, sz, preset_loc);
+    return 0;
 }
 
 

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "sirtet.h"
 #include "application_state.h"
 
 
@@ -21,33 +22,34 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     /***** Initialization *****/
     ApplicationState *retval = (ApplicationState*)malloc(sizeof(ApplicationState));
     if (retval == NULL) {
-        printf("Error allocating ApplicationState\n");
-        exit(EXIT_FAILURE);
+        Sirtet_setError("Error allocating memory for ApplicationState\n");
+        return NULL;
     }
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        const char *errmsg = SDL_GetError();
-        printf("Error starting SDL: %s\n", errmsg);
+        char buff[64];
+        snprintf(buff, 64, "Error starting SDL in ApplicationState: %s\n", SDL_GetError());
+        Sirtet_setError(buff);
         free(retval);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     if (TTF_Init() != 0) {
-        const char* errmsg = TTF_GetError();
-        printf("Error starting SDL_ttf: %s\n", errmsg);
-        SDL_Quit();
+        char buff[64];
+        snprintf(buff, 64, "Error starting TTF in ApplicationState: %s\n", TTF_GetError());
+        Sirtet_setError(buff);
         free(retval);
-        exit(EXIT_FAILURE);
+        return NULL;
     }
 
     // TODO: Final: clean this up if we never end up using pngs
     // int img_flags = (IMG_INIT_PNG);
     // if (!(IMG_Init(img_flags) & img_flags)) {
-    //     printf("Error starting SDL_image: %s\n", IMG_GetError());
-    //     TTF_Quit();
-    //     SDL_Quit();
-    //     free(retval);
-    //     exit(EXIT_FAILURE);
+        // char buff[64];
+        // snprintf(buff, 64, "Error starting SDL_image in ApplicationState: %s\n", IMG_GetError());
+        // Sirtet_setError(buff);
+        // free(retval);
+        // return NULL;
     // }
 
 
@@ -113,8 +115,11 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         retval->fonts.lekton_12 == NULL
         || retval->fonts.lekton_24 == NULL
     ) {
-        printf("Error loading fonts: %s\n", TTF_GetError());
-        exit(EXIT_FAILURE);
+        char buff[64];
+        snprintf(buff, 64, "Error loading fonts in ApplicationState: %s\n", TTF_GetError());
+        Sirtet_setError(buff);
+        free(retval);
+        return NULL;
     }
 
     strcpy(buffer, asset_folder);
@@ -126,8 +131,11 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         retval->fonts.vt323_12 == NULL
         || retval->fonts.vt323_24 == NULL
     ) {
-        printf("Error loading fonts: %s\n", TTF_GetError());
-        exit(EXIT_FAILURE);
+        char buff[64];
+        snprintf(buff, 64, "Error loading fonts in ApplicationState: %s\n", TTF_GetError());
+        Sirtet_setError(buff);
+        free(retval);
+        return NULL;
     }
 
     /***** Load images *****/
@@ -139,11 +147,12 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     SDL_FreeSurface(logo_surf);
 
     if (retval->images.logo == NULL) {
-        printf("Error loading images: %s\n", SDL_GetError());
-        exit(EXIT_FAILURE);
+        char buff[64];
+        snprintf(buff, 64, "Error loading images in ApplicationState: %s\n", TTF_GetError());
+        Sirtet_setError(buff);
+        free(retval);
+        return NULL;
     }
-
-
 
     return retval;
 }

@@ -133,14 +133,14 @@ int TextMenu_updateText(TextMenu *self, int optnum, const char* text);
 ******************************************************************************/
 
 // Draw the elements of a Menu within the provided region
-void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags);
+int Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags);
 
 /******************************************************************************
  * TextMenu draw operations
 ******************************************************************************/
 
 // Draw the elements of a TextMenu within the provided region
-void TextMenu_draw(
+int TextMenu_draw(
     TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
     TTF_Font *active_font, SDL_Color *active_col,
     TTF_Font *inac_font, SDL_Color *inac_col,

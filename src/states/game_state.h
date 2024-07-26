@@ -89,8 +89,8 @@ GameSettings* GameSettings_init(
 void GameSettings_deconstruct(GameSettings *self);
 
 
-void GameSettings_setPresets(GameSettings *self, size_t src_len, long *src);
-void GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src);
+int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src);
+int GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src);
 
 /******************************************************************************
  * GameState

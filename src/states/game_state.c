@@ -24,6 +24,7 @@
 #include "application_state.h"
 #include "component_drawing.h"
 #include "inputs.h"
+#include "sirtet.h"
 #include "state_runner.h"
 
 
@@ -64,32 +65,40 @@ GameSettings* GameSettings_init(
 }
 
 // Assign block presets to settings
-void GameSettings_setPresets(GameSettings *self, size_t src_len, long *src) {
+int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src) {
     if (src_len > self->max_preset_size) {
-        printf(
+        char buff[128];
+        snprintf(
+            buff, 128,
             "Provided preset length %ld exceeds max length of %ld\n",
             src_len, self->max_preset_size
         );
-        exit(EXIT_FAILURE);
+        Sirtet_setError(buff);
+        return -1;
     }
 
     self->preset_size = src_len;
     memcpy(self->block_presets, src, src_len * sizeof(long));
+    return 0;
 }
 
 // Assign a color palette to settings
-void GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src) {
+int GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src) {
 
     if (src_len > self->max_palette_size) {
-        printf(
+        char buff[128];
+        snprintf(
+            buff, 128,
             "Provided palette size %ld exceeds max size of %ld\n",
             src_len, self->max_palette_size
         );
-        exit(EXIT_FAILURE);
+        Sirtet_setError(buff);
+        return -1;
     }
 
     self->palette_size = src_len;
     memcpy(self->palette, src, src_len * sizeof(SDL_Color));
+    return 0;
 }
 
 void GameSettings_deconstruct(GameSettings *self) {
@@ -588,15 +597,27 @@ int drawInterface(
             menu_font, level_buffer, (SDL_Color){255, 255, 255}
         );
         if (lvl_surf == NULL) {
-            printf("Error rendering level surface: %s\n", TTF_GetError());
-            exit(EXIT_FAILURE);
+            char buff[128];
+            snprintf(
+                buff, 128,
+                "Error rendering text for level label: %s\n",
+                TTF_GetError()
+            );
+            Sirtet_setError(buff);
+            return -1;
         }
 
 
         game_state->level_label = SDL_CreateTextureFromSurface(rend, lvl_surf);
         if (game_state->level_label == NULL) {
-            printf("Error rendering level label: %s\n", SDL_GetError());
-            exit(EXIT_FAILURE);
+            char buff[128];
+            snprintf(
+                buff, 128,
+                "Error rendering text for level label: %s\n",
+                SDL_GetError()
+            );
+            Sirtet_setError(buff);
+            return -1;
         }
         SDL_FreeSurface(lvl_surf);
     }

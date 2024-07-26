@@ -50,7 +50,7 @@ char* Sirtet_getError() {
 
 
 /* Primary program runner */
-void run() {
+int run() {
 
     // (these todos are in a general location because I didn't notice
     // specific lines of things lol)
@@ -68,20 +68,23 @@ void run() {
     printf("Initializing application state...\n");
     ApplicationState *global_state = ApplicationState_init("assets");
     if (global_state == NULL) {
-        exit(EXIT_FAILURE);
+        printf("%s\n", Sirtet_getError());
+        return -1;
     }
 
     printf("Initializing main menu...\n");
     MainMenuState *mainmenu_state = MainMenuState_init(
         global_state->rend, global_state->fonts.vt323_24, global_state->images.logo);
     if (mainmenu_state == NULL) {
-        exit(EXIT_FAILURE);
+        printf("%s\n", Sirtet_getError());
+        return -1;
     }
 
     printf("Initializing state runner...\n");
     StateRunner *state_runner = StateRunner_init(32, 16);
     if (state_runner == NULL) {
-        exit(EXIT_FAILURE);
+        printf("%s\n", Sirtet_getError());
+        return -1;
     }
 
     printf("Pushing main menu state...\n");
@@ -91,7 +94,8 @@ void run() {
     );
 
     if (StateRunner_commitBuffer(state_runner) != 0) {
-        exit(EXIT_FAILURE);
+        printf("%s\n", Sirtet_getError());
+        return -1;
     }
 
     clock_t frame_start;
@@ -120,8 +124,8 @@ void run() {
         StateRunner_runState(state_runner, (void*)global_state);
 
         if (StateRunner_commitBuffer(state_runner) != 0) {
-            printf("Error committing state buffer\n");
-            exit(EXIT_FAILURE);
+            printf("%s\n", Sirtet_getError());
+            return -1;
         }
 
 
@@ -131,19 +135,32 @@ void run() {
 
         snprintf(buffer, 128, "%.2f ACTUAL FPS", actual_fps);
         SDL_Surface *fps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
-        SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
-        if (fps_surf == NULL || fps_texture == NULL) {
-            exit(EXIT_FAILURE);
+        if (fps_surf == NULL) {
+            printf("%s\n", TTF_GetError());
+            return -1;
         }
+
+        SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
+        if (fps_texture == NULL) {
+            printf("%s\n", SDL_GetError());
+            return -1;
+        }
+
         // NOTE: We want to optimize this later to not free every frame
         SDL_FreeSurface(fps_surf);
 
         snprintf(buffer, 128, "%.2f UNBOUNDED FPS", raw_fps);
 
         SDL_Surface *rawfps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
+        if (rawfps_surf == NULL) {
+            printf("%s\n", TTF_GetError());
+            return -1;
+        }
+
         SDL_Texture *rawfps_texture = SDL_CreateTextureFromSurface(global_state->rend, rawfps_surf);
-        if (rawfps_surf == NULL || rawfps_texture == NULL) {
-            exit(EXIT_FAILURE);
+        if (rawfps_texture == NULL) {
+            printf("%s\n", SDL_GetError());
+            return -1;
         }
 
         // NOTE: We want to optimize this later to not free every frame

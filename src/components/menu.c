@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "inputs.h"
+#include "sirtet.h"
 #include "menu.h"
 
 
@@ -284,7 +285,7 @@ char* TextMenu_getLabelText(TextMenu *self, int optnum) {
  * Menu draw operations
 ******************************************************************************/
 
-void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags) {
+int Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags) {
     
     // NOTE: `flags` argument meant to be a bitmask of different drawing options.
     // (centering, alignment, etc etc)
@@ -312,13 +313,14 @@ void Menu_draw(Menu *self, SDL_Renderer *rend, SDL_Rect *draw_window, int flags)
         yoffset += txt_h;
         SDL_RenderCopy(rend, label, NULL, &dest);
     }
+    return 0;
 }
 
 /******************************************************************************
  * TextMenu draw operations
 ******************************************************************************/
 
-void TextMenu_draw(
+int TextMenu_draw(
     TextMenu *self, SDL_Renderer *rend, SDL_Rect *draw_window,
     TTF_Font *active_font, SDL_Color *active_col,
     TTF_Font *inac_font, SDL_Color *inac_col,
@@ -380,24 +382,25 @@ void TextMenu_draw(
 
         char *text = TextMenu_getLabelText(self, optnum);
 
-        // TODO: Replace instances of exit(EXIT_FAILURE) with
-        // (1) Setting a global error message accessible through Sirtet_getError()
-        // (2) Returning an error code (null, -1, etc.)
-
         SDL_Surface *lbl_surf = TTF_RenderText_Solid(rend_font, text, rend_col);
         if (lbl_surf == NULL) {
-            printf("Error creating label: %s\n", TTF_GetError());
-            exit(EXIT_FAILURE);
+            char buff[64];
+            snprintf(buff, 64, "Error creaing label: %s\n", TTF_GetError());
+            Sirtet_setError(buff);
+            return -1;
         }
 
         SDL_Texture *lbl_texture = SDL_CreateTextureFromSurface(rend, lbl_surf);
         if (lbl_texture == NULL) {
-            printf("Error creating label: %s\n", SDL_GetError());
-            exit(EXIT_FAILURE);
+            char buff[64];
+            snprintf(buff, 64, "Error creating label: %s\n", SDL_GetError());
+            Sirtet_setError(buff);
+            return -1;
         }
 
         Menu_setLabel(self->menu, optnum, lbl_texture);
     }
 
-    Menu_draw(self->menu, rend, draw_window, flags);
+    return Menu_draw(self->menu, rend, draw_window, flags);
 }
+
