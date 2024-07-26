@@ -13,8 +13,6 @@
 #include "state_runner.h"
 #include "menu.h"
 
-        // .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
-        // .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
 
 typedef struct {
 
@@ -28,6 +26,10 @@ typedef struct {
     int menuopt_tilesize;
 
     // For block display
+    int palette_selection;
+    size_t n_palette_presets;
+    size_t *palette_sizes;
+    SDL_Color *palette_presets;
 
 
 } SettingsMenuState;
