@@ -3,7 +3,6 @@
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
-#include <string.h>
 
 #include "colorpalette.h"
 #include "sirtet.h"
@@ -70,30 +69,6 @@ SettingsMenuState* SettingsMenuState_init(
     retval->settings = settings;
     retval->menu_font = menu_font;
 
-    /*** Menu Setup ***/
-
-    retval->menu = TextMenu_init(4, 32);
-    retval->menucode_states = (bool*)calloc(NUM_MENUCODES, sizeof(bool));
-    retval->menucode_map = MenucodeMap_init(MAX_MENUCODE_MAPS);
-
-    char buffer[32];
-    snprintf(buffer, 32, "Tile Size %d", settings->block_size);
-
-    int tilesize_optn =  TextMenu_addOption(retval->menu, buffer);
-    int palette_optn = TextMenu_addOption(retval->menu, "Color Palette");
-    int back_optn = TextMenu_addOption(retval->menu, "Back");
-
-    retval->menuopt_tilesize = tilesize_optn;
-
-    TextMenu_setCommand(retval->menu, back_optn, MENUCODE_SELECT, menufunc_exitSettings);
-    TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
-    TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
-    TextMenu_setCommand(retval->menu, palette_optn, MENUCODE_DECREMENT_VALUE, menufunc_prevPalette);
-    TextMenu_setCommand(retval->menu, palette_optn, MENUCODE_INCREMENT_VALUE, menufunc_nextPalette);
-
-    MenucodePreset_standard(retval->menucode_map);
-
-
     /*** Block Display Setup ***/
 
     retval->palette_selection = 0;
@@ -122,6 +97,36 @@ SettingsMenuState* SettingsMenuState_init(
         (SDL_Color){189, 178, 255, 255},
         (SDL_Color){255, 198, 255, 255}
     );
+
+
+    /*** Menu Setup ***/
+
+    retval->menu = TextMenu_init(4, 64);
+    retval->menucode_states = (bool*)calloc(NUM_MENUCODES, sizeof(bool));
+    retval->menucode_map = MenucodeMap_init(MAX_MENUCODE_MAPS);
+
+    char buffer[64];
+
+    snprintf(buffer, 64, "Tile Size %d", settings->block_size);
+    int tilesize_optn =  TextMenu_addOption(retval->menu, buffer);
+
+    snprintf(buffer, 64, "Palette: %s", retval->palettes[0]->name);
+    int palette_optn = TextMenu_addOption(retval->menu, buffer);
+
+    int back_optn = TextMenu_addOption(retval->menu, "Back");
+
+    retval->menuopt_tilesize = tilesize_optn;
+    retval->menuopt_palette = palette_optn;
+
+    TextMenu_setCommand(retval->menu, back_optn, MENUCODE_SELECT, menufunc_exitSettings);
+    TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_INCREMENT_VALUE, menufunc_incTileSize);
+    TextMenu_setCommand(retval->menu, tilesize_optn, MENUCODE_DECREMENT_VALUE, menufunc_decTileSize);
+    TextMenu_setCommand(retval->menu, palette_optn, MENUCODE_DECREMENT_VALUE, menufunc_prevPalette);
+    TextMenu_setCommand(retval->menu, palette_optn, MENUCODE_INCREMENT_VALUE, menufunc_nextPalette);
+
+    MenucodePreset_standard(retval->menucode_map);
+
+
 
     return retval;
 }
@@ -411,13 +416,17 @@ static void menufunc_nextPalette(
 
 
     /*** Unpacking ***/
-    GameSettings *settings = menu_state->settings;
     int *selection = &menu_state->palette_selection;
 
     if (*selection + 1 >= menu_state->num_palettes) {
         return;
     }
     (*selection)++;
+
+    // TODO: Clean some of the variable refs up through unpacking
+    char newlbl[128];
+    snprintf(newlbl, 128, "Palette: %s", menu_state->palettes[*selection]->name);
+    TextMenu_updateText(menu_state->menu, menu_state->menuopt_palette, newlbl);
 }
 
 // Use the previous palette
@@ -428,15 +437,16 @@ static void menufunc_prevPalette(
     /*** Recasting ***/
     SettingsMenuState *menu_state = (SettingsMenuState*)menu_data;
 
-
-    /*** Unpacking ***/
-    GameSettings *settings = menu_state->settings;
     int *selection = &menu_state->palette_selection;
 
     if (*selection <= 0) {
         return;
     }
     (*selection)--;
+
+    char newlbl[128];
+    snprintf(newlbl, 128, "Palette: %s", menu_state->palettes[*selection]->name);
+    TextMenu_updateText(menu_state->menu, menu_state->menuopt_palette, newlbl);
 }
 
 

@@ -24,6 +24,7 @@ typedef struct {
     bool *menucode_states;
     MenucodeMap *menucode_map;
     int menuopt_tilesize;
+    int menuopt_palette;
 
     // For block display
     int palette_selection;
