@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "state_runner.h"
+#include "sirtet.h"
 
 
 /* ============================================================================
@@ -121,7 +122,8 @@ int StateRunner_runState(StateRunner *self, void* app_state) {
     StateRunner_flushPop(self);
     int retval = top_runner(self, app_state, top_state);
     if (retval < 0) {
-        printf("Error running state function\n");
+        char *errmsg = Sirtet_getError();
+        printf("Error running state function:\n    %s\n", errmsg);
         return -1;
     }
     StateRunner_flushPop(self);

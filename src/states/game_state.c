@@ -60,20 +60,23 @@ GameSettings* GameSettings_init(
     retval->preset_size=0;
     retval->block_presets = (long*)calloc(max_preset_sz, sizeof(long));
 
-    // TODO: Do the standard 7-color initial setting
     retval->palette = ColorPalette_initVa(
-        "Default", 3,
-        (SDL_Color){255, 0, 0, 255},
-        (SDL_Color){0, 255, 0, 255},
-        (SDL_Color){0, 0, 255, 255}
+        "Default", 7, 
+        (SDL_Color){190,83,28, 255},
+        (SDL_Color){218,170,0, 255},
+        (SDL_Color){101,141,27, 255},
+        (SDL_Color){0,95,134, 255},
+        (SDL_Color){155,0,0, 255},
+        (SDL_Color){0,155,0, 255},
+        (SDL_Color){0,0,155, 255}
     );
 
 
     return retval;
 }
 
-// Assign block presets to settings
-int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src) {
+// Declare the settings config for blocks to spawn
+int GameSettings_setPresets(GameSettings *self, int block_size, size_t src_len, long *src) {
     if (src_len > self->max_preset_size) {
         char buff[128];
         snprintf(
@@ -85,6 +88,7 @@ int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src) {
         return -1;
     }
 
+    self->block_size = block_size;
     self->preset_size = src_len;
     memcpy(self->block_presets, src, src_len * sizeof(long));
     return 0;

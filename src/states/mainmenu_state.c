@@ -159,7 +159,7 @@ MainMenuState* MainMenuState_init(
         0b0011011000000000,
         0b1100011000000000
     };
-    GameSettings_setPresets(settings, 7, init_presets);
+    GameSettings_setPresets(settings, INIT_TILE_SIZE, 7, init_presets);
 
     // Color palette
 
@@ -183,8 +183,8 @@ MainMenuState* MainMenuState_init(
     TextMenu *mainmenu = menustate->mainmenu;
 
     int start_idx = TextMenu_addOption(mainmenu, "Start");
-    int exit_idx = TextMenu_addOption(mainmenu, "Exit");
     int settings_idx = TextMenu_addOption(mainmenu, "Settings");
+    int exit_idx = TextMenu_addOption(mainmenu, "Exit");
 
     menustate->menuopt_start = start_idx;
     menustate->menuopt_exit = exit_idx;
@@ -263,6 +263,10 @@ void menufunc_openSettings(
     SettingsMenuState *new_state = SettingsMenuState_init(
         rend, app_state->fonts.vt323_24, menu_state->settings
     );
+
+    if (new_state == NULL) {
+        printf("Error in menufunc_openSettings:\n    %s\n:", Sirtet_getError());
+    }
 
     StateRunner_addState(
         state_runner, (void*)new_state, 

@@ -92,7 +92,7 @@ GameSettings* GameSettings_init(
 void GameSettings_deconstruct(GameSettings *self);
 
 
-int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src);
+int GameSettings_setPresets(GameSettings *self, int block_size, size_t src_len, long *src);
 int GameSettings_setPalette(GameSettings *self, ColorPalette *palette);
 
 /******************************************************************************

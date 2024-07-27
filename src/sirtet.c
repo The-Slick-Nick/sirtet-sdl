@@ -1,6 +1,4 @@
 /******************************************************************************
- * TODO: Replace/rename this file to Sirtet.c (with corresponding header)
- *
  * sirtet.c
  *
  *

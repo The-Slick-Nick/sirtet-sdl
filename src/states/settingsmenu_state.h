@@ -26,7 +26,11 @@ typedef struct {
     int menuopt_tilesize;
     int menuopt_palette;
 
-    // For block display
+    // Block Preset Settings
+    size_t blocksize_sel;  // Selected block size
+    long **presets;  // indexed by blocksize_sel
+
+    // Color Settings
     int palette_selection;
     size_t num_palettes;
     ColorPalette **palettes;  // Array of palette pointers

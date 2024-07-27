@@ -16,6 +16,9 @@
 #include "application_state.h"
 
 
+// TODO: Pull these from the same global constants file (that doesn't yet exist)
+// as the ones pulled from GameSettings_init(...), as currently they are
+// separate macros that HAPPEN to define the same values
 #define MAX_TILE_SIZE 5
 #define MIN_TILE_SIZE 3
 #define INIT_TILE_SIZE 4
@@ -61,6 +64,10 @@ SettingsMenuState* SettingsMenuState_init(
     SDL_Renderer *rend, TTF_Font *menu_font, GameSettings *settings
 ) {
 
+    assert(MIN_TILE_SIZE <= MAX_TILE_SIZE);
+    assert(MIN_TILE_SIZE <= INIT_TILE_SIZE);
+    assert(INIT_TILE_SIZE <= MAX_TILE_SIZE);
+
     size_t n = sizeof(SettingsMenuState);
     SettingsMenuState *retval = (SettingsMenuState*)calloc(1, n);
 
@@ -69,7 +76,67 @@ SettingsMenuState* SettingsMenuState_init(
     retval->settings = settings;
     retval->menu_font = menu_font;
 
-    /*** Block Display Setup ***/
+
+    /*** Block presets ***/
+
+    // TODO: Figure the deconstruction
+    long** preset_arr = (long**)calloc(3, sizeof(long*));
+    if (preset_arr == NULL) {
+        Sirtet_setError("Error allocating preset array in SettingMenuState\n");
+        return NULL;
+    }
+
+    retval->blocksize_sel = settings->block_size;
+    retval->presets = preset_arr;
+    if (
+        (preset_arr[0] = (long*)calloc(2, sizeof(long))) == NULL ||
+        (preset_arr[1] = (long*)calloc(7, sizeof(long))) == NULL ||
+        (preset_arr[2] = (long*)calloc(18, sizeof(long))) == NULL
+    )
+    {
+        Sirtet_setError("Error allocating preset array in SettingsMenuState\n");
+        return NULL;
+    }
+
+
+    // size 3
+    size_t idx = 0;
+    preset_arr[0][idx++] = 0b010110000;
+    preset_arr[0][idx++] = 0b010010010;
+
+    // size 4
+    idx = 0;
+    preset_arr[1][idx++] = 0b0100010001000100;
+    preset_arr[1][idx++] = 0b0000011001100000;
+    preset_arr[1][idx++] = 0b0100010001100000;
+    preset_arr[1][idx++] = 0b0010001001100000;
+    preset_arr[1][idx++] = 0b0000010011100000;
+    preset_arr[1][idx++] = 0b0011011000000000;
+    preset_arr[1][idx++] = 0b1100011000000000;
+
+    // size 5
+    idx = 0;
+    preset_arr[2][idx++] = 0b0000000110011000010000000;
+    preset_arr[2][idx++] = 0b0000001100001100010000000;
+    preset_arr[2][idx++] = 0b0010000100001000010000100;
+    preset_arr[2][idx++] = 0b0010000100001000011000000;
+    preset_arr[2][idx++] = 0b0010000100001000110000000;
+    preset_arr[2][idx++] = 0b0010000100011000100000000;
+    preset_arr[2][idx++] = 0b0010000100001100001000000;
+    preset_arr[2][idx++] = 0b0000001100011000010000000;
+    preset_arr[2][idx++] = 0b0000000110001100010000000;
+    preset_arr[2][idx++] = 0b0000001110001000010000000;
+    preset_arr[2][idx++] = 0b0000001010011100000000000;
+    preset_arr[2][idx++] = 0b0010000100001110000000000;
+    preset_arr[2][idx++] = 0b0000001000011000011000000;
+    preset_arr[2][idx++] = 0b0000000100011100010000000;
+    preset_arr[2][idx++] = 0b0010000100001100010000000;
+    preset_arr[2][idx++] = 0b0010000100011000010000000;
+    preset_arr[2][idx++] = 0b0000001100001000011000000;
+    preset_arr[2][idx++] = 0b0000001100001000011000000;
+
+
+    /*** Color Palette Presets ***/
 
     retval->palette_selection = 0;
     retval->num_palettes = 2;
@@ -97,6 +164,10 @@ SettingsMenuState* SettingsMenuState_init(
         (SDL_Color){189, 178, 255, 255},
         (SDL_Color){255, 198, 255, 255}
     );
+
+    if (retval->palettes[0] == NULL || retval->palettes[1] == NULL) {
+        return NULL;
+    }
 
 
     /*** Menu Setup ***/
@@ -133,24 +204,71 @@ SettingsMenuState* SettingsMenuState_init(
 
 int SettingsMenuState_deconstruct(void *self) {
 
-    SettingsMenuState *settings = (SettingsMenuState*)self;
+    /* The deconstruction function for this menu state is twofold -
+     * (1) Copy the settings picked by the user during this state into
+     *     the linked settings struct
+     * (2) Free all memory
+     *
+     * By doing it this way, we can avoid new memory allocation and freeing
+     * during the lifetime of the state. (The alternative, and previously used,
+     * method was to copy chosen values into settings each time a value was
+     * modified, thus resulting in a lot of alloc's and free's)
+     *
+     */
 
-    /*** First - copy selected settings ***/
-    ColorPalette_deconstruct(settings->settings->palette);
-    settings->settings->palette = ColorPalette_initCopy(settings->palettes[settings->palette_selection]);
 
-    // TODO: Fit the block preset in here somehow - refactor where needed
+    /*** Unpacking/recasting ***/
+
+    SettingsMenuState *settingsmenu = (SettingsMenuState*)self;
+    GameSettings *settings = settingsmenu->settings;
 
 
-    /*** Second - free memory ***/
+    /*** Copy Size Selection ***/
 
-    TextMenu_deconstruct(settings->menu);
-    MenucodeMap_deconstruct(settings->menucode_map);
+    size_t block_size = settingsmenu->blocksize_sel;
+    size_t preset_sz = (
+        block_size == 3 ? 2 :
+        block_size == 4 ? 7 :
+        block_size == 5 ? 18 :  
+        -1
+    );
+    assert(preset_sz >= 0);
 
-    for (size_t palidx = 0; palidx < settings->num_palettes; palidx++) {
-        ColorPalette_deconstruct(settings->palettes[palidx]);
+    int idx = block_size - MIN_TILE_SIZE;
+    assert(idx >= 0 && idx <= MAX_TILE_SIZE - MIN_TILE_SIZE);
+    GameSettings_setPresets(
+        settings, block_size, preset_sz, settingsmenu->presets[idx]);
+
+
+    /*** Copy Palette Selection ***/
+
+    GameSettings_setPalette(
+        settings,
+        settingsmenu->palettes[settingsmenu->palette_selection]
+    );
+
+
+    /*** Free Memory ***/
+
+    TextMenu_deconstruct(settingsmenu->menu);
+    MenucodeMap_deconstruct(settingsmenu->menucode_map);
+
+    for (size_t sizei = 0; sizei < MAX_TILE_SIZE - MIN_TILE_SIZE; sizei++) {
+        free(settingsmenu->presets[sizei]);
     }
-    free(settings->palettes);
+    free(settingsmenu->presets);
+
+    for (size_t palidx = 0; palidx < settingsmenu->num_palettes; palidx++) {
+        ColorPalette_deconstruct(settingsmenu->palettes[palidx]);
+    }
+    free(settingsmenu->palettes);
+
+
+    // long** preset_arr = (long**)calloc(3, sizeof(long*));
+    // if (preset_arr == NULL) {
+    //     Sirtet_setError("Error allocating preset array in SettingMenuState\n");
+    //     return NULL;
+    // }
 
     free(self);
     return 0;
@@ -177,7 +295,7 @@ int SettingsMenuState_run(
 
     SDL_Renderer *rend = app_state->rend;
     SDL_Window *wind = app_state->wind;
-    GameSettings *settings = settings_state->settings;
+    // GameSettings *settings = settings_state->settings;  // TODO: Fix memory access violation here
     ColorPalette *palette = settings_state->palettes[settings_state->palette_selection];
 
 
@@ -232,7 +350,9 @@ int SettingsMenuState_run(
 
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
+
     // menu
+
     SDL_Rect draw_window = {0, 0, wind_w / 2, wind_h};
     SDL_Color i_col = {0, 0, 0};
     SDL_Color a_col = {255, 255, 255};
@@ -244,27 +364,39 @@ int SettingsMenuState_run(
     );
 
 
-    const int rows = (settings->preset_size / 2) + ((settings->preset_size & 1) == 1);
-    const int cellsize_w = (wind_w / 2) / (settings->block_size * 2);
-    const int cellsize_h = (wind_h) / (settings->block_size * rows);
+    // Blocks
+
+    int block_size = settings_state->blocksize_sel;
+    long *presets = settings_state->presets[block_size - 3];
+    int preset_sz = (
+        block_size == 3 ? 2 :
+        block_size == 4 ? 7 :
+        block_size == 5 ? 18 :  
+        -1
+    );
+    assert(preset_sz >= 0);
+
+    const int rows = (preset_sz / 2) + ((preset_sz & 1) == 1);
+    const int cellsize_w = (wind_w / 2) / (block_size * 2);
+    const int cellsize_h = (wind_h) / (block_size * rows);
 
     const int cell_size = cellsize_h > cellsize_w ? cellsize_w : cellsize_h;
 
     Point drawpos = {.x = wind_w / 2, .y = 0};
-    for (int block_num = 0; block_num < settings->preset_size; block_num++) {
+    for (int block_num = 0; block_num < preset_sz; block_num++) {
 
         SDL_Color drawcol;
         ColorPalette_getColor(palette, block_num % palette->size, &drawcol);
 
         drawBlockContents(
-            rend, settings->block_size,
-            settings->block_presets[block_num], // <-- CULPRIT
+            rend, block_size,
+            presets[block_num],
             &drawcol, &drawpos, cell_size, cell_size
         );
 
         drawpos.x += wind_w / 4;
         if (drawpos.x >= wind_w) {
-            drawpos.y += settings->block_size * cell_size;
+            drawpos.y += block_size * cell_size;
             drawpos.x = wind_w / 2;
         }
     }
@@ -290,117 +422,55 @@ void menufunc_exitSettings(
 }
 
 
-static int populatePresets(GameSettings *settings) {
-
-    long block_presets[2 + 7 + 18] = {
-        /* blocksize 3 */
-        0b010110000,
-        0b010010010,
-
-        /* blocksize 4 */
-        0b0100010001000100,
-        0b0000011001100000,
-        0b0100010001100000,
-        0b0010001001100000,
-        0b0000010011100000,
-        0b0011011000000000,
-        0b1100011000000000,
-
-        /* blocksize 5 */
-        0b0000000110011000010000000,
-        0b0000001100001100010000000,
-        0b0010000100001000010000100,
-        0b0010000100001000011000000,
-        0b0010000100001000110000000,
-        0b0010000100011000100000000,
-        0b0010000100001100001000000,
-        0b0000001100011000010000000,
-        0b0000000110001100010000000,
-        0b0000001110001000010000000,
-        0b0000001010011100000000000,
-        0b0010000100001110000000000,
-        0b0000001000011000011000000,
-        0b0000000100011100010000000,
-        0b0010000100001100010000000,
-        0b0010000100011000010000000,
-        0b0000001100001000011000000,
-        0b0000001100001000011000000
-    };
-
-    int offset;
-    char buff[64];
-    size_t sz;
-    long *preset_loc;
-    switch (settings->block_size) {
-        case 3:
-            sz = 2;
-            preset_loc = block_presets;
-            break;
-        case 4:
-            sz = 7;
-            preset_loc = (long*)(block_presets + 2);
-            break;
-        case 5:
-            sz = 18;
-            preset_loc = (long*)(block_presets + 9);
-            break;
-        default:
-            snprintf(
-                buff, 64, "Cannot determine a preset for tilesize %d\n",
-                settings->block_size
-            );
-            Sirtet_setError(buff);
-            // TODO: Identify a proper error return
-            return -1;
-    }
-
-    GameSettings_setPresets(settings, sz, preset_loc);
-    return 0;
-}
-
-
 void menufunc_incTileSize(
     StateRunner *state_runner, void *app_data,
     void *menu_data
 ) {
 
+    /*** Recasting ***/
     SettingsMenuState *menu_state = (SettingsMenuState*)menu_data;
     ApplicationState *app_state = (ApplicationState*)app_data;
-    TextMenu *menu = menu_state->menu;
 
-    if (menu_state->settings->block_size >= MAX_TILE_SIZE) {
+
+    /*** Unpacking ***/
+    TextMenu *menu = menu_state->menu;
+    size_t *block_size = &menu_state->blocksize_sel;  // selected block size
+    int *menuopt = &menu_state->menuopt_tilesize;     // textmenu option index
+
+    if (*block_size >= MAX_TILE_SIZE) {
         return;
     }
-    menu_state->settings->block_size++;
+    (*block_size)++;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
+    snprintf(buff, 32, "Tile Size %ld\n", *block_size);
 
-    int opt = menu_state->menuopt_tilesize;
-    TextMenu_updateText(menu, opt, buff);
-
-    populatePresets(menu_state->settings);
+    TextMenu_updateText(menu, *menuopt, buff);
 }
 
 void menufunc_decTileSize(
     StateRunner *state_runner, void *app_data,
     void *menu_data
 ) {
+    /*** Recasting ***/
     SettingsMenuState *menu_state = (SettingsMenuState*)menu_data;
     ApplicationState *app_state = (ApplicationState*)app_data;
-    TextMenu *menu = menu_state->menu;
 
-    if (menu_state->settings->block_size <= MIN_TILE_SIZE) {
+
+    /*** Unpacking ***/
+    TextMenu *menu = menu_state->menu;
+    size_t *block_size = &menu_state->blocksize_sel;  // selected block size
+    int *menuopt = &menu_state->menuopt_tilesize;     // textmenu option index
+
+    if (*block_size <= MIN_TILE_SIZE) {
         return;
     }
-    menu_state->settings->block_size--;
+    (*block_size)--;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %d\n", menu_state->settings->block_size);
+    snprintf(buff, 32, "Tile Size %ld\n", *block_size);
 
-    int opt = menu_state->menuopt_tilesize;
-    TextMenu_updateText(menu, opt, buff);
-    populatePresets(menu_state->settings);
+    TextMenu_updateText(menu, *menuopt, buff);
 }
 
 
