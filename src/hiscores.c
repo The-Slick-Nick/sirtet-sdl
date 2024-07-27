@@ -7,40 +7,16 @@
 
 int parseInt(char* txt, size_t len, int *out_num) {
 
-    if (
-        len > 11
-        ||
-        (len == 11 && txt[0] != '-')
-    ) {
-        char buff[64];
-        buff[63] = '\0';
-
-        int cplen = len > 63 ? 63 : len;
-        memcpy(buff, txt, sizeof(char) * cplen);
-
-        char buff2[128];
-        snprintf(
-            buff2, 128, 
-            "Number in string cannot be pased with parseInt:\n    %s",
-            buff
-        );
-
-        Sirtet_setError(buff2);
-        return -1;
-    }
-
-
     int factor = 1;
     int result = 0;
-
     if (txt[0] == '-') {
         for (int idx = len - 1; idx > 0; idx--) {
             char c = txt[idx];
             if (c < 48 || c > 57) {
-                char buff[64];
+                char buff[128];
                 snprintf(
-                    buff, 64,
-                    "praseInt encountered an unknown character %d\n", c
+                    buff, 128,
+                    "praseInt encountered an unknown digit %c\n", c
                 );
                 Sirtet_setError(buff);
                 return -1;
@@ -49,9 +25,9 @@ int parseInt(char* txt, size_t len, int *out_num) {
             int to_sub = factor * (c - 48);
             if (result < INT_MIN + to_sub) {
 
-                char buff[64];
+                char buff[128];
                 snprintf(
-                    buff, 64,
+                    buff, 128,
                     "parseInt cannot parse a number smaller than %d. (got %s)",
                     INT_MAX, txt
                 );
@@ -67,10 +43,10 @@ int parseInt(char* txt, size_t len, int *out_num) {
         for (int idx = len - 1; idx >= 0; idx--) {
             char c = txt[idx];
             if (c < 48 || c > 57) {
-                char buff[64];
+                char buff[128];
                 snprintf(
-                    buff, 64,
-                    "praseInt encountered an unknown character %d\n", c
+                    buff, 128,
+                    "praseInt encountered an unknown digit %c\n", c
                 );
                 Sirtet_setError(buff);
                 return -1;
@@ -78,9 +54,9 @@ int parseInt(char* txt, size_t len, int *out_num) {
 
             int to_add = factor * (c - 48);
             if (to_add > INT_MAX - result) {
-                char buff[64];
+                char buff[128];
                 snprintf(
-                    buff, 64,
+                    buff, 128,
                     "parseInt cannot parse a number larger than %d. (got %s)",
                     INT_MAX, txt
                 );
