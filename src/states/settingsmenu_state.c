@@ -5,6 +5,7 @@
 #include <SDL2/SDL_video.h>
 #include <string.h>
 
+#include "colorpalette.h"
 #include "sirtet.h"
 #include "component_drawing.h"
 #include "assert.h"
@@ -96,34 +97,11 @@ SettingsMenuState* SettingsMenuState_init(
     /*** Block Display Setup ***/
 
     retval->palette_selection = 0;
-    retval->n_palette_presets = 2;
+    retval->num_palettes = 2;
+    retval->palettes = (ColorPalette**)calloc(retval->num_palettes, sizeof(ColorPalette*));
 
-    retval->palette_sizes = (size_t*)calloc(
-        retval->n_palette_presets,
-        sizeof(size_t)
-    );
-    if (retval->palette_sizes == NULL) {
-        // TODO: Set error and exit
-        return NULL;
-    }
-
-    // TODO: Create a struct/API for ColorPalette, because this is awful:
-    retval->palette_sizes[0] = 7;
-    retval->palette_sizes[1] = 8;
-
-    size_t to_alloc = 0;
-    for (int i = 0; i < retval->n_palette_presets; i++) {
-        to_alloc += retval->palette_sizes[i];
-    }
-
-    retval->palette_presets = (SDL_Color*)calloc(to_alloc, sizeof(SDL_Color));
-    if (retval->palette_presets == NULL) {
-        // TODO: Set error and exit
-        return NULL;
-    }
-
-    // TODO: Figure out how to set this within some config file or something
-    SDL_Color preset_1[7] = {
+    retval->palettes[0] = ColorPalette_initVa(
+        "Default", 7, 
         (SDL_Color){190,83,28, 255},
         (SDL_Color){218,170,0, 255},
         (SDL_Color){101,141,27, 255},
@@ -131,9 +109,10 @@ SettingsMenuState* SettingsMenuState_init(
         (SDL_Color){155,0,0, 255},
         (SDL_Color){0,155,0, 255},
         (SDL_Color){0,0,155, 255}
-    };
+    );
 
-    SDL_Color preset_2[8] = {
+    retval->palettes[1] = ColorPalette_initVa(
+        "Pastels", 8, 
         (SDL_Color){255, 173, 173, 255},
         (SDL_Color){255, 214, 165, 255},
         (SDL_Color){253, 255, 182, 255},
@@ -141,11 +120,8 @@ SettingsMenuState* SettingsMenuState_init(
         (SDL_Color){155, 246, 255, 255},
         (SDL_Color){160, 196, 255, 255},
         (SDL_Color){189, 178, 255, 255},
-        (SDL_Color){255, 198, 255, 255},
-    };
-
-    memcpy(retval->palette_presets + 0, preset_1, 7 * sizeof(SDL_Color));
-    memcpy(retval->palette_presets + 7, preset_2, 8 * sizeof(SDL_Color));
+        (SDL_Color){255, 198, 255, 255}
+    );
 
     return retval;
 }
@@ -153,8 +129,24 @@ SettingsMenuState* SettingsMenuState_init(
 int SettingsMenuState_deconstruct(void *self) {
 
     SettingsMenuState *settings = (SettingsMenuState*)self;
+
+    /*** First - copy selected settings ***/
+    ColorPalette_deconstruct(settings->settings->palette);
+    settings->settings->palette = ColorPalette_initCopy(settings->palettes[settings->palette_selection]);
+
+    // TODO: Fit the block preset in here somehow - refactor where needed
+
+
+    /*** Second - free memory ***/
+
     TextMenu_deconstruct(settings->menu);
     MenucodeMap_deconstruct(settings->menucode_map);
+
+    for (size_t palidx = 0; palidx < settings->num_palettes; palidx++) {
+        ColorPalette_deconstruct(settings->palettes[palidx]);
+    }
+    free(settings->palettes);
+
     free(self);
     return 0;
 }
@@ -181,8 +173,7 @@ int SettingsMenuState_run(
     SDL_Renderer *rend = app_state->rend;
     SDL_Window *wind = app_state->wind;
     GameSettings *settings = settings_state->settings;
-
-    SDL_Color *palette = settings->palette;
+    ColorPalette *palette = settings_state->palettes[settings_state->palette_selection];
 
 
     /*** Inputs ***/
@@ -257,7 +248,8 @@ int SettingsMenuState_run(
     Point drawpos = {.x = wind_w / 2, .y = 0};
     for (int block_num = 0; block_num < settings->preset_size; block_num++) {
 
-        SDL_Color drawcol = palette[block_num % settings->palette_size];
+        SDL_Color drawcol;
+        ColorPalette_getColor(palette, block_num % palette->size, &drawcol);
 
         drawBlockContents(
             rend, settings->block_size,
@@ -421,24 +413,11 @@ static void menufunc_nextPalette(
     /*** Unpacking ***/
     GameSettings *settings = menu_state->settings;
     int *selection = &menu_state->palette_selection;
-    SDL_Color *presets = menu_state->palette_presets;
 
-
-    if (*selection + 1 >= menu_state->n_palette_presets) {
+    if (*selection + 1 >= menu_state->num_palettes) {
         return;
     }
     (*selection)++;
-    
-    // TODO: Extract below logic to inline func to use in both next & prev
-    size_t offset = 0;
-    for (int i = 0; i < *selection; i++) {
-        offset += menu_state->palette_sizes[i];
-    }
- 
-    // set settings palette
-    size_t size = menu_state->palette_sizes[*selection];
-    settings->palette_size = menu_state->palette_sizes[*selection];
-    memcpy(settings->palette, (SDL_Color*)(presets + offset), size * sizeof(SDL_Color));
 }
 
 // Use the previous palette
@@ -453,23 +432,11 @@ static void menufunc_prevPalette(
     /*** Unpacking ***/
     GameSettings *settings = menu_state->settings;
     int *selection = &menu_state->palette_selection;
-    SDL_Color *presets = menu_state->palette_presets;
 
     if (*selection <= 0) {
         return;
     }
     (*selection)--;
-
-    size_t offset = 0;
-    for (int i = 0; i < *selection; i++) {
-        offset += menu_state->palette_sizes[i];
-    }
- 
-    // set settings palette
-    size_t size = menu_state->palette_sizes[*selection];
-    settings->palette_size = menu_state->palette_sizes[*selection];
-    memcpy(settings->palette, (SDL_Color*)(presets + offset), size * sizeof(SDL_Color));
-
 }
 
 

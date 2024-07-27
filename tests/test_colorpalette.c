@@ -5,26 +5,46 @@
 #include "colorpalette.h"
 
 void testInitPalette() {
-    // ColorPalette *mypalette = ColorPalette_init(const char *name, size_t size, ...)
-    ColorPalette *mypalette = ColorPalette_init(
-        "Test",
+
+
+    /*** By Array ***/
+
+    SDL_Color colors[3] = {
+        (SDL_Color){155, 155, 155, 255},
+        (SDL_Color){200, 200, 200, 255}
+    };
+
+
+    ColorPalette *arrpalette = ColorPalette_init("TestArr", 3, colors);
+    ASSERT_EQUAL_INT(arrpalette->size, 3);
+    ASSERT_EQUAL_STR(arrpalette->name, "TestArr");
+
+
+    /*** By Variadic Arguments ***/
+
+    ColorPalette *vapalette = ColorPalette_initVa(
+        "TestVa",
         3,
         (SDL_Color){155, 155, 155, 255},
         (SDL_Color){200, 200, 200, 255},
         (SDL_Color){55, 55, 55, 255}
     );
+    ASSERT_EQUAL_INT(vapalette->size, 3);
+    ASSERT_EQUAL_STR(vapalette->name, "TestVa");
 
-    ColorPalette *otherpalette = ColorPalette_init(
-        "Test2", 1, (SDL_Color){10, 10, 10, 255}
-    );
 
-    ASSERT_EQUAL_INT(mypalette->size, 3);
-    ASSERT_EQUAL_STR(mypalette->name, "Test");
+    /*** By copy ***/
 
-    ASSERT_EQUAL_INT(otherpalette->size, 1);
-    ASSERT_EQUAL_STR(otherpalette->name, "Test2");
+    ColorPalette *cppalette = ColorPalette_initCopy(arrpalette);
+    ASSERT_EQUAL_INT(arrpalette->size, 3);
+    ASSERT_EQUAL_STR(arrpalette->name, "TestArr");
 
-    ColorPalette_deconstruct(mypalette);
+
+
+    ColorPalette_deconstruct(arrpalette);
+    ColorPalette_deconstruct(vapalette);
+    ColorPalette_deconstruct(cppalette);
+
 }
 
 #define MANY_PALETTE_COUNT 10000
@@ -39,7 +59,7 @@ void testManyPalettes() {
     ColorPalette *palettes[MANY_PALETTE_COUNT];
 
     for (int i = 0; i < MANY_PALETTE_COUNT; i++) {
-         palettes[i] = ColorPalette_init(
+         palettes[i] = ColorPalette_initVa(
             "PALETTE", 1, (SDL_Color){255, 255, 255, 255}
         );
 
@@ -60,7 +80,7 @@ void testManyPalettes() {
 
 void testGetColor() {
 
-    ColorPalette *cp = ColorPalette_init(
+    ColorPalette *cp = ColorPalette_initVa(
         "Test1", 2,
         (SDL_Color){1, 2, 3, 4},
         (SDL_Color){5, 6, 7, 8}
@@ -95,7 +115,7 @@ void testGetColor() {
 
 void testGetColorPtr() {
 
-    ColorPalette *cp = ColorPalette_init(
+    ColorPalette *cp = ColorPalette_initVa(
         "Test1", 2,
         (SDL_Color){1, 2, 3, 4},
         (SDL_Color){5, 6, 7, 8}

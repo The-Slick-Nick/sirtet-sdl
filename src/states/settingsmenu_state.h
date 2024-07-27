@@ -27,10 +27,8 @@ typedef struct {
 
     // For block display
     int palette_selection;
-    size_t n_palette_presets;
-    size_t *palette_sizes;
-    SDL_Color *palette_presets;
-
+    size_t num_palettes;
+    ColorPalette **palettes;  // Array of palette pointers
 
 } SettingsMenuState;
 

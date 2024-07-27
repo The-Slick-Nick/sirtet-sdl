@@ -16,6 +16,7 @@
 #include "block.h"
 #include "grid.h"
 #include "inputs.h"
+#include "colorpalette.h"
 
 #include "state_runner.h"
 
@@ -35,8 +36,9 @@ typedef struct {
     size_t preset_size;         // Number of block presets in use
     long *block_presets;        // Array of block presets
 
-    size_t palette_size;        // Number of colors in palette
-    SDL_Color *palette;         // Array of colors for tiles
+    ColorPalette *palette;
+    // size_t palette_size;        // Number of colors in palette
+    // SDL_Color *palette;         // Array of colors for tiles
 
 } GameSettings;
 
@@ -63,8 +65,9 @@ typedef struct {
     long *block_presets;        // Array of block content masks to draw from
     int num_presets;            // Number of block content presets in *block_presets
     
-    SDL_Color *palette;         // Array of SDL colors to use
-    int palette_size;           // Number of colors in palette
+    ColorPalette *palette;
+    // SDL_Color *palette;         // Array of SDL colors to use
+    // int palette_size;           // Number of colors in palette
 
 
     /* State/structs for display */
@@ -90,7 +93,7 @@ void GameSettings_deconstruct(GameSettings *self);
 
 
 int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src);
-int GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src);
+int GameSettings_setPalette(GameSettings *self, ColorPalette *palette);
 
 /******************************************************************************
  * GameState
@@ -110,5 +113,6 @@ int GameState_run(StateRunner *state_runner, void *application_data, void *state
 int GameState_runPaused(StateRunner *state_runner, void *application_data, void *state_data);
 int GameState_runGridAnimation(StateRunner *state_runner, void *app_data, void *state_data);
 int GameState_runGameOver(StateRunner *state_runner, void *app_data, void *state_data);
+
 
 #endif

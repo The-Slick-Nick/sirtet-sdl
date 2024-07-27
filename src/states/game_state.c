@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "colorpalette.h"
 #include "grid.h"
 #include "block.h"
 #include "game_state.h"
@@ -55,11 +56,18 @@ GameSettings* GameSettings_init(
     retval->max_palette_size = max_palette_sz;
 
     retval->keymaps = GamecodeMap_init(MAX_GAMECODE_MAPS);
-    retval->block_presets = (long*)calloc(max_preset_sz, sizeof(long));
-    retval->palette = (SDL_Color*)calloc(max_palette_sz, sizeof(SDL_Color));
 
     retval->preset_size=0;
-    retval->palette_size=0;
+    retval->block_presets = (long*)calloc(max_preset_sz, sizeof(long));
+
+    // TODO: Do the standard 7-color initial setting
+    retval->palette = ColorPalette_initVa(
+        "Default", 3,
+        (SDL_Color){255, 0, 0, 255},
+        (SDL_Color){0, 255, 0, 255},
+        (SDL_Color){0, 0, 255, 255}
+    );
+
 
     return retval;
 }
@@ -83,21 +91,23 @@ int GameSettings_setPresets(GameSettings *self, size_t src_len, long *src) {
 }
 
 // Assign a color palette to settings
-int GameSettings_setPalette(GameSettings *self, size_t src_len, SDL_Color *src) {
+int GameSettings_setPalette(GameSettings *self, ColorPalette *palette) {
 
-    if (src_len > self->max_palette_size) {
-        char buff[128];
-        snprintf(
-            buff, 128,
-            "Provided palette size %ld exceeds max size of %ld\n",
-            src_len, self->max_palette_size
-        );
-        Sirtet_setError(buff);
+    if (self == NULL) {
+        Sirtet_setError(
+            "GameSettings_setPalette passed a NULL pointer for self\n");
         return -1;
     }
 
-    self->palette_size = src_len;
-    memcpy(self->palette, src, src_len * sizeof(SDL_Color));
+    if (palette == NULL) {
+        Sirtet_setError(
+            "GameSettings_setPalette passed a NULL pointer for palette\n");
+        return -1;
+    }
+
+    ColorPalette_deconstruct(self->palette);
+    self->palette = ColorPalette_initCopy(palette);
+
     return 0;
 }
 
@@ -135,7 +145,9 @@ GameState* GameState_init(
     long *block_presets = settings->block_presets;
 
     size_t palette_size = settings->preset_size;
-    SDL_Color *palette = settings->palette;
+
+
+    ColorPalette *palette = ColorPalette_initCopy(settings->palette);
     GamecodeMap *keymaps = settings->keymaps;
 
 
@@ -165,10 +177,7 @@ GameState* GameState_init(
     retval->queued_block = INVALID_BLOCK_ID;
 
     // Palette
-    size_t palette_n = sizeof(SDL_Color) * settings->palette_size;
-    retval->palette_size = settings->palette_size;
-    retval->palette = (SDL_Color*)malloc(palette_n);
-    memcpy(retval->palette, settings->palette, palette_n);
+    retval->palette = ColorPalette_initCopy(settings->palette);
 
     // Presets
     size_t preset_n = sizeof(long) * settings->preset_size;
@@ -278,10 +287,11 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
     if (*queued_block == INVALID_BLOCK_ID) {
 
         int preset_idx = rand() % game_state->num_presets;
-        int palette_idx = preset_idx % game_state->palette_size;
+        int palette_idx = preset_idx % game_state->palette->size;
 
         long new_contents = block_presets[preset_idx];
-        SDL_Color new_color = game_state->palette[palette_idx];
+        SDL_Color new_color;
+        ColorPalette_getColor(game_state->palette, palette_idx, &new_color);
 
         *queued_block = BlockDb_createBlock(
             db, game_state->block_size, new_contents, (Point){0, 0}, new_color
@@ -292,10 +302,11 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
         *primary_block = *queued_block;
 
         int preset_idx = rand() % game_state->num_presets;
-        int palette_idx = preset_idx % game_state->palette_size;
+        int palette_idx = preset_idx % game_state->palette->size;
 
         long new_contents = block_presets[preset_idx];
-        SDL_Color new_color = game_state->palette[palette_idx];
+        SDL_Color new_color;
+        ColorPalette_getColor(game_state->palette, palette_idx, &new_color);
 
         *queued_block = BlockDb_createBlock(
             db, game_state->block_size, new_contents, (Point){0, 0}, new_color

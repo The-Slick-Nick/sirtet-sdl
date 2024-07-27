@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "colorpalette.h"
 #include "sirtet.h"
 #include "mainmenu_state.h"
 #include "menu.h"
@@ -161,7 +162,9 @@ MainMenuState* MainMenuState_init(
     GameSettings_setPresets(settings, 7, init_presets);
 
     // Color palette
-    SDL_Color init_palette[7] = {
+
+    settings->palette = ColorPalette_initVa(
+        "Default", 7, 
         (SDL_Color){190,83,28, 255},
         (SDL_Color){218,170,0, 255},
         (SDL_Color){101,141,27, 255},
@@ -169,9 +172,7 @@ MainMenuState* MainMenuState_init(
         (SDL_Color){155,0,0, 255},
         (SDL_Color){0,155,0, 255},
         (SDL_Color){0,0,155, 255}
-    };
-    GameSettings_setPalette(settings, 7, init_palette);
-
+    );
 
     /*** Menu configuration ***/
 

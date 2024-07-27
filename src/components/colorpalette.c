@@ -4,8 +4,8 @@
 #include <string.h>
 #include "colorpalette.h"
 
-ColorPalette* ColorPalette_init(const char *name, size_t size, ...) {
-
+ColorPalette* ColorPalette_init(
+    const char *name, size_t size, SDL_Color *src) {
     // memory structure:
     // [] size
     // [] name (prt)
@@ -17,7 +17,7 @@ ColorPalette* ColorPalette_init(const char *name, size_t size, ...) {
     // []
     // ...
     // []
-
+    
     size_t nbytes = 0;
     size_t namelen = strlen(name);
 
@@ -44,18 +44,60 @@ ColorPalette* ColorPalette_init(const char *name, size_t size, ...) {
         .colors=(SDL_Color*)((char*)mem + colors_offset)
     };
     strcpy(retval->name, name);
-    // TODO: va_args for color population into (mem + colors_offset)
+
+    // memcpy(void *, const void *, unsigned long)
+    memcpy(retval->colors, src, sizeof(SDL_Color) * size);
+    return retval;
+}
+
+
+#define STATIC_ARRMAX 128
+ColorPalette* ColorPalette_initVa(const char *name, size_t size, ...) {
+
+    // memory structure:
+    // [] size
+    // [] name (prt)
+    // [] colors (ptr)
+    // [] name (char values)
+    // ...
+    // [] /0
+    // [] colors (color values)
+    // []
+    // ...
+    // []
+
+    SDL_Color colarr[STATIC_ARRMAX];
+    SDL_Color *cparr;
+    
+    if (size <= STATIC_ARRMAX) {
+        cparr = colarr;
+    }
+    else {
+        cparr = (SDL_Color*)calloc(size, sizeof(SDL_Color));
+    }
 
     va_list argptr;
     va_start(argptr, size);
 
     for (int colidx = 0; colidx < size; colidx++) {
-        retval->colors[colidx] = va_arg(argptr, SDL_Color);
+        cparr[colidx] = va_arg(argptr, SDL_Color);
     }
 
     va_end(argptr);
+
+    ColorPalette *retval = ColorPalette_init(name, size, cparr);
+
+    if (size > STATIC_ARRMAX) {
+        free(cparr);
+    }
     return retval;
 }
+
+
+ColorPalette* ColorPalette_initCopy(ColorPalette *src) {
+    return ColorPalette_init(src->name, src->size, src->colors);
+}
+
 
 void ColorPalette_deconstruct(ColorPalette *self) {
     free(self);

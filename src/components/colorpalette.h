@@ -23,7 +23,16 @@ typedef struct {
     SDL_Color *colors;
 } ColorPalette;
 
-ColorPalette* ColorPalette_init(const char *name, size_t size, ...);
+// Initialize a ColorPalette, passing colors as variadic arguments
+ColorPalette* ColorPalette_initVa(const char *name, size_t size, ...);
+
+// Initialize a ColorPalette, returning its pointer, or NULL if failed
+ColorPalette* ColorPalette_init(const char *name, size_t size, SDL_Color *src);
+
+// Initialize a ColorPalette as a copy of another one
+ColorPalette* ColorPalette_initCopy(ColorPalette *src);
+
+// Free color palette
 void ColorPalette_deconstruct(ColorPalette *self);
 
 
