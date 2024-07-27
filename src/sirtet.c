@@ -58,7 +58,6 @@ int run() {
     //       in a 3x3 grid)
     // TODO: Block prediction overlay
     // TODO: Sound effects and (maybe) music(?)
-    // TODO: Changable color palettes in settings
 
 
     srand((int)time(NULL));

@@ -139,9 +139,12 @@ SettingsMenuState* SettingsMenuState_init(
     /*** Color Palette Presets ***/
 
     retval->palette_selection = 0;
-    retval->num_palettes = 2;
-    retval->palettes = (ColorPalette**)calloc(retval->num_palettes, sizeof(ColorPalette*));
+    retval->num_palettes = 4;
 
+    size_t sz = sizeof(ColorPalette*);
+    retval->palettes = (ColorPalette**)calloc(retval->num_palettes, sz);
+
+    // TODO: Figure out a way to make this a parsable config file or something
     retval->palettes[0] = ColorPalette_initVa(
         "Default", 7, 
         (SDL_Color){190,83,28, 255},
@@ -165,8 +168,36 @@ SettingsMenuState* SettingsMenuState_init(
         (SDL_Color){255, 198, 255, 255}
     );
 
-    if (retval->palettes[0] == NULL || retval->palettes[1] == NULL) {
-        return NULL;
+    retval->palettes[2] = ColorPalette_initVa(
+        "Beach", 4, 
+        (SDL_Color){250, 255, 175, 255},
+        (SDL_Color){150, 201, 244, 255},
+        (SDL_Color){63, 162, 246, 255},
+        (SDL_Color){15, 103, 177, 255},
+        (SDL_Color){15, 103, 177, 255}
+    );
+
+    retval->palettes[3] = ColorPalette_initVa(
+        "Coffee", 5, 
+        (SDL_Color){55, 34, 20, 255},
+        (SDL_Color){121, 66, 40, 255},
+        (SDL_Color){184, 115, 58, 255},
+        (SDL_Color){190, 194, 203, 255},
+        (SDL_Color){52, 48, 44, 255}
+    );
+
+
+    for (int i = 0; i < retval->num_palettes; i++) {
+        if (retval->palettes[i] == NULL) {
+            char buff[128];
+            snprintf(
+                buff, 128,
+                "Error in establishing color palettes:\n    %s\n",
+                Sirtet_getError()
+            );
+            Sirtet_setError(buff);
+            return NULL;
+        }
     }
 
 
@@ -253,7 +284,7 @@ int SettingsMenuState_deconstruct(void *self) {
     TextMenu_deconstruct(settingsmenu->menu);
     MenucodeMap_deconstruct(settingsmenu->menucode_map);
 
-    for (size_t sizei = 0; sizei < MAX_TILE_SIZE - MIN_TILE_SIZE; sizei++) {
+    for (size_t sizei = 0; sizei <= MAX_TILE_SIZE - MIN_TILE_SIZE; sizei++) {
         free(settingsmenu->presets[sizei]);
     }
     free(settingsmenu->presets);
