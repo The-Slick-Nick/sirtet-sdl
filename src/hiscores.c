@@ -5,71 +5,60 @@
 #include "sirtet.h"  // May be removed if used later as a general-purpose tool
 
 
-int parseInt(char* txt, size_t len, int *out_num) {
 
-    int factor = 1;
+    // TODO: Rework this to END on non-digit char, returning
+    // length of parsed number (works better for my intended use)
+int parseInt(char* txt, int *out_num) {
+
+    char *cur = txt;
+
+    bool neg = (*cur == '-');
+    bool hasdig = false;
+
+    if (*cur == '-' || *cur == '+') {
+        cur++;
+    }
+
     int result = 0;
-    if (txt[0] == '-') {
-        for (int idx = len - 1; idx > 0; idx--) {
-            char c = txt[idx];
-            if (c < 48 || c > 57) {
+    while (*cur >= '0' && *cur <= '9') {
+        hasdig = true;
+
+        int digit = *cur - '0';
+
+        if (neg) {
+            if (result < ((INT_MIN + digit) / 10) ) {
                 char buff[128];
                 snprintf(
                     buff, 128,
-                    "praseInt encountered an unknown digit %c\n", c
+                    "Cannot parse integer smaller than %d\n",
+                    INT_MIN
                 );
                 Sirtet_setError(buff);
                 return -1;
             }
-
-            int to_sub = factor * (c - 48);
-            if (result < INT_MIN + to_sub) {
-
-                char buff[128];
-                snprintf(
-                    buff, 128,
-                    "parseInt cannot parse a number smaller than %d. (got %s)",
-                    INT_MAX, txt
-                );
-                Sirtet_setError(buff);
-                return -1;
-            }
-
-            result -= to_sub;
-            factor *= 10;
+            result = result * 10 - digit;
         }
-    }
-    else {
-        for (int idx = len - 1; idx >= 0; idx--) {
-            char c = txt[idx];
-            if (c < 48 || c > 57) {
+        else {
+            if (result > ((INT_MAX - digit) / 10) ) {
                 char buff[128];
                 snprintf(
                     buff, 128,
-                    "praseInt encountered an unknown digit %c\n", c
+                    "Cannot parse integer larger than %d\n",
+                    INT_MAX
                 );
-                Sirtet_setError(buff);
                 return -1;
             }
-
-            int to_add = factor * (c - 48);
-            if (to_add > INT_MAX - result) {
-                char buff[128];
-                snprintf(
-                    buff, 128,
-                    "parseInt cannot parse a number larger than %d. (got %s)",
-                    INT_MAX, txt
-                );
-                Sirtet_setError(buff);
-                return -1;
-            }
-
-            result += to_add;
-            factor *= 10;
+            result = result * 10 + digit;
         }
+
+        cur++;
     }
 
+    if (!hasdig) {
+        Sirtet_setError("No digits enounctered parsing text\n");
+        return -1;
+    }
 
     *out_num = result;
-    return 0;
+    return (int)(cur - txt);
 }
