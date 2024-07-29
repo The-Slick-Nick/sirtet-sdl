@@ -349,6 +349,15 @@ int ScoreList_sort(ScoreList *self) {
 }
 
 
+
+enum HsParseState {
+    AwaitingName,
+    ParsingName,
+    AwaitingNum,
+    ParsingNum
+};
+
+// Read rows from a highscores file into provided ScoreList
 int ScoreList_readFile(ScoreList *self, FILE *f) {
 
     if (self == NULL) {
@@ -361,44 +370,89 @@ int ScoreList_readFile(ScoreList *self, FILE *f) {
         return -1;
     }
 
-    char *buff = self->name_hld;
-
+    char *newname = self->name_hld;
     int score;
-    char st_newname[128];
-    char *newname = (
-        self->namelen + 1 > 128 ?
-        malloc((self->namelen + 1) * sizeof(char)) :
-        st_newname
-    );
+    bool neg;
+    int nameidx = 0;
+    char chr;
+    enum HsParseState curstate = AwaitingName;
 
-    char *getreturn = fgets(buff, self->namelen, f);
-    for (int i = 0; i < 100; i++) { printf("\n"); }
-    printf("%s", getreturn);
-    while (getreturn != NULL) {
+    do {
+        chr = fgetc(f);
 
-        size_t offset = parseName(buff, newname, self->namelen);
-        if (offset == -1) {
-            return -1;
+        switch (curstate) {
+            case AwaitingName:
+                if (chr != ' ' && chr != '\0' && chr != '\n' && chr != EOF) {
+                    nameidx = 0;
+                    newname[nameidx++] = chr;
+                    curstate = ParsingName;
+                }
+                break;
+
+            case ParsingName:
+                if (chr == ' ' || chr == '\0' || chr == '\n' || chr == EOF) {
+                    newname[nameidx] = '\0';
+                    curstate = AwaitingNum;
+                }
+                else {
+                    if (nameidx >= self->namelen) {
+                        Sirtet_setError(
+                            "Error parsing score file: Name too long\n"
+                        );
+                        return -1;
+                    }
+                    newname[nameidx++] = chr;
+                }
+                break;
+
+            case AwaitingNum:
+                if (chr == '-') {
+                    neg = true;
+                    score = 0;
+                    curstate = ParsingNum;
+                }
+                else if (chr >= '0' && chr <= '9') {
+                    neg = false;
+                    score = (chr - '0');
+                    curstate = ParsingNum;
+                }
+                break;
+
+            case ParsingNum:
+                if (chr >= '0' && chr <= '9') {
+                    int digit = chr - '0';
+                    if (neg) {
+                        if (score < ((INT_MIN + digit) / 10)) {
+                            Sirtet_setError(
+                                "Error parsing score file: "
+                                "Parsed score below MIN_INT value\n"
+                            );
+                            return -1;
+                        }
+                        score = (score * 10) - (chr - '0');
+                    }
+                    else {
+                        if (score > ((INT_MAX - digit) / 10)) {
+                            Sirtet_setError(
+                                "Error parsing score file: "
+                                "Parsed score exceeds INT_MAX\n"
+                            );
+                            return -1;
+                        }
+                        score = (score * 10) + (chr - '0');
+                    }
+                }
+                else {
+                    // end
+                    if (ScoreList_add(self, newname, score) != 0) {
+                        printf(":(");
+                        return -1;
+                    }
+                    curstate = AwaitingName;
+                }
+                break;
         }
-        int retval = parseInt(buff + offset, &score);
-        if (retval != 0) {
-            return retval;
-        }
-
-        printf("Adding %s with score %d\n", newname, score);
-        retval = ScoreList_add(self, newname, score);
-        if (retval != 0) {
-            return retval;
-        }
-
-        getreturn = fgets(buff, self->namelen, f);
-    }
-
-
-    if (newname != st_newname) {
-        free(newname);
-    }
-    // not yet implemented
+    } while (chr != EOF);
     return 0;
 }
 

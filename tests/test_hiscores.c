@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "hiscores.h"
+#include "sirtet.h"
 
 
 /******************************************************************************
@@ -310,23 +312,26 @@ void testScoreListSort() {
     ScoreList_deconstruct(sl);
 }
 
+static inline void makefile(const char* content) {
+    FILE *f_write = fopen("test.txt", "w");
+    if (f_write == NULL) {
+        TEST_FAIL("File failed to open for writing");
+    }
+    fprintf(f_write, "%s", content);
+    fclose(f_write);
+}
+
 void testFileInteraction() {
 
+    Sirtet_setError("");
 
     /*** GOOD ***/
 
-    FILE *f = fopen("test.txt", "w");
-    if (f == NULL) {
-        TEST_FAIL("File for testFileInteraction() could not open");
-        return;
-    }
+    makefile("ABC 10\nDEF 45\n");
 
-    char *text = "ABC 10\nDEF 45\n";
-    fprintf(f, "%s", text);
-
-
+    FILE *f_read = fopen("test.txt", "r");
     ScoreList *sl = ScoreList_init(10, 3);
-    ScoreList_readFile(sl, f);
+    ScoreList_readFile(sl, f_read);
 
 
     int outscore;
@@ -336,57 +341,99 @@ void testFileInteraction() {
     ASSERT_EQUAL_INT(sl->len, 2);
     retval = ScoreList_get(sl, 0, outname, &outscore);
     ASSERT_EQUAL_INT(retval, 0);
+    if (retval != 0) {
+        char *errmsg = Sirtet_getError();
+        INFO(errmsg);
+    }
     ASSERT_EQUAL_INT(outscore, 10);
     ASSERT_EQUAL_STR(outname, "ABC");
 
 
     retval = ScoreList_get(sl, 1, outname, &outscore);
     ASSERT_EQUAL_INT(retval, 0);
+    if (retval != 0) {
+        char *errmsg = Sirtet_getError();
+        INFO(errmsg);
+    }
     ASSERT_EQUAL_INT(outscore, 45);
     ASSERT_EQUAL_STR(outname, "DEF");
 
-    fclose(f);
+    fclose(f_read);
     ScoreList_deconstruct(sl);
 
 
     /*** OVERFLOW ON NAME ***/
 
-    f = fopen("test.txt", "w");
-    if (f == NULL) {
-        TEST_FAIL("File for testFileInteraction() could not open");
-        return;
-    }
+
+    makefile("VERYLONGNAME 10\nANOTHERREALLYLONGNAMELONGER 25\n");
+    f_read = fopen("test.txt", "r");
 
     sl = ScoreList_init(10, 3);
-
-    text = "VERYLONGNAME 10\nANOTHERREALLYLONGNAMELONGER 25\n";
-    fprintf(f, "%s", text);
-
-    // retval = ScoreList_readFile(ScoreList *self, FILE *f)
-    retval = ScoreList_readFile(sl, f);
+    retval = ScoreList_readFile(sl, f_read);
     ASSERT_EQUAL_INT(retval, -1);
 
-    fclose(f);
+    fclose(f_read);
     ScoreList_deconstruct(sl);
 
 
     /*** OVERFLOW ON ENTRIES ***/
 
-    // sl = ScoreList_init(size_t size, size_t namelen)
+    makefile("abc 10\ndef 20\nghi 30\n");
     sl = ScoreList_init(2, 3);
-    text = "abc 10\ndef 20\nghi 30\n";
 
-    f = fopen("test.txt", "w");
-    if (f == NULL) {
-        TEST_FAIL("File for testFileInteraction() could not open");
-        return;
-    }
-    fprintf(f, "%s", text);
-    retval = ScoreList_readFile(sl, f);
+    f_read = fopen("test.txt", "r");
+
+    retval = ScoreList_readFile(sl, f_read);
     ASSERT_EQUAL_INT(retval, -1);
 
-    fclose(f);
+    fclose(f_read);
     ScoreList_deconstruct(sl);
+
+
+    /*** Integer  Limits ***/
+
+    INT_MAX; //  2147483647
+    INT_MIN; // -2147483648
+    makefile("name 2147483647\n name2 -2147483648\n");
+    f_read = fopen("test.txt", "r");
+    sl = ScoreList_init(10, 10);
+    retval = ScoreList_readFile(sl, f_read);
+
+    ASSERT_EQUAL_INT(retval, 0);
+    if (retval != 0) {
+        INFO(Sirtet_getError());
+    }
+    ASSERT_EQUAL_INT(sl->len, 2);
+
+    ScoreList_get(sl, 0, outname, &outscore);
+    ASSERT_EQUAL_INT(outscore, INT_MAX);
+
+    ScoreList_get(sl, 1, outname, &outscore);
+    ASSERT_EQUAL_INT(outscore, INT_MIN);
+
+    fclose(f_read);
+    ScoreList_deconstruct(sl);
+
+    /*** Integer  Overflows ***/
+    makefile("name 2147483648");
+    f_read = fopen("test.txt", "r");
+    sl = ScoreList_init(10, 10);
+
+    retval = ScoreList_readFile(sl, f_read);
+    ASSERT_EQUAL_INT(retval, -1);
+
+    fclose(f_read);
+    makefile("name -2147483649");
+
+    f_read = fopen("test.txt", "r");
+    sl = ScoreList_init(10, 10);
+
+    retval = ScoreList_readFile(sl, f_read);
+    ASSERT_EQUAL_INT(retval, -1);
+
+    ScoreList_deconstruct(sl);
+    fclose(f_read);
+
 }
 
 
