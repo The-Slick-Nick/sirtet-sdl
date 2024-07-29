@@ -1,18 +1,22 @@
-#include <string.h>
 #include <limits.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "hiscores.h"
 #include "sirtet.h"  // May be removed if used later as a general-purpose tool
 
 
 
-    // TODO: Rework this to END on non-digit char, returning
-    // length of parsed number (works better for my intended use)
+/******************************************************************************
+ * General Utilities
+******************************************************************************/
+
+
 int parseInt(char* txt, int *out_num) {
 
     char *cur = txt;
 
-    bool neg = (*cur == '-');
+    const bool neg = (*cur == '-');
     bool hasdig = false;
 
     if (*cur == '-' || *cur == '+') {
@@ -62,3 +66,369 @@ int parseInt(char* txt, int *out_num) {
     *out_num = result;
     return (int)(cur - txt);
 }
+
+
+int parseName(const char* txt, char *out_str, size_t maxlen) {
+
+    size_t idx = 0;
+    char cur;
+    while (idx <= maxlen) {
+
+        cur = txt[idx];
+
+        if (cur == EOF) {
+            return -1;
+        }
+
+        if (cur == ' ') {
+            out_str[idx] = '\0';
+            return idx;
+        }
+
+
+        out_str[idx++] = cur;
+    }
+
+    // exceeded max len
+    return -1;
+}
+
+/******************************************************************************
+ * Scorelist Methods
+******************************************************************************/
+
+
+ScoreList* ScoreList_init(size_t size, size_t namelen) {
+
+    ScoreList *retval = (ScoreList*)calloc(1, sizeof(ScoreList));
+    if (retval == NULL) {
+        Sirtet_setError("Error allocating memory for ScoreList\n");
+        return NULL;
+    }
+
+    retval->len = 0;
+    retval->namelen = namelen;
+    retval->size = size;
+
+    retval->names = (char*)calloc((namelen + 1) * size, sizeof(char));
+    retval->scores = (int*)calloc(size, sizeof(int));
+
+    // Ensure enough is allocated for parsing a scoring line
+    // name + null terminator + whitespace separator + integer + endline
+    size_t bufflen = namelen + 1 + 1 + 11 + 1;
+    retval->name_hld = (char*)malloc(bufflen * sizeof(char));
+    retval->scores_hld = (int*)malloc(size * sizeof(int));
+
+    if (
+        retval->names == NULL ||
+        retval->scores == NULL ||
+        retval->name_hld == NULL ||
+        retval->scores_hld == NULL
+    ) {
+        Sirtet_setError("Error allocating memory for ScoreList\n");
+        return NULL;
+    }
+    memset(retval->name_hld, 0, bufflen * sizeof(char));
+
+    return retval;
+}
+
+
+void ScoreList_deconstruct(ScoreList *self) {
+    free(self->names);
+    free(self->scores);
+    free(self->name_hld);
+    free(self->scores_hld);
+}
+
+
+// Add an entry to score list, returning a status code
+int ScoreList_add(ScoreList *self, char *name, int score) {
+
+    if (self->len == self->size) {
+        return -1;
+    }
+
+    size_t idx = self->len;
+    size_t namelen = self->namelen;
+    size_t inputlen = strlen(name);
+
+
+    if (inputlen > namelen) {
+         return -1;
+        Sirtet_setError("Name too long to add to ScoreList\n");
+    }
+    self->scores[idx] = score;
+
+    char *nameptr = (char*)(self->names + idx * (namelen + 1));
+    memset(nameptr, 0, sizeof(char) * (namelen + 1));
+    memcpy(nameptr, name, sizeof(char) * inputlen);
+
+    self->len++;
+    return 0;
+}
+
+// Remove the final element of the scorelist, returning a status code
+int ScoreList_pop(ScoreList *self, char *out_name, int *out_score) {
+
+    if (self->len == 0) {
+        return -1;
+    }
+
+    // we store return val, then decrement
+    const int retval = ScoreList_get(self, self->len - 1, out_name, out_score);
+    if (retval != 0) {
+        return retval;
+    }
+    self->len--;
+    return retval;
+
+}
+
+// Retrieve the entry at the given index
+int ScoreList_get(ScoreList *self, size_t idx, char *out_name, int *out_score) {
+
+    if (idx >= self->len) {
+        return -1;
+    }
+
+    if (out_name != NULL) {
+        char *strptr = (char*)(self->names + (idx * (self->namelen + 1)));
+        strcpy(out_name, strptr);
+    }
+
+    if (out_score != NULL) {
+        *out_score = self->scores[idx];
+    }
+
+    return 0;
+}
+
+// Populate sort order of `basis` into `indices`
+void sortByBasisDesc(size_t len, int *indices, const int *basis) {
+
+    int st_supp[128];
+    int *supp = (len > 128 ? (int*)malloc(len * sizeof(int)) : st_supp);
+
+    for (int i = 0; i < len; i++) {
+        indices[i] = i;
+        supp[i] = i;
+    }
+
+    int *hold;
+    int *tosort = supp; // better naming
+    int *result = indices;
+
+    size_t bucket_sz = 1;
+    while (bucket_sz < len) {
+
+        hold = tosort;
+        tosort = result;
+        result = hold;
+
+        size_t placeidx = 0;
+
+        for (size_t leftstart = 0; leftstart < len; leftstart += 2 * bucket_sz) {
+            size_t leftend = leftstart + (bucket_sz - 1);
+            leftend = (leftend >= len ? len - 1 : leftend);
+
+            size_t rightstart = leftend + 1; 
+            size_t rightend = rightstart + (bucket_sz - 1);
+            rightend = (rightend >= len ? len - 1 : rightend);
+
+            size_t ileft = leftstart;
+            size_t iright = rightstart;
+
+            while (ileft <= leftend || iright <= rightend) {
+
+                if (iright > rightend) {
+                    size_t n = leftend - ileft + 1;
+                    memcpy(result + placeidx, tosort + ileft, sizeof(int) * n);
+                    placeidx += n;
+                    ileft += n;
+                    continue;
+                }
+
+                if (ileft > leftend) {
+                    size_t n = rightend - iright + 1;
+                    memcpy(result + placeidx, tosort + iright, sizeof(int) * n);
+                    placeidx += n;
+                    iright += n;
+                    continue;
+                }
+
+                if (basis[tosort[ileft]] > basis[tosort[iright]]) {
+                    result[placeidx++] = tosort[ileft++];
+                }
+                else {
+                    result[placeidx++] = tosort[iright++];
+                }
+            }
+        }
+        bucket_sz *= 2;
+    }
+
+    // in case we've ended up unswapped
+    memcpy(indices, result, sizeof(int) * len);
+
+    if (len > 128) {
+        free(supp);
+    }
+}
+
+
+
+void sortByOrder(void *tosort, const int *order, size_t elem_sz, size_t elem_n) {
+
+    int st_curorder[128];
+    int *curorder = (elem_n > 128 ? (int*)malloc(elem_n * sizeof(int)) : st_curorder);
+
+    char st_hold[128];
+    void *hold = (elem_sz > 128 ? malloc(elem_sz) : (void*)st_hold);
+
+
+    for (int i = 0; i < elem_n; i++) {
+        curorder[i] = i;
+    }
+
+
+    for (int i = 0; i < elem_n; i++) {
+
+        // already correct
+        if (curorder[i] == order[i]) {
+            continue;
+        }
+
+        int searchi = order[i];
+        while (curorder[searchi] != order[i]) {
+            searchi = curorder[searchi];
+        }
+
+        // swap time baby
+        size_t scale = (elem_sz / sizeof(char));
+        char *swap1 = (char*)tosort + (scale * i);
+        char *swap2 = (char*)tosort + (scale * searchi);
+
+        memcpy(hold, swap1, elem_sz);
+        memcpy(swap1, swap2, elem_sz);
+        memcpy(swap2, hold, elem_sz);
+
+        int idxhold = curorder[i];
+        curorder[i] = curorder[searchi];
+        curorder[searchi] = idxhold;
+    }
+
+    if (curorder != st_curorder) {
+        free(curorder);
+    }
+
+    if (hold != st_hold) {
+        free(hold);
+    }
+
+}
+
+// Sort scoreList in descending order by score
+int ScoreList_sort(ScoreList *self) {
+
+    // retval->scores_hld = (int*)malloc(2 * size * sizeof(int));
+
+    int *scores = self->scores;
+
+    int *arr1 = self->scores_hld;
+    int *arr2 = self->scores_hld + self->len;
+
+
+    int *indices = self->scores_hld;
+    sortByBasisDesc(self->len, self->scores_hld, self->scores);
+
+    sortByOrder(self->scores, indices, sizeof(int), self->len);
+    sortByOrder(self->names, indices, (1 + self->namelen) * sizeof(char), self->len);
+
+    return 0;
+}
+
+
+int ScoreList_readFile(ScoreList *self, FILE *f) {
+
+    if (self == NULL) {
+        Sirtet_setError("ScoreList_readFile passed a NULL ScoreList\n");
+        return -1;
+    }
+
+    if (f == NULL) {
+        Sirtet_setError("ScoreList_readFile passed a NULL file pointer\n");
+        return -1;
+    }
+
+    char *buff = self->name_hld;
+
+    int score;
+    char st_newname[128];
+    char *newname = (
+        self->namelen + 1 > 128 ?
+        malloc((self->namelen + 1) * sizeof(char)) :
+        st_newname
+    );
+
+    char *getreturn = fgets(buff, self->namelen, f);
+    for (int i = 0; i < 100; i++) { printf("\n"); }
+    printf("%s", getreturn);
+    while (getreturn != NULL) {
+
+        size_t offset = parseName(buff, newname, self->namelen);
+        if (offset == -1) {
+            return -1;
+        }
+        int retval = parseInt(buff + offset, &score);
+        if (retval != 0) {
+            return retval;
+        }
+
+        printf("Adding %s with score %d\n", newname, score);
+        retval = ScoreList_add(self, newname, score);
+        if (retval != 0) {
+            return retval;
+        }
+
+        getreturn = fgets(buff, self->namelen, f);
+    }
+
+
+    if (newname != st_newname) {
+        free(newname);
+    }
+    // not yet implemented
+    return 0;
+}
+
+
+int ScoreList_toFile(ScoreList *self, FILE *f) {
+
+
+    if (self == NULL) {
+        Sirtet_setError("ScoreList_toFile passed a NULL ScoreList\n");
+        return -1;
+    }
+
+    if (f == NULL) {
+        Sirtet_setError("ScoreList_toFile passed a NULL file pointer\n");
+        return -1;
+    }
+
+    int *scores = self->scores;
+    char *names = self->names;
+
+    size_t name_sz = ((sizeof(char) * (self->namelen + 1)));
+
+    for (int i = 0; i < self->len; i++) {
+        fprintf(f, "%s %d\n", names + (name_sz * i), scores[i]);
+    }
+
+    return 0;
+}
+
+
+
+
+

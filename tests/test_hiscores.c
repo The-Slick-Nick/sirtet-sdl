@@ -1,9 +1,109 @@
 
 #include <EWENIT.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "hiscores.h"
 
 
-// int parseNum(char* txt, size_t len, int *out_num) {
+/******************************************************************************
+ * Tests on general/helper functions
+******************************************************************************/
+
+
+void testSortByBasis() {
+    // sorting algo test
+
+    int indices[8];
+    int basis[8] =    {8, 1, 7, 2, 6, 3, 5, 4};
+    //                 0, 1, 2, 3, 4, 5, 6, 7
+    int expected[8] = {0, 2, 4, 6, 7, 5, 3, 1};
+
+    sortByBasisDesc(8, indices, basis);
+    for (int i = 0; i < 8; i++) {
+        INFO_FMT("i = %d", i);
+        ASSERT_EQUAL_INT(indices[i], expected[i]);
+    }
+
+    int *bigindices = (int*)malloc(10000 * sizeof(int));
+    int *bigbasis = (int*)malloc(10000 * sizeof(int));
+
+
+    for (int i = 0; i < 10000; i++) {
+        bigbasis[i] = rand();
+    }
+
+    sortByBasisDesc(10000, bigindices, bigbasis);
+
+    for (int i = 1; i < 10000; i++) {
+        int leftval = bigbasis[bigindices[i - 1]];
+        int rightval = bigbasis[bigindices[i]];
+         if (leftval >= rightval) {
+            TEST_PASS("Sort order holds");
+         }
+         else {
+            TEST_FAIL_FMT(
+                "Sort order violated: %d at %d vs %d at %d",
+                leftval, i - 1, rightval, i
+            );
+         }
+    }
+
+
+    free(bigbasis);
+    free(bigindices);
+
+}
+
+void testSortByOrder() {
+
+    int arr[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    int order[8] = {7, 6, 5, 4, 3, 2, 1, 0};
+    int expected[8] = {8, 7, 6, 5, 4, 3, 2, 1};
+
+
+    sortByOrder(arr, order, sizeof(int), 8);
+
+    for (int i = 0; i < 8; i++) {
+        ASSERT_EQUAL_INT(expected[i], arr[i]);
+    }
+
+
+    // large array
+    size_t n = 1000;
+
+    int *bigarr = (int*)malloc(n * sizeof(int));
+    int *bigsorted = (int*)malloc(n * sizeof(int));
+    int *bigorder = (int*)malloc(n * sizeof(int));
+
+    for (int i = 0; i < n; i++) {
+        bigarr[i] = rand();
+        bigorder[i] = i;
+    }
+    memcpy(bigsorted, bigarr, n * sizeof(int));
+
+    // scramble
+    for (int i = 0; i < n; i++) {
+        size_t swapidx = i + rand() % (n - i);
+        int hold = bigorder[i];
+        bigorder[i] = bigorder[swapidx];
+        bigorder[swapidx] = hold;
+    }
+
+    sortByOrder(bigsorted, bigorder, sizeof(int), n);
+
+    for (int i = 0;i < n; i++) {
+        ASSERT_EQUAL_INT(bigsorted[i], bigarr[bigorder[i]]);
+    }
+
+
+    free(bigorder);
+    free(bigsorted);
+    free(bigarr);
+
+}
+
 void testParseInt() {
 
     int num;
@@ -87,11 +187,221 @@ void testParseInt() {
     retval = parseInt("-999999999999999999999999999999999999999", &num);
     ASSERT_EQUAL_INT(retval, -1);
     ASSERT_EQUAL_INT(num, 0);
+}
+
+
+void testParseName() {
+
+    int retval;
+    char out[64];
+
+    retval = parseName("hello 123", out, 64);
+    ASSERT_EQUAL_INT(retval, 5);
+    ASSERT_EQUAL_STR(out, "hello");
+
+    retval = parseName("hithere 8", out, 64);
+    ASSERT_EQUAL_INT(retval, 7);
+    ASSERT_EQUAL_STR(out, "hithere");
 
 }
+
+
+/******************************************************************************
+ * ScoreList tests
+******************************************************************************/
+
+void testScoreList() {
+
+    ScoreList *sl = ScoreList_init(10, 3);
+
+    ASSERT_EQUAL_INT(sl->len, 0);
+    ASSERT_EQUAL_INT(sl->size, 10);
+
+
+    int score;
+    char name[16];
+    int retval;
+
+    // Nothing added yet
+    score = 0;
+    strcpy(name, "___");
+    retval = ScoreList_pop(sl, name, &score);
+    ASSERT_EQUAL_INT(retval, -1);
+    retval = ScoreList_get(sl, 0, name, &score);
+    ASSERT_EQUAL_INT(retval, -1);
+
+    retval = ScoreList_add(sl, "BOB", 123);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(sl->len, 1);
+
+    score = 0;
+    strcpy(name, "___");
+    retval = ScoreList_get(sl, 0, name, &score);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(sl->len, 1);
+    ASSERT_EQUAL_STR(name, "BOB");
+    ASSERT_EQUAL_INT(score, 123);
+
+    score = 0;
+    strcpy(name, "___");
+    retval = ScoreList_pop(sl, name, &score);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(sl->len, 0);
+    ASSERT_EQUAL_STR(name, "BOB");
+    ASSERT_EQUAL_INT(score, 123);
+    
+    // cannot add too large a name
+    retval = ScoreList_add(sl, "A REALLY LONG NAME", 10);
+    ASSERT_EQUAL_INT(retval, -1);
+
+    // Cannot add more than SIZE
+    for (int i = 0; i < 10; i++) {
+        snprintf(name, 4, "P%d", i);
+        retval = ScoreList_add(sl, name, score);
+        ASSERT_EQUAL_INT(retval, 0);
+    }
+    retval = ScoreList_add(sl, "BAD", 10);
+    ASSERT_EQUAL_INT(retval, -1);
+
+
+    ScoreList_deconstruct(sl);
+}
+
+
+
+
+void testScoreListSort() {
+    // Ensure sorting works correctly
+    ScoreList *sl = ScoreList_init(10, 5);
+
+
+    ScoreList_add(sl, "bob", 10);
+    ScoreList_add(sl, "alice", -15);
+    ScoreList_add(sl, "zack", 100);
+    ScoreList_add(sl, "john", 5);
+
+
+    ScoreList_sort(sl);
+    int score;
+    char name[6];
+    int retval;
+
+    retval = ScoreList_get(sl, 0, name, &score);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_STR(name, "zack");
+    ASSERT_EQUAL_INT(score, 100);
+
+    retval = ScoreList_get(sl, 1, name, &score);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_STR(name, "bob");
+    ASSERT_EQUAL_INT(score, 10);
+    
+    retval = ScoreList_get(sl, 2, name, &score);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_STR(name, "john");
+    ASSERT_EQUAL_INT(score, 5);
+
+    retval = ScoreList_get(sl, 3, name, &score);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_STR(name, "alice");
+    ASSERT_EQUAL_INT(score, -15);
+
+
+    ScoreList_deconstruct(sl);
+}
+
+void testFileInteraction() {
+
+
+    /*** GOOD ***/
+
+    FILE *f = fopen("test.txt", "w");
+    if (f == NULL) {
+        TEST_FAIL("File for testFileInteraction() could not open");
+        return;
+    }
+
+    char *text = "ABC 10\nDEF 45\n";
+    fprintf(f, "%s", text);
+
+
+    ScoreList *sl = ScoreList_init(10, 3);
+    ScoreList_readFile(sl, f);
+
+
+    int outscore;
+    char outname[16];
+    int retval;
+
+    ASSERT_EQUAL_INT(sl->len, 2);
+    retval = ScoreList_get(sl, 0, outname, &outscore);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(outscore, 10);
+    ASSERT_EQUAL_STR(outname, "ABC");
+
+
+    retval = ScoreList_get(sl, 1, outname, &outscore);
+    ASSERT_EQUAL_INT(retval, 0);
+    ASSERT_EQUAL_INT(outscore, 45);
+    ASSERT_EQUAL_STR(outname, "DEF");
+
+    fclose(f);
+    ScoreList_deconstruct(sl);
+
+
+    /*** OVERFLOW ON NAME ***/
+
+    f = fopen("test.txt", "w");
+    if (f == NULL) {
+        TEST_FAIL("File for testFileInteraction() could not open");
+        return;
+    }
+
+    sl = ScoreList_init(10, 3);
+
+    text = "VERYLONGNAME 10\nANOTHERREALLYLONGNAMELONGER 25\n";
+    fprintf(f, "%s", text);
+
+    // retval = ScoreList_readFile(ScoreList *self, FILE *f)
+    retval = ScoreList_readFile(sl, f);
+    ASSERT_EQUAL_INT(retval, -1);
+
+    fclose(f);
+    ScoreList_deconstruct(sl);
+
+
+    /*** OVERFLOW ON ENTRIES ***/
+
+    // sl = ScoreList_init(size_t size, size_t namelen)
+    sl = ScoreList_init(2, 3);
+    text = "abc 10\ndef 20\nghi 30\n";
+
+    f = fopen("test.txt", "w");
+    if (f == NULL) {
+        TEST_FAIL("File for testFileInteraction() could not open");
+        return;
+    }
+    fprintf(f, "%s", text);
+    retval = ScoreList_readFile(sl, f);
+    ASSERT_EQUAL_INT(retval, -1);
+
+    fclose(f);
+    ScoreList_deconstruct(sl);
+}
+
+
 
 int main() {
     EWENIT_START;
     ADD_CASE(testParseInt);
+    ADD_CASE(testParseName);
+    ADD_CASE(testSortByBasis);
+    ADD_CASE(testSortByOrder);
+
+
+
+    ADD_CASE(testScoreList);
+    ADD_CASE(testScoreListSort);
+    ADD_CASE(testFileInteraction);
     EWENIT_END;
 }
