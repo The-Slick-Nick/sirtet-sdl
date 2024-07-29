@@ -1,6 +1,7 @@
 sandbox/*
 *.o
 *.a
+*.d
 *.bin
 *.cache
 
@@ -15,3 +16,7 @@ assets/wip/*
 # profiling
 logs/*
 *.log
+
+# local data files (that will eventually
+# be stored elsewhere)
+hiscores.txt

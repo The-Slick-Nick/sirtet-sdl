@@ -16,6 +16,8 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_surface.h>
 
+#include "hiscores.h"
+
 struct fontlib {
     TTF_Font *lekton_12;
     TTF_Font *lekton_24;
@@ -35,6 +37,8 @@ typedef struct {
     int *hardware_states;  // Array, indexed by SDL_Scancode, indicating # of frames a hardware input has been pressed (or released)
     SDL_Renderer *rend;     // Pointer to renderer struct in use by the application
     SDL_Window *wind;       // Pointer to SDL_Window struct
+
+    ScoreList *hiscores;
 
     struct fontlib fonts;
     struct imglib images;

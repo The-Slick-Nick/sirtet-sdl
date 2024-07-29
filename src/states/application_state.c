@@ -86,6 +86,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
 
     /***** Build*****/
+
     int *hardware_states = (int*)malloc((int)SDL_NUM_SCANCODES * sizeof(int));
     for (int i = 0; i < (int)SDL_NUM_SCANCODES; i++) { hardware_states[i] = INT_MIN; }
 
@@ -101,6 +102,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         ApplicationState_deconstruct(retval);
         return NULL;
     }
+
 
     /***** Load fonts *****/
 
@@ -154,6 +156,26 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         return NULL;
     }
 
+
+    /***** Load saved data *****/
+
+    // TODO: When global cfg file is used, define an app-level name length
+    // & highscores length to maintain
+    retval->hiscores = ScoreList_init(11, 5);
+
+    // TODO: Take a path to some appdata style folder and append filename to
+    // path 
+
+    char *path = "hiscores.txt";
+    FILE *hiscore_file = fopen(path, "r");
+    // TODO: Make this a hard error, once I figure out how to "create file if
+    // not exists"
+    if (hiscore_file != NULL) {
+        ScoreList_readFile(retval->hiscores, hiscore_file);
+        fclose(hiscore_file);
+    }
+
+
     return retval;
 }
 
@@ -168,6 +190,19 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.lekton_12);
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
+
+    char *path = "hiscores.txt";
+    FILE* hiscore_file = fopen(path, "w");
+    if (hiscore_file == NULL) {
+        Sirtet_setError("Error writing highscores to file\n");
+        return -1;
+    }
+
+    ScoreList_sort(self->hiscores);
+    ScoreList_toFile(self->hiscores, hiscore_file);
+
+    fclose(hiscore_file);
+    ScoreList_deconstruct(self->hiscores);
 
     free(self->hardware_states);
     free(self);
