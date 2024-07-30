@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "colorpalette.h"
+#include "hiscores_state.h"
 #include "sirtet.h"
 #include "mainmenu_state.h"
 #include "menu.h"
@@ -53,6 +54,10 @@ void menufunc_openSettings(
     void *menu_data
 );
 
+void menufunc_openHiscores(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
+);
 
 /******************************************************************************
  * State Struct creation & destruction
@@ -184,6 +189,7 @@ MainMenuState* MainMenuState_init(
 
     int start_idx = TextMenu_addOption(mainmenu, "Start");
     int settings_idx = TextMenu_addOption(mainmenu, "Settings");
+    int hiscores_idx = TextMenu_addOption(mainmenu, "High Scores");
     int exit_idx = TextMenu_addOption(mainmenu, "Exit");
 
     menustate->menuopt_start = start_idx;
@@ -192,6 +198,8 @@ MainMenuState* MainMenuState_init(
     TextMenu_setCommand(mainmenu, start_idx, MENUCODE_SELECT, menufunc_startGame);
     TextMenu_setCommand(mainmenu, exit_idx, MENUCODE_SELECT, menufunc_exitGame);
     TextMenu_setCommand(mainmenu, settings_idx, MENUCODE_SELECT, menufunc_openSettings);
+    TextMenu_setCommand(mainmenu, hiscores_idx, MENUCODE_SELECT, menufunc_openHiscores);
+
 
     MenucodeMap *mcodes = menustate->menucode_map;
     MenucodePreset_standard(mcodes);
@@ -274,6 +282,25 @@ void menufunc_openSettings(
         SettingsMenuState_deconstruct
     );
 
+}
+
+void menufunc_openHiscores(
+    StateRunner *state_runner, void *app_data,
+    void *menu_data
+) {
+
+    ApplicationState *app_state = (ApplicationState*)app_data;
+
+    HiscoresState *new_state = HiscoresState_init(
+        app_state->rend, app_state->fonts.vt323_24, app_state->hiscores);
+
+    if (new_state == NULL) {
+        printf(
+            "Error in menufunc_openHiscores:\n    %s\n:", Sirtet_getError());
+    }
+
+    StateRunner_addState(
+        state_runner, new_state, HiscoresState_run, HiscoresState_deconstruct);
 }
 
 
