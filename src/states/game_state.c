@@ -339,6 +339,9 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
                 GameState_runGridAnimation, GameState_deconstruct
             );
 
+            // TODO: Create then call a GameOverState here -
+            // for high score entry
+
             printf("Game over!\n");
             StateRunner_setPopCount(state_runner, 1);
             return 0;
