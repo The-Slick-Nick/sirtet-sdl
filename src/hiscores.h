@@ -23,9 +23,8 @@ typedef struct {
     char *names;
     int *scores;
 
-    // TODO: Remove name_hld (and possibly scores_hld?)
-    int *scores_hld;    // Supplementary array for use in sorting
-    char *name_hld;     // Supplementary char buffer for use in sorting
+    int *intbuff;
+    char *strbuff;
 } ScoreList;
 
 

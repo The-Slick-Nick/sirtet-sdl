@@ -23,6 +23,7 @@
 #include "block.h"
 #include "game_state.h"
 #include "application_state.h"
+#include "gameover_state.h"
 #include "component_drawing.h"
 #include "inputs.h"
 #include "sirtet.h"
@@ -262,7 +263,11 @@ int GameState_deconstruct(void* self) {
 =============================================================================*/
 
 // Update portion of main game loop
-int updateGame(StateRunner *state_runner, GameState *game_state) {
+int updateGame(
+    StateRunner *state_runner,
+    ApplicationState *app_state,
+    GameState *game_state
+) {
 
     // relevant variable extraction - for shorthand (
     // and to save my fingers from typing a lot)
@@ -331,6 +336,17 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
 
+            GameoverState *go_state = GameoverState_init(
+                app_state->rend, app_state->fonts.vt323_24,
+                game_state->score, app_state->hiscores
+            );
+
+            StateRunner_addState(
+                state_runner, go_state,
+                GameoverState_run, GameoverState_deconstruct
+            );
+
+            // On top of stack - show animation
             GameGrid_prepareAnimationAllRows(grid, 5);
 
             *primary_block = INVALID_BLOCK_ID;  // to avoid drawing
@@ -339,10 +355,7 @@ int updateGame(StateRunner *state_runner, GameState *game_state) {
                 GameState_runGridAnimation, GameState_deconstruct
             );
 
-            // TODO: Create then call a GameOverState here -
-            // for high score entry
 
-            printf("Game over!\n");
             StateRunner_setPopCount(state_runner, 1);
             return 0;
         }
@@ -843,16 +856,18 @@ int GameState_run(
 
 
     /***** PROCESS INPUTS *****/
+
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
 
     /***** UPDATE *****/
+
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
         printf("Quitting...\n");
         StateRunner_setPopCount(state_runner, 1);
         return 0;
     }
 
-    int update_status = updateGame(state_runner, game_state);
+    int update_status = updateGame(state_runner, application_state, game_state);
     if (update_status == -1) {
         return -1;
     }
@@ -861,7 +876,9 @@ int GameState_run(
         StateRunner_addState(state_runner, game_state, GameState_runPaused, NULL);
     }
 
+    
     /***** DRAW *****/
+
     drawGame(application_state, game_state);
     return 0;
 }

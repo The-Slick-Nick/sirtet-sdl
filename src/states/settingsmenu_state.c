@@ -79,7 +79,6 @@ SettingsMenuState* SettingsMenuState_init(
 
     /*** Block presets ***/
 
-    // TODO: Figure the deconstruction
     long** preset_arr = (long**)calloc(3, sizeof(long*));
     if (preset_arr == NULL) {
         Sirtet_setError("Error allocating preset array in SettingMenuState\n");

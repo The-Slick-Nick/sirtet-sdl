@@ -161,7 +161,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     // TODO: When global cfg file is used, define an app-level name length
     // & highscores length to maintain
-    retval->hiscores = ScoreList_init(11, 5);
+    retval->hiscores = ScoreList_init(100, 3);
 
     // TODO: Take a path to some appdata style folder and append filename to
     // path 

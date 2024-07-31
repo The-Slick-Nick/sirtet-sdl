@@ -1,12 +1,13 @@
+
 /******************************************************************************
- * hiscores_state.h
+ * gameover_state.h
  *
- * Defines a state acting as a menu reporting on the highscores (
- * as stored in global ApplicationState)
+ * Defines a state to show when the game is lost - showing the player's
+ * score among the high scores and prompting for a name
 ******************************************************************************/
 
-#ifndef HISCORES_STATE_H
-#define HISCORES_STATE_H
+#ifndef GAMEOVER_STATE_H
+#define GAMEOVER_STATE_H
 
 
 #include <SDL2/SDL.h>
@@ -17,9 +18,10 @@
 #include "inputs.h"
 
 
-// NOTE: ScoreList *hiscores is in ApplicationState, so is not stored here
 typedef struct {
 
+
+    // for the top 10
     size_t n_lbls;
     SDL_Texture **name_lbls; // array of name lbl pointers
     SDL_Texture **score_lbls; // array of score lbl pointers
@@ -27,15 +29,15 @@ typedef struct {
     bool *menucode_states;
     MenucodeMap *mcodes;
 
+} GameoverState;
 
-} HiscoresState;
 
+GameoverState* GameoverState_init(
+    SDL_Renderer *rend, TTF_Font *lbl_font,
+    int player_score, ScoreList *hiscores
+);
 
-HiscoresState* HiscoresState_init(
-    SDL_Renderer *rend, TTF_Font *lbl_font, ScoreList *hiscores);
-
-int HiscoresState_deconstruct(void *self);
-
+int GameoverState_deconstruct(void *self);
 
 
 
@@ -49,6 +51,6 @@ int HiscoresState_deconstruct(void *self);
 /******************************************************************************
  * State running
 ******************************************************************************/
-int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data);
+int GameoverState_run(StateRunner *runner, void *app_data, void *state_data);
 
 #endif

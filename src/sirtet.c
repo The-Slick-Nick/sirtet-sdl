@@ -52,7 +52,6 @@ int run() {
 
     // (these todos are in a general location because I didn't notice
     // specific lines of things lol)
-    // TODO: Highscores (list on main menu with extra space?)
     // TODO: Implement SRS (or similar) system - with dynamic "block size"
     //       based on content needs (some "blocksize 4" blocks can be represented
     //       in a 3x3 grid)

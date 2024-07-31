@@ -113,22 +113,19 @@ ScoreList* ScoreList_init(size_t size, size_t namelen) {
     retval->names = (char*)calloc((namelen + 1) * size, sizeof(char));
     retval->scores = (int*)calloc(size, sizeof(int));
 
-    // Ensure enough is allocated for parsing a scoring line
-    // name + null terminator + whitespace separator + integer + endline
-    size_t bufflen = namelen + 1 + 1 + 11 + 1;
-    retval->name_hld = (char*)malloc(bufflen * sizeof(char));
-    retval->scores_hld = (int*)malloc(size * sizeof(int));
+    size_t bufflen = (namelen + 1) > 32 ? (namelen + 1) : 32;
+    retval->strbuff = calloc(bufflen, sizeof(char));
+    retval->intbuff = calloc(size, sizeof(int));
 
     if (
         retval->names == NULL ||
         retval->scores == NULL ||
-        retval->name_hld == NULL ||
-        retval->scores_hld == NULL
+        retval->strbuff == NULL ||
+        retval->intbuff == NULL
     ) {
         Sirtet_setError("Error allocating memory for ScoreList\n");
         return NULL;
     }
-    memset(retval->name_hld, 0, bufflen * sizeof(char));
 
     return retval;
 }
@@ -137,8 +134,8 @@ ScoreList* ScoreList_init(size_t size, size_t namelen) {
 void ScoreList_deconstruct(ScoreList *self) {
     free(self->names);
     free(self->scores);
-    free(self->name_hld);
-    free(self->scores_hld);
+    free(self->strbuff);
+    free(self->intbuff);
 }
 
 
@@ -331,16 +328,10 @@ void sortByOrder(void *tosort, const int *order, size_t elem_sz, size_t elem_n) 
 // Sort scoreList in descending order by score
 int ScoreList_sort(ScoreList *self) {
 
-    // retval->scores_hld = (int*)malloc(2 * size * sizeof(int));
-
     int *scores = self->scores;
+    int *indices = self->intbuff;
 
-    int *arr1 = self->scores_hld;
-    int *arr2 = self->scores_hld + self->len;
-
-
-    int *indices = self->scores_hld;
-    sortByBasisDesc(self->len, self->scores_hld, self->scores);
+    sortByBasisDesc(self->len, indices, self->scores);
 
     sortByOrder(self->scores, indices, sizeof(int), self->len);
     sortByOrder(self->names, indices, (1 + self->namelen) * sizeof(char), self->len);
@@ -370,7 +361,7 @@ int ScoreList_readFile(ScoreList *self, FILE *f) {
         return -1;
     }
 
-    char *newname = self->name_hld;
+    char *newname = self->strbuff;
     int score;
     bool neg;
     int nameidx = 0;

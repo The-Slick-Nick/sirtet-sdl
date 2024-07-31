@@ -1,17 +1,7 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_video.h>
 
-#include "hiscores_state.h"
-#include "application_state.h"
-#include "hiscores.h"
-#include "inputs.h"
-#include "state_runner.h"
 #include "sirtet.h"
-
-
+#include "gameover_state.h"
+#include "application_state.h"
 
 
 /******************************************************************************
@@ -20,12 +10,14 @@
 
 
 
-HiscoresState* HiscoresState_init(
-    SDL_Renderer *rend, TTF_Font *lbl_font, ScoreList *hiscores) {
+GameoverState* GameoverState_init(
+    SDL_Renderer *rend, TTF_Font *lbl_font,
+    int player_score, ScoreList *hiscores
+) {
 
-    HiscoresState *retval = calloc(1, sizeof(HiscoresState));
+    GameoverState *retval = calloc(1, sizeof(GameoverState));
     if (retval == NULL) {
-        Sirtet_setError("Error allocating memory for HiscoresState\n");
+        Sirtet_setError("Error allocating memory for GameoverState\n");
         return NULL;
     }
 
@@ -46,8 +38,11 @@ HiscoresState* HiscoresState_init(
         }
         snprintf(scorebuff, 12, "%d", score);
 
-        SDL_Surface *namesurf = TTF_RenderText_Solid(lbl_font, namebuff, (SDL_Color){50, 50, 200, 255});
-        SDL_Surface *scoresurf = TTF_RenderText_Solid(lbl_font, scorebuff, (SDL_Color){50, 50, 200, 255});
+        SDL_Surface *namesurf = TTF_RenderText_Solid(
+            lbl_font, namebuff, (SDL_Color){50, 50, 200, 255});
+
+        SDL_Surface *scoresurf = TTF_RenderText_Solid(
+            lbl_font, scorebuff, (SDL_Color){50, 50, 200, 255});
 
         retval->name_lbls[i] = SDL_CreateTextureFromSurface(rend, namesurf);
         retval->score_lbls[i] = SDL_CreateTextureFromSurface(rend, scoresurf);
@@ -70,10 +65,9 @@ HiscoresState* HiscoresState_init(
 }
 
 
-int HiscoresState_deconstruct(void *self) {
+int GameoverState_deconstruct(void *self) {
 
-    HiscoresState *hs = (HiscoresState*)self;
-
+    GameoverState *hs = (GameoverState*)self;
 
     for (int i = 0; i < hs->n_lbls; i++) {
         SDL_DestroyTexture(hs->score_lbls[i]);
@@ -91,19 +85,18 @@ int HiscoresState_deconstruct(void *self) {
 
 }
 
-
 /******************************************************************************
  * State running
  * typedef int (*state_func_t)(StateRunner*, void*, void*);
 ******************************************************************************/
 
-int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
+int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
 
 
     /*** Recasting ***/
 
     ApplicationState *app_state = (ApplicationState*)app_data;
-    HiscoresState *hs_state = (HiscoresState*)state_data;
+    GameoverState *go_state = (GameoverState*)state_data;
 
 
     /*** Unpacking ***/
@@ -112,12 +105,14 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     /*** Process Inputs ***/
 
-    processMenucodes(hs_state->menucode_states, app_state->hardware_states, hs_state->mcodes);
+    processMenucodes(
+        go_state->menucode_states,
+        app_state->hardware_states,
+        go_state->mcodes
+    );
 
     // should be mapped to ESC
-    if (Menucode_pressed(hs_state->menucode_states, MENUCODE_EXIT)) {
-
-        // StateRunner_setPopCount(StateRunner *self, int count)
+    if (Menucode_pressed(go_state->menucode_states, MENUCODE_EXIT)) {
         StateRunner_setPopCount(runner, 1);
     }
 
@@ -128,9 +123,9 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
     int yoffset = 0;
-    for (int lbli = 0; lbli < hs_state->n_lbls; lbli++) {
-        SDL_Texture *name_lbl = hs_state->name_lbls[lbli];
-        SDL_Texture *score_lbl = hs_state->score_lbls[lbli];
+    for (int lbli = 0; lbli < go_state->n_lbls; lbli++) {
+        SDL_Texture *name_lbl = go_state->name_lbls[lbli];
+        SDL_Texture *score_lbl = go_state->score_lbls[lbli];
 
         int name_h, name_w, score_h, score_w;
 
@@ -150,7 +145,3 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     return 0;
 }
-    
-
-
-
