@@ -225,7 +225,7 @@ SettingsMenuState* SettingsMenuState_init(
     TextMenu_setCommand(retval->menu, palette_optn, MENUCODE_DECREMENT_VALUE, menufunc_prevPalette);
     TextMenu_setCommand(retval->menu, palette_optn, MENUCODE_INCREMENT_VALUE, menufunc_nextPalette);
 
-    MenucodePreset_standard(retval->menucode_map);
+    MenucodePreset_standard(retval->menucode_map, 1, 1, 1);
 
 
 
@@ -293,13 +293,6 @@ int SettingsMenuState_deconstruct(void *self) {
     }
     free(settingsmenu->palettes);
 
-
-    // long** preset_arr = (long**)calloc(3, sizeof(long*));
-    // if (preset_arr == NULL) {
-    //     Sirtet_setError("Error allocating preset array in SettingMenuState\n");
-    //     return NULL;
-    // }
-
     free(self);
     return 0;
 }
@@ -325,7 +318,6 @@ int SettingsMenuState_run(
 
     SDL_Renderer *rend = app_state->rend;
     SDL_Window *wind = app_state->wind;
-    // GameSettings *settings = settings_state->settings;  // TODO: Fix memory access violation here
     ColorPalette *palette = settings_state->palettes[settings_state->palette_selection];
 
 

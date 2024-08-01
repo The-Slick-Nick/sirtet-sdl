@@ -1,4 +1,3 @@
-#include "inputs.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_scancode.h>
@@ -6,6 +5,9 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include "inputs.h"
+#include "sirtet.h"
 
 /******************************************************************************
  * Hardware Inputs
@@ -209,11 +211,7 @@ int processMenucodes(
     bool *menucode_states, int *hardware_states, MenucodeMap *all_mappings
 ) {
 
-    // memset(void *s, int c, size_t n)
     memset(menucode_states, 0, (int)NUM_MENUCODES * sizeof(bool));
-    // for (int int_menu = 0; int_menu < (int)NUM_MENUCODES; int_menu++) {
-    //     menucode_states[int_menu] = false;
-    // }
 
     MenucodeMapItem map_itm;
     for (int map_i = 0; map_i < all_mappings->head; map_i++) {
@@ -265,18 +263,62 @@ bool Menucode_pressed(bool *menucode_arr, Menucode menucode) {
     return menucode_arr[(int)menucode];
 }
 
+/******************************************************************************
+ * Presets
+******************************************************************************/
+
+#define ERR_CK(func) if(func < 0) { return -1; }
+
+
+// TODO: Make these take "delay" and "interval" params to determine how
+// key repeats get handled in presets
+
 
 // Set up a MenucodeMap with common standard controls (arrow keys, enter, etc.)
-void MenucodePreset_standard(MenucodeMap *map) {
+int MenucodePreset_standard(
+    MenucodeMap *map, int start, int end, int interval) {
+    ERR_CK(Menucode_addMap(map, MENUCODE_EXIT, SDL_SCANCODE_ESCAPE, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_RETURN, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_RETURN2, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_KP_ENTER, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_INCREMENT_VALUE, SDL_SCANCODE_RIGHT, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_DECREMENT_VALUE, SDL_SCANCODE_LEFT, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_MOVE_UP, SDL_SCANCODE_UP, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_MOVE_DOWN, SDL_SCANCODE_DOWN, start, end, interval));
+    return 0;
+}
 
-    Menucode_addMap(map, MENUCODE_EXIT, SDL_SCANCODE_ESCAPE, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_RETURN, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_RETURN2, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_SELECT, SDL_SCANCODE_KP_ENTER, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_INCREMENT_VALUE, SDL_SCANCODE_RIGHT, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_DECREMENT_VALUE, SDL_SCANCODE_LEFT, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_MOVE_UP, SDL_SCANCODE_UP, 1, 1, 1);
-    Menucode_addMap(map, MENUCODE_MOVE_DOWN, SDL_SCANCODE_DOWN, 1, 1, 1);
-    
+
+int MenucodePreset_upperAlpha(
+    MenucodeMap *map, int start, int end, int interval) {
+
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_A, SDL_SCANCODE_A, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_B, SDL_SCANCODE_B, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_C, SDL_SCANCODE_C, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_D, SDL_SCANCODE_D, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_E, SDL_SCANCODE_E, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_F, SDL_SCANCODE_F, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_G, SDL_SCANCODE_G, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_H, SDL_SCANCODE_H, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_I, SDL_SCANCODE_I, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_J, SDL_SCANCODE_J, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_K, SDL_SCANCODE_K, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_L, SDL_SCANCODE_L, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_M, SDL_SCANCODE_M, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_N, SDL_SCANCODE_N, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_O, SDL_SCANCODE_O, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_P, SDL_SCANCODE_P, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_Q, SDL_SCANCODE_Q, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_R, SDL_SCANCODE_R, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_S, SDL_SCANCODE_S, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_T, SDL_SCANCODE_T, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_U, SDL_SCANCODE_U, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_V, SDL_SCANCODE_V, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_W, SDL_SCANCODE_W, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_X, SDL_SCANCODE_X, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_Y, SDL_SCANCODE_Y, start, end, interval));
+    ERR_CK(Menucode_addMap(map, MENUCODE_ALPHA_UC_Z, SDL_SCANCODE_Z, start, end, interval));
+    return 0;
+
 
 }

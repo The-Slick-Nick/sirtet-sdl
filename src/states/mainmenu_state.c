@@ -202,7 +202,7 @@ MainMenuState* MainMenuState_init(
 
 
     MenucodeMap *mcodes = menustate->menucode_map;
-    MenucodePreset_standard(mcodes);
+    MenucodePreset_standard(mcodes, 1, 1, 1);
 
     /*** ***/
 

@@ -96,6 +96,34 @@ typedef enum {
     MENUCODE_MOVE_RIGHT,
     MENUCODE_INCREMENT_VALUE,
     MENUCODE_DECREMENT_VALUE,
+
+    MENUCODE_ALPHA_UC_A,
+    MENUCODE_ALPHA_UC_B,
+    MENUCODE_ALPHA_UC_C,
+    MENUCODE_ALPHA_UC_D,
+    MENUCODE_ALPHA_UC_E,
+    MENUCODE_ALPHA_UC_F,
+    MENUCODE_ALPHA_UC_G,
+    MENUCODE_ALPHA_UC_H,
+    MENUCODE_ALPHA_UC_I,
+    MENUCODE_ALPHA_UC_J,
+    MENUCODE_ALPHA_UC_K,
+    MENUCODE_ALPHA_UC_L,
+    MENUCODE_ALPHA_UC_M,
+    MENUCODE_ALPHA_UC_N,
+    MENUCODE_ALPHA_UC_O,
+    MENUCODE_ALPHA_UC_P,
+    MENUCODE_ALPHA_UC_Q,
+    MENUCODE_ALPHA_UC_R,
+    MENUCODE_ALPHA_UC_S,
+    MENUCODE_ALPHA_UC_T,
+    MENUCODE_ALPHA_UC_U,
+    MENUCODE_ALPHA_UC_V,
+    MENUCODE_ALPHA_UC_W,
+    MENUCODE_ALPHA_UC_X,
+    MENUCODE_ALPHA_UC_Y,
+    MENUCODE_ALPHA_UC_Z,
+
     MENUCODE_EXIT,
     NUM_MENUCODES
 } Menucode;
@@ -121,8 +149,6 @@ typedef struct {
 MenucodeMap* MenucodeMap_init(int max_maps);
 int MenucodeMap_deconstruct(MenucodeMap *self);
 
-// Set up a MenucodeMap with common standard controls (arrow keys, enter, etc.)
-void MenucodePreset_standard(MenucodeMap *map);
 
 
 // Add a mapping for a hardware input to menu input
@@ -138,5 +164,29 @@ bool Menucode_pressed(bool *menucode_arr, Menucode menucode);
 int processMenucodes(bool *menucode_states, int *hardware_states, MenucodeMap *all_mappings);
 
 
+/******************************************************************************
+ * Presets
+******************************************************************************/
+
+/**
+ * @brief Add standard menu controls (arrows keys, enter, etc.) to MenucodeMap
+ * @param start - First frame of hardware code activatiton to emit signal
+ * @param end - Final frame of hardware code activation eligable to emit signal
+ * @param interval - Number of frames between signal emits
+ * @returns int - Integer status code of mapping, 0 for success, -1 for failure
+ */
+int MenucodePreset_standard(
+    MenucodeMap *map, int start, int end, int interval);
+
+/**
+ * @brief Add a-z keyboard mapper to uppercase alphabetical characters 
+ *        to MenucodeMap
+ * @param start - First frame of hardware code activatiton to emit signal
+ * @param end - Final frame of hardware code activation eligable to emit signal
+ * @param interval - Number of frames between signal emits
+ * @returns int - Integer status code of mapping, 0 for success, -1 for failure
+ */
+int MenucodePreset_upperAlpha(
+    MenucodeMap *map, int start, int end, int interval);
 
 #endif

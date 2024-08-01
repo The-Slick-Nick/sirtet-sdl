@@ -63,7 +63,7 @@ HiscoresState* HiscoresState_init(
 
     retval->menucode_states = calloc(NUM_MENUCODES, sizeof(bool));
     retval->mcodes = MenucodeMap_init(MAX_MENUCODE_MAPS);
-    MenucodePreset_standard(retval->mcodes);
+    MenucodePreset_standard(retval->mcodes, 1, 1, 1);
 
 
     return retval;
