@@ -25,6 +25,16 @@ typedef struct {
     size_t n_lbls;
     SDL_Texture **name_lbls; // array of name lbl pointers
     SDL_Texture **score_lbls; // array of score lbl pointers
+    
+
+    // Player data & whatnot
+    SDL_Texture *pname_lbl;  // Player's name
+    SDL_Texture *pscore_lbl;  // Player's score
+
+    size_t name_idx;  // for name entry
+    char *player_name;
+    int player_score;
+    int player_rank;  // Where player will be once added to hiscores
 
     bool *menucode_states;
     MenucodeMap *mcodes;

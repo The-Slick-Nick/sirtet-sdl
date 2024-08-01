@@ -341,6 +341,11 @@ int updateGame(
                 game_state->score, app_state->hiscores
             );
 
+            if (go_state == NULL) {
+                printf("%s", Sirtet_getError());
+                exit(1);
+            }
+
             StateRunner_addState(
                 state_runner, go_state,
                 GameoverState_run, GameoverState_deconstruct

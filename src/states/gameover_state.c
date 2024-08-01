@@ -1,13 +1,14 @@
 
+#include "hiscores.h"
 #include "sirtet.h"
 #include "gameover_state.h"
 #include "application_state.h"
+#include <SDL2/SDL_surface.h>
 
 
 /******************************************************************************
  * State Struct creation & destruction
 ******************************************************************************/
-
 
 
 GameoverState* GameoverState_init(
@@ -22,17 +23,92 @@ GameoverState* GameoverState_init(
     }
 
 
+    // For good measure - likely already sorted but just in case
+    ScoreList_sort(hiscores);
+
+    // TODO: Deconstruct/free
+    retval->player_name = calloc(hiscores->namelen + 1, sizeof(char));
+    memset(retval->player_name, '_', 3 * sizeof(char));
+    retval->name_idx = 0;
+    retval->player_score = player_score;
+
+    // NOTE: Could binary search, but likely not needed
+    retval->player_rank = hiscores->len;
+    for (int i = 0; i < hiscores->len; i++) {
+        int loopscore;
+        ScoreList_get(hiscores, i, NULL, &loopscore);
+
+        if (player_score > loopscore) {
+            retval->player_rank = i;
+            break;
+        }
+    }
+
+
     /*** Labels ***/
 
-    retval->n_lbls = (hiscores->len <= 10 ? hiscores->len : 10);
-    retval->name_lbls = malloc(hiscores->len * sizeof(SDL_Texture*));
-    retval->score_lbls = malloc(hiscores->len * sizeof(SDL_Texture*));
-
-    char *namebuff = calloc(hiscores->namelen + 1, sizeof(char));
     char scorebuff[12];
+    char *namebuff = calloc(hiscores->namelen + 1, sizeof(char));
+    memset(namebuff, '_', hiscores->namelen * sizeof(char));
+
+
+    /** Player Score **/
+
+    snprintf(scorebuff, 12, "%d", player_score);
+    SDL_Surface *pscoresurf = TTF_RenderText_Solid(
+        lbl_font, scorebuff, (SDL_Color){50, 50, 200, 255});
+    SDL_Surface *pnamesurf = TTF_RenderText_Solid(
+        lbl_font, namebuff, (SDL_Color){50, 50, 200, 255});
+
+    if (pscoresurf == NULL || pnamesurf == NULL) {
+        char buff[128];
+        snprintf(
+            buff, 128,
+            "Error creating player labels in GameoverState:\n%s\n",
+            TTF_GetError()
+        );
+        Sirtet_setError(buff);
+        return NULL;
+    }
+
+    // TODO: Deconstruct/free
+    retval->pname_lbl = SDL_CreateTextureFromSurface(rend, pnamesurf);
+    retval->pscore_lbl = SDL_CreateTextureFromSurface(rend, pscoresurf);
+
+    if (retval->pname_lbl == NULL || retval->pscore_lbl == NULL) {
+        char buff[128];
+        snprintf(
+            buff, 128,
+            "Error creating player labels in GameoverState:\n%s\n",
+            SDL_GetError()
+        );
+        return NULL;
+    }
+
+    // TODO: Null check
+    SDL_FreeSurface(pscoresurf);
+    SDL_FreeSurface(pnamesurf);
+
+
+    /** Existing High Scores **/
+
+    // 1 for player labels
+    retval->n_lbls = 1 + (hiscores->len <= 10 ? hiscores->len : 10);
+    retval->name_lbls = malloc(retval->n_lbls * sizeof(SDL_Texture*));
+    retval->score_lbls = malloc(retval->n_lbls * sizeof(SDL_Texture*));
+
     int score;
+    int lbli = 0;
+    int hiscore_i = 0;
     for (int i = 0; i < retval->n_lbls; i++) {
-        if (ScoreList_get(hiscores, i, namebuff, &score) != 0) {
+
+        if (i == retval->player_rank) {
+            retval->name_lbls[lbli] = retval->pname_lbl;
+            retval->score_lbls[lbli++] = retval->pscore_lbl;
+            continue;
+        }
+
+        if (ScoreList_get(hiscores, hiscore_i, namebuff, &score) != 0) {
             free(retval);
             return NULL;
         }
@@ -44,14 +120,24 @@ GameoverState* GameoverState_init(
         SDL_Surface *scoresurf = TTF_RenderText_Solid(
             lbl_font, scorebuff, (SDL_Color){50, 50, 200, 255});
 
-        retval->name_lbls[i] = SDL_CreateTextureFromSurface(rend, namesurf);
-        retval->score_lbls[i] = SDL_CreateTextureFromSurface(rend, scoresurf);
+        retval->name_lbls[lbli] = SDL_CreateTextureFromSurface(rend, namesurf);
+        retval->score_lbls[lbli++] = SDL_CreateTextureFromSurface(rend, scoresurf);
 
         SDL_FreeSurface(namesurf);
         SDL_FreeSurface(scoresurf);
+        hiscore_i++;
     }
 
+    if (retval->player_rank > 10) {
+        retval->name_lbls[lbli] = retval->pname_lbl;
+        retval->score_lbls[lbli] = retval->pscore_lbl;
+    }
+
+    
     free(namebuff);
+
+    /***/
+
 
 
     /*** Inputs ***/
@@ -125,8 +211,12 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     int yoffset = 0;
     for (int lbli = 0; lbli < go_state->n_lbls; lbli++) {
-        SDL_Texture *name_lbl = go_state->name_lbls[lbli];
-        SDL_Texture *score_lbl = go_state->score_lbls[lbli];
+
+        SDL_Texture *name_lbl;
+        SDL_Texture *score_lbl;
+
+        name_lbl = go_state->name_lbls[lbli];
+        score_lbl = go_state->score_lbls[lbli];
 
         int name_h, name_w, score_h, score_w;
 
