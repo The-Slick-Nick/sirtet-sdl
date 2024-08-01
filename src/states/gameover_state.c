@@ -3,7 +3,9 @@
 #include "sirtet.h"
 #include "gameover_state.h"
 #include "application_state.h"
+#include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_ttf.h>
 
 
 /******************************************************************************
@@ -24,9 +26,9 @@ GameoverState* GameoverState_init(
 
 
     // For good measure - likely already sorted but just in case
+    retval->hiscores = hiscores;
     ScoreList_sort(hiscores);
 
-    // TODO: Deconstruct/free
     retval->player_name = calloc(hiscores->namelen + 1, sizeof(char));
     memset(retval->player_name, '_', 3 * sizeof(char));
     retval->name_idx = 0;
@@ -71,7 +73,6 @@ GameoverState* GameoverState_init(
         return NULL;
     }
 
-    // TODO: Deconstruct/free
     retval->pname_lbl = SDL_CreateTextureFromSurface(rend, pnamesurf);
     retval->pscore_lbl = SDL_CreateTextureFromSurface(rend, pscoresurf);
 
@@ -85,7 +86,6 @@ GameoverState* GameoverState_init(
         return NULL;
     }
 
-    // TODO: Null check
     SDL_FreeSurface(pscoresurf);
     SDL_FreeSurface(pnamesurf);
 
@@ -156,6 +156,10 @@ int GameoverState_deconstruct(void *self) {
 
     GameoverState *hs = (GameoverState*)self;
 
+
+    free(hs->player_name);
+
+    // NOTE: hs->pscore_lbl and hs->pname_lbl will be destroyed here
     for (int i = 0; i < hs->n_lbls; i++) {
         SDL_DestroyTexture(hs->score_lbls[i]);
         SDL_DestroyTexture(hs->name_lbls[i]);
@@ -201,6 +205,42 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
     // should be mapped to ESC
     if (Menucode_pressed(go_state->menucode_states, MENUCODE_EXIT)) {
         StateRunner_setPopCount(runner, 1);
+    }
+
+
+    /*** Respond to input ***/
+
+
+    // NOTE: This relies on A-Z being contiguous - which SHOULD be the case
+    // but could not be if I make a mistake
+    for (int i = MENUCODE_ALPHA_UC_A; i < MENUCODE_ALPHA_UC_Z; i++) {
+
+        // TODO: Rename i more semantically
+        if (Menucode_pressed(go_state->menucode_states, i)) {
+            char newchar = 'A' + (i - MENUCODE_ALPHA_UC_A);
+
+            size_t *nameidx = &go_state->name_idx;
+
+            go_state->player_name[*nameidx] = newchar;
+
+            *nameidx = (*nameidx + 1) % go_state->hiscores->namelen;
+
+            // remake label
+            // TODO: Store preferred font in state
+            // TODO: Also figure out the color
+            // TODO: Null checks
+            SDL_DestroyTexture(go_state->pname_lbl);
+            SDL_Surface *namesurf = TTF_RenderText_Solid(
+                app_state->fonts.vt323_24, go_state->player_name,
+                (SDL_Color){50, 50, 255, 255}
+            );
+
+            go_state->pname_lbl = SDL_CreateTextureFromSurface(rend, namesurf);
+            SDL_FreeSurface(namesurf);
+
+        }
+
+
     }
 
 

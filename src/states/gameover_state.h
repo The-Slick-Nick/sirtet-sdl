@@ -26,6 +26,8 @@ typedef struct {
     SDL_Texture **name_lbls; // array of name lbl pointers
     SDL_Texture **score_lbls; // array of score lbl pointers
     
+    // store ref
+    ScoreList *hiscores;
 
     // Player data & whatnot
     SDL_Texture *pname_lbl;  // Player's name
