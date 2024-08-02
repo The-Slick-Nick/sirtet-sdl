@@ -11,6 +11,7 @@
  * General Utilities
 ******************************************************************************/
 
+// TODO: Send these two to a utilities.h/c file
 
 int parseInt(char* txt, int *out_num) {
 

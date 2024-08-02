@@ -39,18 +39,25 @@ typedef struct {
 
     size_t name_idx;  // for name entry
     char *player_name;
+
     int player_score;
     int player_rank;  // Where player will be once added to hiscores
 
+    // menu config
     bool *menucode_states;
     MenucodeMap *mcodes;
+    TTF_Font *lbl_font;
+    SDL_Color static_col;   // for static labels
+    SDL_Color dynamic_col;  // for labels being edited
+
 
 } GameoverState;
 
 
 GameoverState* GameoverState_init(
     SDL_Renderer *rend, TTF_Font *lbl_font,
-    int player_score, ScoreList *hiscores
+    int player_score, ScoreList *hiscores,
+    const SDL_Color *static_col, const SDL_Color *dynamic_col
 );
 
 int GameoverState_deconstruct(void *self);

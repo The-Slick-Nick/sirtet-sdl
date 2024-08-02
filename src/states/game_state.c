@@ -336,9 +336,12 @@ int updateGame(
 
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
 
+            SDL_Color act_col = {200, 50, 50, 255};
+            SDL_Color dyn_col = {50, 50, 200, 255};
             GameoverState *go_state = GameoverState_init(
                 app_state->rend, app_state->fonts.vt323_24,
-                game_state->score, app_state->hiscores
+                game_state->score, app_state->hiscores,
+                &dyn_col, &act_col
             );
 
             if (go_state == NULL) {

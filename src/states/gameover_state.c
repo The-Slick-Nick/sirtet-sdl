@@ -28,7 +28,8 @@
 
 GameoverState* GameoverState_init(
     SDL_Renderer *rend, TTF_Font *lbl_font,
-    int player_score, ScoreList *hiscores
+    int player_score, ScoreList *hiscores,
+    const SDL_Color *static_col, const SDL_Color *dynamic_col
 ) {
 
     GameoverState *retval = calloc(1, sizeof(GameoverState));
@@ -60,6 +61,18 @@ GameoverState* GameoverState_init(
     }
 
 
+    /*** General config ***/
+
+    retval->menucode_states = calloc(NUM_MENUCODES, sizeof(bool));
+    retval->mcodes = MenucodeMap_init(MAX_MENUCODE_MAPS);
+    MenucodePreset_standard(retval->mcodes, 1, 1, 1);
+    MenucodePreset_upperAlpha(retval->mcodes, 1, 1, 1);
+
+    retval->static_col = *static_col;
+    retval->dynamic_col = *dynamic_col;
+    retval->lbl_font = lbl_font;
+
+
     /*** Labels ***/
 
     char scorebuff[12];
@@ -76,11 +89,11 @@ GameoverState* GameoverState_init(
 
 
     SDL_Surface *pscoresurf = TTF_RenderText_Solid(
-        lbl_font, scorebuff, (SDL_Color){200, 50, 50, 255});
+        lbl_font, scorebuff, *dynamic_col);
     SDL_Surface *pnamesurf = TTF_RenderText_Solid(
-        lbl_font, namebuff, (SDL_Color){200, 50, 50, 255});
+        lbl_font, namebuff, *dynamic_col);
     SDL_Surface *pranksurf = TTF_RenderText_Solid(
-        lbl_font, rankbuff, (SDL_Color){200, 50, 50, 255});
+        lbl_font, rankbuff, *dynamic_col);
 
     if (pscoresurf == NULL || pnamesurf == NULL || pranksurf == NULL) {
         char buff[128];
@@ -140,13 +153,13 @@ GameoverState* GameoverState_init(
         snprintf(rankbuff, 12, "%d", rank);
 
         SDL_Surface *namesurf = TTF_RenderText_Solid(
-            lbl_font, namebuff, (SDL_Color){50, 50, 200, 255});
+            lbl_font, namebuff, *static_col);
 
         SDL_Surface *scoresurf = TTF_RenderText_Solid(
-            lbl_font, scorebuff, (SDL_Color){50, 50, 200, 255});
+            lbl_font, scorebuff, *static_col);
 
         SDL_Surface *ranksurf = TTF_RenderText_Solid(
-            lbl_font, rankbuff, (SDL_Color){50, 50, 200, 255});
+            lbl_font, rankbuff, *static_col);
 
         retval->name_lbls[lbli] = SDL_CreateTextureFromSurface(rend, namesurf);
         retval->score_lbls[lbli] = SDL_CreateTextureFromSurface(rend, scoresurf);
@@ -164,12 +177,6 @@ GameoverState* GameoverState_init(
 
 
 
-    /*** Inputs ***/
-
-    retval->menucode_states = calloc(NUM_MENUCODES, sizeof(bool));
-    retval->mcodes = MenucodeMap_init(MAX_MENUCODE_MAPS);
-    MenucodePreset_standard(retval->mcodes, 1, 1, 1);
-    MenucodePreset_upperAlpha(retval->mcodes, 1, 1, 1);
 
 
     return retval;
@@ -245,35 +252,17 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
     /*** Respond to input ***/
 
     Menucode mcmap[26] = {
-        MENUCODE_ALPHA_UC_A,
-        MENUCODE_ALPHA_UC_B,
-        MENUCODE_ALPHA_UC_C,
-        MENUCODE_ALPHA_UC_D,
-        MENUCODE_ALPHA_UC_E,
-        MENUCODE_ALPHA_UC_F,
-        MENUCODE_ALPHA_UC_G,
-        MENUCODE_ALPHA_UC_H,
-        MENUCODE_ALPHA_UC_I,
-        MENUCODE_ALPHA_UC_J,
-        MENUCODE_ALPHA_UC_K,
-        MENUCODE_ALPHA_UC_L,
-        MENUCODE_ALPHA_UC_M,
-        MENUCODE_ALPHA_UC_N,
-        MENUCODE_ALPHA_UC_O,
-        MENUCODE_ALPHA_UC_P,
-        MENUCODE_ALPHA_UC_Q,
-        MENUCODE_ALPHA_UC_R,
-        MENUCODE_ALPHA_UC_S,
-        MENUCODE_ALPHA_UC_T,
-        MENUCODE_ALPHA_UC_U,
-        MENUCODE_ALPHA_UC_V,
-        MENUCODE_ALPHA_UC_W,
-        MENUCODE_ALPHA_UC_X,
-        MENUCODE_ALPHA_UC_Y,
-        MENUCODE_ALPHA_UC_Z
+        MENUCODE_ALPHA_UC_A, MENUCODE_ALPHA_UC_B, MENUCODE_ALPHA_UC_C,
+        MENUCODE_ALPHA_UC_D, MENUCODE_ALPHA_UC_E, MENUCODE_ALPHA_UC_F,
+        MENUCODE_ALPHA_UC_G, MENUCODE_ALPHA_UC_H, MENUCODE_ALPHA_UC_I,
+        MENUCODE_ALPHA_UC_J, MENUCODE_ALPHA_UC_K, MENUCODE_ALPHA_UC_L,
+        MENUCODE_ALPHA_UC_M, MENUCODE_ALPHA_UC_N, MENUCODE_ALPHA_UC_O,
+        MENUCODE_ALPHA_UC_P, MENUCODE_ALPHA_UC_Q, MENUCODE_ALPHA_UC_R,
+        MENUCODE_ALPHA_UC_S, MENUCODE_ALPHA_UC_T, MENUCODE_ALPHA_UC_U,
+        MENUCODE_ALPHA_UC_V, MENUCODE_ALPHA_UC_W, MENUCODE_ALPHA_UC_X,
+        MENUCODE_ALPHA_UC_Y, MENUCODE_ALPHA_UC_Z
     };
 
-    // for (int i = MENUCODE_ALPHA_UC_A; i < MENUCODE_ALPHA_UC_Z; i++) {
     for (int i = 0; i < 26; i++) {
         Menucode mc = mcmap[i];
 
@@ -287,17 +276,37 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
             *nameidx = (*nameidx + 1) % go_state->hiscores->namelen;
 
             // remake label
-            // TODO: Store preferred font in state
-            // TODO: Also figure out the color
-            // TODO: Null checks
             SDL_DestroyTexture(go_state->pname_lbl);
             SDL_Surface *namesurf = TTF_RenderText_Solid(
-                app_state->fonts.vt323_24, go_state->player_name,
-                (SDL_Color){200, 50, 50, 255}
+                go_state->lbl_font,
+                go_state->player_name,
+                go_state->dynamic_col
             );
+
+            if (namesurf == NULL) {
+                char buff[128];
+                snprintf(
+                    buff, 128,
+                    "Error creating surface for new name:\n%s\n",
+                    TTF_GetError()
+                );
+                Sirtet_setError(buff);
+                return -1;
+            }
 
             go_state->pname_lbl = SDL_CreateTextureFromSurface(rend, namesurf);
             SDL_FreeSurface(namesurf);
+            if (go_state->pname_lbl == NULL) {
+                char buff[128];
+                snprintf(
+                    buff, 128,
+                    "Error creating surface for new name:\n%s\n",
+                    SDL_GetError()
+                );
+                Sirtet_setError(buff);
+                return -1;
+            }
+
 
         }
     }
@@ -327,7 +336,6 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
         go_state->n_lbls,
         (go_state->player_rank <= 10 ? 9 : 10)
     );
-
 
     bool player_drawn = false;
     for (int lbli = 0; lbli < max_lbli; lbli++) {
@@ -379,7 +387,8 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
 
 
         SDL_Rect namedst = {.x=rank_w * 2, .y=yoffset, .w=name_w, .h=draw_h};
-        SDL_Rect scoredst = {.x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
+        SDL_Rect scoredst = {
+            .x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
         SDL_Rect rankdst = {.x=0, .y=yoffset, .w=rank_w, .h=draw_h};
 
         SDL_RenderCopy(rend, name_lbl, NULL, &namedst);

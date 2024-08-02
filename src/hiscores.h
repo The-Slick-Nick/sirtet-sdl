@@ -12,8 +12,8 @@
 #define HISCORES_H
 
 #include <stdio.h>
-
-
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 
 typedef struct {
@@ -26,6 +26,21 @@ typedef struct {
     int *intbuff;
     char *strbuff;
 } ScoreList;
+
+
+// A struct representing a display of the above
+typedef struct {
+
+    size_t n_lbls;
+    SDL_Texture **name_lbls;
+    SDL_Texture **score_lbls;
+    SDL_Texture **rank_lbls;
+
+
+} ScoreDisplay; 
+
+
+
 
 
 /******************************************************************************
@@ -79,6 +94,48 @@ int ScoreList_get(ScoreList *self, size_t idx, char *out_name, int *out_score);
 
 // Sort scoreList in descending order by score
 int ScoreList_sort(ScoreList *self);
+
+
+
+/******************************************************************************
+ * ScoreDisplay methods
+******************************************************************************/
+
+// TODO: Implement ScoreDisplay in both hiscore_state and gameover_state
+// - For gameover_state, configure as TWO different ScoreDisplays's straddling
+// the player's new rank
+
+/**
+ * @brief Create a ScoreDisplay from an existing ScoreList
+ * @param sl - ScoreList to use as basis
+ * @param first - First index of ScoreList to read from
+ * @param last - Final index of ScoreList to read from
+ * @param rank_start - First rank number to show (in labels)
+ */
+ScoreDisplay *ScoreDisplay_init(
+    ScoreList *sl, int first, int last, int rank_start);
+
+/**
+ * @brief - Destroy a ScoreDisplay, freeing any memory it has reserved
+ */
+int ScoreDisplay_deconstruct(ScoreDisplay *self);
+
+/**
+ * @param self - ScoreDisplay to draw
+ * @param draw_window - Pointer to dimensions to draw within
+ * @param n - Number of labels to draw
+ * @param out_dim - Pointer to rectangle that will be written into
+ *                  with the final overall drawn dimensions.
+ */
+int ScoreDisplay_draw(
+    ScoreList *self, const SDL_Rect *draw_window,
+    SDL_Rect *out_dim
+
+);
+
+
+
+
 
 #endif
 
