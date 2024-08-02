@@ -1,8 +1,10 @@
 
 #include "hiscores.h"
+#include "inputs.h"
 #include "sirtet.h"
 #include "gameover_state.h"
 #include "application_state.h"
+#include "state_runner.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_ttf.h>
@@ -50,8 +52,9 @@ GameoverState* GameoverState_init(
     /*** Labels ***/
 
     char scorebuff[12];
-    char *namebuff = calloc(hiscores->namelen + 1, sizeof(char));
+    char *namebuff = malloc((hiscores->namelen + 1) * sizeof(char));
     memset(namebuff, '_', hiscores->namelen * sizeof(char));
+    namebuff[hiscores->namelen] = '\0';
 
 
     /** Player Score **/
@@ -93,22 +96,15 @@ GameoverState* GameoverState_init(
     /** Existing High Scores **/
 
     // 1 for player labels
-    retval->n_lbls = 1 + (hiscores->len <= 10 ? hiscores->len : 10);
+    retval->n_lbls = (hiscores->len <= 10 ? hiscores->len : 10);
     retval->name_lbls = malloc(retval->n_lbls * sizeof(SDL_Texture*));
     retval->score_lbls = malloc(retval->n_lbls * sizeof(SDL_Texture*));
 
     int score;
     int lbli = 0;
-    int hiscore_i = 0;
     for (int i = 0; i < retval->n_lbls; i++) {
 
-        if (i == retval->player_rank) {
-            retval->name_lbls[lbli] = retval->pname_lbl;
-            retval->score_lbls[lbli++] = retval->pscore_lbl;
-            continue;
-        }
-
-        if (ScoreList_get(hiscores, hiscore_i, namebuff, &score) != 0) {
+        if (ScoreList_get(hiscores, i, namebuff, &score) != 0) {
             free(retval);
             return NULL;
         }
@@ -125,12 +121,6 @@ GameoverState* GameoverState_init(
 
         SDL_FreeSurface(namesurf);
         SDL_FreeSurface(scoresurf);
-        hiscore_i++;
-    }
-
-    if (retval->player_rank > 10) {
-        retval->name_lbls[lbli] = retval->pname_lbl;
-        retval->score_lbls[lbli] = retval->pscore_lbl;
     }
 
     
@@ -175,6 +165,12 @@ int GameoverState_deconstruct(void *self) {
     return 0;
 
 }
+
+
+/******************************************************************************
+ * Helper funcs
+******************************************************************************/
+
 
 /******************************************************************************
  * State running
@@ -239,7 +235,19 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
             SDL_FreeSurface(namesurf);
 
         }
+    }
 
+
+    if (Menucode_pressed(go_state->menucode_states, MENUCODE_SELECT)) {
+        // submit score
+
+        ScoreList_add(
+            go_state->hiscores, go_state->player_name, go_state->player_score);
+
+        // TODO: Should it be the responsibility of the ScoreList to sort
+        // itself whenever added to, or the method using it?
+        ScoreList_sort(go_state->hiscores);
+        StateRunner_setPopCount(runner, 1);
 
     }
 
@@ -250,7 +258,32 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
 
     int yoffset = 0;
+
+
     for (int lbli = 0; lbli < go_state->n_lbls; lbli++) {
+
+        int name_h, name_w, score_h, score_w;
+
+        if (lbli == go_state->player_rank) {
+            SDL_QueryTexture(
+                go_state->pname_lbl, NULL, NULL, &name_w, &name_h);
+            SDL_QueryTexture(
+                go_state->pscore_lbl, NULL, NULL, &score_w, &score_h);
+
+            int draw_h = name_h > score_h ? name_h : score_h;
+
+            SDL_Rect namedst = {
+                .x=0, .y=yoffset, .w=name_w, .h=draw_h
+            };
+            SDL_Rect scoredst = {
+                .x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
+
+
+            SDL_RenderCopy(rend, go_state->pname_lbl, NULL, &namedst);
+            SDL_RenderCopy(rend, go_state->pscore_lbl, NULL, &scoredst);
+            yoffset += draw_h;
+        }
+
 
         SDL_Texture *name_lbl;
         SDL_Texture *score_lbl;
@@ -258,7 +291,6 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
         name_lbl = go_state->name_lbls[lbli];
         score_lbl = go_state->score_lbls[lbli];
 
-        int name_h, name_w, score_h, score_w;
 
         SDL_QueryTexture(name_lbl, NULL, NULL, &name_w, &name_h);
         SDL_QueryTexture(score_lbl, NULL, NULL, &score_w, &score_h);
