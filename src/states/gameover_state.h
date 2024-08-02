@@ -23,6 +23,8 @@ typedef struct {
 
     // for the top 10
     size_t n_lbls;
+
+    SDL_Texture **rank_lbls; // array of name lbl pointers
     SDL_Texture **name_lbls; // array of name lbl pointers
     SDL_Texture **score_lbls; // array of score lbl pointers
     
@@ -30,6 +32,8 @@ typedef struct {
     ScoreList *hiscores;
 
     // Player data & whatnot
+
+    SDL_Texture *prank_lbl;  // Player's rank
     SDL_Texture *pname_lbl;  // Player's name
     SDL_Texture *pscore_lbl;  // Player's score
 
