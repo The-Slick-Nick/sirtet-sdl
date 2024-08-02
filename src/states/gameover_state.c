@@ -17,6 +17,10 @@
 #define MAX3(a, b, c) MAX2((a), MAX2((b), (c)))
 #endif
 
+#ifndef MIN2
+#define MIN2(a, b) ((a) > (b) ? (b) : (a))
+#endif
+
 /******************************************************************************
  * State Struct creation & destruction
 ******************************************************************************/
@@ -318,8 +322,15 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     int yoffset = 0;
 
-    int max_lbli = (go_state->player_rank <= 10 ? 8 : 9);
-    for (int lbli = 0; lbli <= max_lbli; lbli++) {
+
+    int max_lbli = MIN2(
+        go_state->n_lbls,
+        (go_state->player_rank <= 10 ? 9 : 10)
+    );
+
+
+    bool player_drawn = false;
+    for (int lbli = 0; lbli < max_lbli; lbli++) {
 
         int name_h, name_w, score_h, score_w, rank_w, rank_h;
 
@@ -347,6 +358,7 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
             SDL_RenderCopy(rend, go_state->pscore_lbl, NULL, &scoredst);
             SDL_RenderCopy(rend, go_state->prank_lbl, NULL, &rankdst);
             yoffset += draw_h;
+            player_drawn = true;
         }
 
 
@@ -377,8 +389,8 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
         yoffset += draw_h;
     }
 
-    // Draw at end, if not in top 10
-    if (go_state->player_rank > 10) {
+    // Drawn at end (if not in top 10)
+    if (!player_drawn) {
 
         int name_h, name_w, score_h, score_w, rank_w, rank_h;
 
