@@ -7,7 +7,6 @@
 #include "coordinates.h"
 
 
-#define INVALID_BLOCK_ID -1
 
 /* For a standard size 4 block
 * [00] [01] [02] [03]

@@ -21,17 +21,6 @@
 #include "game_state.h"
 
 
-#define INIT_TILE_SIZE 4
-#define MAX_TILE_SIZE 5
-#define MIN_TILE_SIZE 3
-
-#define MIN_LEVEL 0
-#define MAX_LEVEL 10
-
-#define MENUCOL_ACTIVE ((SDL_Color){0, 0, 0})
-#define MENUCOL_INACTIVE ((SDL_Color){100, 100, 100})
-#define BACKGROUNDCOL ((SDL_Color){155, 155, 155})
-
 /******************************************************************************
  * menufunc predeclarations
  *

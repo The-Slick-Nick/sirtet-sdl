@@ -159,17 +159,13 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     /***** Load saved data *****/
 
-    // TODO: When global cfg file is used, define an app-level name length
-    // & highscores length to maintain
-    retval->hiscores = ScoreList_init(100, 3);
+    retval->hiscores = ScoreList_init(HISCORES_MAX_SIZE, HISCORES_NAME_LEN);
 
     // TODO: Take a path to some appdata style folder and append filename to
     // path 
 
     char *path = "hiscores.txt";
     FILE *hiscore_file = fopen(path, "r");
-    // TODO: Make this a hard error, once I figure out how to "create file if
-    // not exists"
     if (hiscore_file != NULL) {
         ScoreList_readFile(retval->hiscores, hiscore_file);
         fclose(hiscore_file);

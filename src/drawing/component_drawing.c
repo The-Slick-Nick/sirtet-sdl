@@ -1,10 +1,3 @@
-
-/* component_drawing.h
-*
-* Source file to handle the drawing of any components
-* (blocks, grid, etc.)
-*/
-
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_stdinc.h>
 #include <SDL2/SDL_timer.h>
@@ -14,10 +7,9 @@
 #include "coordinates.h"
 #include "block.h"
 #include "grid.h"
+#include "utilities.h"
+#include "sirtet.h"
 
-#ifndef INT_MIN
-#define INT_MIN(a, b) ((a) > (b) ? (b) : (a))
-#endif
 
 
 // Lowest-level unit of "draw game component"
@@ -55,9 +47,9 @@ int drawBlockCell(
     };
 
     SDL_Color nw_color = (SDL_Color){
-        .r=INT_MIN(255, 12*base_color.r / 10),
-        .g=INT_MIN(255, 12*base_color.g / 10),
-        .b=INT_MIN(255, 12* base_color.b / 10),
+        .r=MIN2(255, 12*base_color.r / 10),
+        .g=MIN2(255, 12*base_color.g / 10),
+        .b=MIN2(255, 12* base_color.b / 10),
         .a=base_color.a
     };
 

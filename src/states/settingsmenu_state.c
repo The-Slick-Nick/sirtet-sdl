@@ -16,12 +16,6 @@
 #include "application_state.h"
 
 
-// TODO: config.h - Pull these from the same global constants file (that doesn't yet exist)
-// as the ones pulled from GameSettings_init(...), as currently they are
-// separate macros that HAPPEN to define the same values
-#define MAX_TILE_SIZE 5
-#define MIN_TILE_SIZE 3
-#define INIT_TILE_SIZE 4
 
 /******************************************************************************
  * menufunc predeclarations
@@ -504,21 +498,28 @@ static void menufunc_nextPalette(
 
 
     /*** Recasting ***/
+
     SettingsMenuState *menu_state = (SettingsMenuState*)menu_data;
 
 
     /*** Unpacking ***/
+
     int *selection = &menu_state->palette_selection;
+    ColorPalette **palettes = menu_state->palettes;
+    TextMenu *menu = menu_state->menu;
+    int palette_opt = menu_state->menuopt_palette;
+
+
 
     if (*selection + 1 >= menu_state->num_palettes) {
         return;
     }
     (*selection)++;
+    ColorPalette *this_palette = palettes[*selection];
 
-    // TODO: Clean some of the variable refs up through unpacking
     char newlbl[128];
-    snprintf(newlbl, 128, "Palette: %s", menu_state->palettes[*selection]->name);
-    TextMenu_updateText(menu_state->menu, menu_state->menuopt_palette, newlbl);
+    snprintf(newlbl, 128, "Palette: %s", this_palette->name);
+    TextMenu_updateText(menu, palette_opt, newlbl);
 }
 
 // Use the previous palette

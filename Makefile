@@ -38,10 +38,17 @@ INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 # Add a prefix to INC_DIRS. So moduleA would become -ImoduleA. GCC understands this -I flag
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
+# All SDL libraries/modules used
+SDL_MODULES := SDL2 SDL2_ttf
+# Lib flags for each SDL module
+SDL_FLAGS := $(addprefix -l,$(SDL_MODULES))
+
+
+
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
 # Note to self: look in /usr/include for proper lib names
-CPPFLAGS := $(INC_FLAGS) -g -MMD -MP -lSDL2 -lSDL2_ttf
+CPPFLAGS := $(INC_FLAGS) -g -MMD -MP $(SDL_FLAGS)
 
 ######################
 ### Build Commands ###
@@ -60,9 +67,8 @@ $(BUILD_DIR)/%.c.o: %.c
 $(BUILD_DIR)/lib.a: $(OBJS)
 	ar rvs $@ $^	
 
-# TODO: Make all of the -lSDL flags into a common $(...) syntax var
 ./main.bin: $(BUILD_DIR)/lib.a
-	gcc main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a -lSDL2 -lSDL2_ttf
+	gcc main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a $(SDL_FLAGS)
 
 ##################
 ### HIGH LEVEL ###

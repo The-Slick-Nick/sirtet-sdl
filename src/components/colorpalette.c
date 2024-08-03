@@ -50,8 +50,6 @@ ColorPalette* ColorPalette_init(
     return retval;
 }
 
-
-#define STATIC_ARRMAX 128
 ColorPalette* ColorPalette_initVa(const char *name, size_t size, ...) {
 
     // memory structure:

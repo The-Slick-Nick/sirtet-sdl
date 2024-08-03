@@ -8,7 +8,6 @@
 ******************************************************************************/
 
 
-// TODO: Move these tests into a test_utilities.c
 void testSortByBasis() {
     // sorting algo test
 

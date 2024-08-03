@@ -1,25 +1,14 @@
-
-#include "hiscores.h"
-#include "inputs.h"
-#include "sirtet.h"
-#include "gameover_state.h"
-#include "application_state.h"
-#include "state_runner.h"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_ttf.h>
 
-#ifndef MAX2
-#define MAX2(a, b) ((a) > (b) ? (a) : (b))
-#endif
-
-#ifndef MAX3
-#define MAX3(a, b, c) MAX2((a), MAX2((b), (c)))
-#endif
-
-#ifndef MIN2
-#define MIN2(a, b) ((a) > (b) ? (b) : (a))
-#endif
+#include "hiscores.h"
+#include "inputs.h"
+#include "sirtet.h"
+#include "utilities.h"
+#include "gameover_state.h"
+#include "application_state.h"
+#include "state_runner.h"
 
 /******************************************************************************
  * State Struct creation & destruction

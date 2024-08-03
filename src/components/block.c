@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+
 #include "block.h"
+#include "sirtet.h"
 #include "coordinates.h"
-
-
 
 /* Block "contents" are represented as a bit mask,
  * with each bit number referring to a particular

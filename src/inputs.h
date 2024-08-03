@@ -24,7 +24,7 @@ int processHardwareInputs(int* hardware_states);
 /******************************************************************************
  * Game Inputs
 ******************************************************************************/
-#define MAX_GAMECODE_MAPS 128  // maximum 
+#define MAX_GAMECODE_MAPS 128 // maximum 
 
 
 // Enum of codes representing game (and menu?) actions
