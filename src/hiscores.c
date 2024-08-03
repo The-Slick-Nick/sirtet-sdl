@@ -500,12 +500,19 @@ ScoreDisplay *ScoreDisplay_init(
     ScoreDisplay *retval = malloc(sizeof(ScoreDisplay));
 
     if (
-        first >= last ||
+        first > last ||
         first < 0 ||
         last >= sl->len ) {
 
-        Sirtet_setError(
-            "Invalid ScoreList indices passed in ScoreDisplay_init\n");
+        char buff[128];
+        snprintf(
+            buff, 128,
+            "Invalid ScoreList indices passed in ScoreDisplay_init: "
+            "%d to %d\n",
+            first, last
+        );
+
+        Sirtet_setError(buff);
         return NULL;
     }
     retval->n_lbls = (last - first + 1);
@@ -593,6 +600,9 @@ ScoreDisplay *ScoreDisplay_init(
 
 
 int ScoreDisplay_deconstruct(ScoreDisplay *self) {
+    if (self == NULL) {
+        return 0;
+    }
 
     for (int i = 0; i < self->n_lbls; i++) {
         SDL_DestroyTexture(self->name_lbls[i]);
@@ -622,7 +632,7 @@ int ScoreDisplay_draw(
 
         SDL_Rect rankdst = {
             .x=draw_window->x,
-            .y=yoffset
+            .y=draw_window->y + yoffset
         };
         SDL_QueryTexture(
             self->rank_lbls[lbl_i], NULL, NULL, &rankdst.w, &rankdst.h);
@@ -630,7 +640,7 @@ int ScoreDisplay_draw(
 
         SDL_Rect namedst = {
             .x=draw_window->x + rankdst.w,
-            .y=yoffset
+            .y=draw_window->y + yoffset
         };
         SDL_QueryTexture(
             self->name_lbls[lbl_i], NULL, NULL, &namedst.w, &namedst.h);
@@ -640,7 +650,7 @@ int ScoreDisplay_draw(
         SDL_QueryTexture(
             self->score_lbls[lbl_i], NULL, NULL, &scoredst.w, &scoredst.h);
         scoredst.x = (draw_window->x + draw_window->w - scoredst.w);
-        scoredst.y = yoffset;
+        scoredst.y = draw_window->y + yoffset;
 
         SDL_RenderCopy(rend, self->rank_lbls[lbl_i], NULL, &rankdst);
         SDL_RenderCopy(rend, self->name_lbls[lbl_i], NULL, &namedst);

@@ -197,6 +197,11 @@ GameState* GameState_init(
     /*** Controls ***/
 
     retval->keymaps = GamecodeMap_initCopy(keymaps);
+
+
+    // TODO: Delete this
+    GamecodeMap_addMap(retval->keymaps, GAMECODE_HARD_DROP, SDL_SCANCODE_SPACE, 1, INT_MAX, 1);
+
     retval->gamecode_states = (bool*)calloc((int)NUM_GAMECODES, sizeof(bool));
 
 
@@ -345,7 +350,7 @@ int updateGame(
             );
 
             if (go_state == NULL) {
-                printf("%s", Sirtet_getError());
+                printf("Error: %s", Sirtet_getError());
                 exit(1);
             }
 

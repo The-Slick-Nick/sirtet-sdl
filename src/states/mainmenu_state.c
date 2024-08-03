@@ -297,6 +297,7 @@ void menufunc_openHiscores(
     if (new_state == NULL) {
         printf(
             "Error in menufunc_openHiscores:\n    %s\n:", Sirtet_getError());
+        exit(1);
     }
 
     StateRunner_addState(

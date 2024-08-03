@@ -34,9 +34,24 @@ HiscoresState* HiscoresState_init(
 
     /*** Labels ***/
 
-    SDL_Color lblcol = {50, 50, 200, 255};
-    retval->labels = ScoreDisplay_init(
-        hiscores, 0, hiscores->len - 1, 1, rend, lbl_font, &lblcol);
+    retval->labels = NULL;
+    if (hiscores->len > 0) {
+
+        SDL_Color lblcol = {50, 50, 200, 255};
+        retval->labels = ScoreDisplay_init(
+            hiscores, 0, hiscores->len - 1, 1, rend, lbl_font, &lblcol);
+
+        if (retval->labels == NULL) {
+            char buff[128];
+            snprintf(
+                buff, 128,
+                "Error creating HiscoreState:\n    %s\n",
+                Sirtet_getError()
+            );
+            Sirtet_setError(buff);
+            return NULL;
+        }
+    }
 
 
     /*** Inputs ***/
@@ -100,9 +115,11 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     /*** DRAW ***/
 
-    SDL_Rect dstwind = {.x=0, .y=0};
-    SDL_GetWindowSize(app_state->wind, &dstwind.w, &dstwind.h);
-    ScoreDisplay_draw(hs_state->labels, rend, &dstwind, NULL);
+    if (hs_state->labels != NULL && hs_state->labels->n_lbls > 0) {
+        SDL_Rect dstwind = {.x=0, .y=0};
+        SDL_GetWindowSize(app_state->wind, &dstwind.w, &dstwind.h);
+        ScoreDisplay_draw(hs_state->labels, rend, &dstwind, NULL);
+    }
 
     return 0;
 }
