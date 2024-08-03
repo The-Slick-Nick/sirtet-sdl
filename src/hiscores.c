@@ -1,3 +1,4 @@
+#include <SDL2/SDL_render.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,6 +6,14 @@
 #include "hiscores.h"
 #include "sirtet.h"  // May be removed if used later as a general-purpose tool
 
+// TODO: Put these from global utilities header & include from there
+#ifndef MAX2
+#define MAX2(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
+#ifndef MAX3
+#define MAX3(a, b, c) (MAX2(MAX2(a, b), c))
+#endif
 
 
 /******************************************************************************
@@ -476,5 +485,180 @@ int ScoreList_toFile(ScoreList *self, FILE *f) {
 
 
 
+/******************************************************************************
+ * ScoreDisplay methods
+******************************************************************************/
+
+
+ScoreDisplay *ScoreDisplay_init(
+    ScoreList *sl, 
+    int first, int last, int rank_start,
+    SDL_Renderer *rend,
+    TTF_Font *lbl_font, const SDL_Color *lbl_col
+) {
+
+    ScoreDisplay *retval = malloc(sizeof(ScoreDisplay));
+
+    if (
+        first >= last ||
+        first < 0 ||
+        last >= sl->len ) {
+
+        Sirtet_setError(
+            "Invalid ScoreList indices passed in ScoreDisplay_init\n");
+        return NULL;
+    }
+    retval->n_lbls = (last - first + 1);
+
+
+    size_t arrsz = retval->n_lbls * sizeof(SDL_Texture*);
+    retval->rank_lbls = malloc(arrsz);
+    retval->name_lbls = malloc(arrsz);
+    retval->score_lbls = malloc(arrsz);
+
+    char rankbuff[12];
+    char scorebuff[12];
+    char *namebuff = calloc(sl->namelen + 1, sizeof(char));
+    if (namebuff == NULL) {
+        Sirtet_setError("Error allocating memory in ScoreDisplay_init\n");
+        return NULL;
+    }
+
+    for (
+        int lbl_i = 0, rank = rank_start, sl_i = first;
+        lbl_i < retval->n_lbls && sl_i <= last;
+        lbl_i++, rank++, sl_i++
+    ) {
+
+        int score;
+        if (ScoreList_get(sl, sl_i, namebuff, &score) != 0) {
+            free(retval);
+            return NULL;
+        }
+
+        snprintf(scorebuff, 12, "%d", score);
+        snprintf(rankbuff, 12, "%d", rank);
+
+        SDL_Surface *namesurf = TTF_RenderText_Solid(
+            lbl_font, namebuff, *lbl_col);
+
+        SDL_Surface *scoresurf = TTF_RenderText_Solid(
+            lbl_font, scorebuff, *lbl_col);
+
+        SDL_Surface *ranksurf = TTF_RenderText_Solid(
+            lbl_font, rankbuff, *lbl_col);
+
+        if (
+            namesurf == NULL ||
+            scoresurf == NULL ||
+            ranksurf == NULL
+        ) {
+            char errbuff[128];
+            snprintf(
+                errbuff, 128, 
+                "Error creating labels for ScoreDisplay:\n%s\n",
+                TTF_GetError()
+            );
+            return NULL;
+        }
+
+        retval->name_lbls[lbl_i] = SDL_CreateTextureFromSurface(
+            rend, namesurf);
+        retval->score_lbls[lbl_i] = SDL_CreateTextureFromSurface(
+            rend, scoresurf);
+        retval->rank_lbls[lbl_i] = SDL_CreateTextureFromSurface(
+            rend, ranksurf);
+
+        SDL_FreeSurface(namesurf);
+        SDL_FreeSurface(scoresurf);
+        SDL_FreeSurface(ranksurf);
+
+        if (
+            retval->name_lbls[lbl_i] == NULL ||
+            retval->score_lbls[lbl_i] == NULL ||
+            retval->rank_lbls[lbl_i] == NULL
+        ) {
+            char errbuff[128];
+            snprintf(
+                errbuff, 128, 
+                "Error creating labels for ScoreDisplay:\n%s\n",
+                SDL_GetError()
+            );
+            return NULL;
+        }
+    }
+    free(namebuff);
+    return retval;
+}
+
+
+int ScoreDisplay_deconstruct(ScoreDisplay *self) {
+
+    for (int i = 0; i < self->n_lbls; i++) {
+        SDL_DestroyTexture(self->name_lbls[i]);
+        SDL_DestroyTexture(self->score_lbls[i]);
+        SDL_DestroyTexture(self->rank_lbls[i]);
+    }
+
+    free(self->name_lbls);
+    free(self->score_lbls);
+    free(self->rank_lbls);
+
+    free(self);
+
+    return 0;
+}
+
+
+int ScoreDisplay_draw(
+    ScoreDisplay *self,
+    SDL_Renderer *rend,
+    const SDL_Rect *draw_window,
+    SDL_Rect *out_dim
+) {
+
+    int yoffset = 0;
+    for (int lbl_i = 0; lbl_i < self->n_lbls; lbl_i++) {
+
+        SDL_Rect rankdst = {
+            .x=draw_window->x,
+            .y=yoffset
+        };
+        SDL_QueryTexture(
+            self->rank_lbls[lbl_i], NULL, NULL, &rankdst.w, &rankdst.h);
+
+
+        SDL_Rect namedst = {
+            .x=draw_window->x + rankdst.w,
+            .y=yoffset
+        };
+        SDL_QueryTexture(
+            self->name_lbls[lbl_i], NULL, NULL, &namedst.w, &namedst.h);
+
+
+        SDL_Rect scoredst;
+        SDL_QueryTexture(
+            self->score_lbls[lbl_i], NULL, NULL, &scoredst.w, &scoredst.h);
+        scoredst.x = (draw_window->x + draw_window->w - scoredst.w);
+        scoredst.y = yoffset;
+
+        SDL_RenderCopy(rend, self->rank_lbls[lbl_i], NULL, &rankdst);
+        SDL_RenderCopy(rend, self->name_lbls[lbl_i], NULL, &namedst);
+        SDL_RenderCopy(rend, self->score_lbls[lbl_i], NULL, &scoredst);
+
+        yoffset += MAX3(rankdst.h, namedst.h, scoredst.h);
+    }
+
+    if (out_dim != NULL) {
+        *out_dim = (SDL_Rect) {
+            .x=draw_window->x,
+            .y=draw_window->y,
+            .w=draw_window->h,
+            .h=yoffset
+        };
+    }
+
+    return 0;
+}
 
 

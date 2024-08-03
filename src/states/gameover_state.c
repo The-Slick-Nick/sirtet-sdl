@@ -132,52 +132,24 @@ GameoverState* GameoverState_init(
 
     /** Existing High Scores **/
 
-    retval->n_lbls = (hiscores->len <= 10 ? hiscores->len : 10);
-    size_t arrsz = retval->n_lbls * sizeof(SDL_Texture*);
-    retval->rank_lbls = malloc(arrsz);
-    retval->name_lbls = malloc(arrsz);
-    retval->score_lbls = malloc(arrsz);
-
-    int score;
-    int lbli = 0;
-    for (int i = 0; i < retval->n_lbls; i++) {
-
-        if (ScoreList_get(hiscores, i, namebuff, &score) != 0) {
-            free(retval);
-            return NULL;
-        }
-
-        int rank = i + 1 + (retval->player_rank <= i);
-
-        snprintf(scorebuff, 12, "%d", score);
-        snprintf(rankbuff, 12, "%d", rank);
-
-        SDL_Surface *namesurf = TTF_RenderText_Solid(
-            lbl_font, namebuff, *static_col);
-
-        SDL_Surface *scoresurf = TTF_RenderText_Solid(
-            lbl_font, scorebuff, *static_col);
-
-        SDL_Surface *ranksurf = TTF_RenderText_Solid(
-            lbl_font, rankbuff, *static_col);
-
-        retval->name_lbls[lbli] = SDL_CreateTextureFromSurface(rend, namesurf);
-        retval->score_lbls[lbli] = SDL_CreateTextureFromSurface(rend, scoresurf);
-        retval->rank_lbls[lbli++] = SDL_CreateTextureFromSurface(rend, ranksurf);
-
-        SDL_FreeSurface(namesurf);
-        SDL_FreeSurface(scoresurf);
-        SDL_FreeSurface(ranksurf);
+    retval->top_labels = NULL;
+    if (retval->player_rank > 0) {
+        retval->top_labels = ScoreDisplay_init(
+            hiscores, 0, MIN2(retval->player_rank - 1, 10), 1,
+            rend, lbl_font, static_col
+        );
     }
 
-    
-    free(namebuff);
+    retval->bottom_labels = NULL;
+    if (retval->player_rank < 10) {
+        retval->bottom_labels = ScoreDisplay_init(
+            hiscores, retval->player_rank, 9, retval->player_rank + 1,
+            rend, lbl_font, static_col
+
+        );
+    }
 
     /***/
-
-
-
-
 
     return retval;
 }
@@ -194,13 +166,13 @@ int GameoverState_deconstruct(void *self) {
     SDL_DestroyTexture(hs->pscore_lbl);
     SDL_DestroyTexture(hs->pname_lbl);
 
-    for (int i = 0; i < hs->n_lbls; i++) {
-        SDL_DestroyTexture(hs->score_lbls[i]);
-        SDL_DestroyTexture(hs->name_lbls[i]);
-        SDL_DestroyTexture(hs->rank_lbls[i]);
+    if (hs->top_labels != NULL) {
+        ScoreDisplay_deconstruct(hs->top_labels);
     }
-    free(hs->score_lbls);
-    free(hs->name_lbls);
+
+    if (hs->bottom_labels != NULL) {
+        ScoreDisplay_deconstruct(hs->bottom_labels);
+    }
 
 
     MenucodeMap_deconstruct(hs->mcodes);
@@ -326,107 +298,58 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     /*** DRAW ***/
 
-    int wind_w, wind_h;
-    SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
+    SDL_Rect drawdst = {.x=0, .y=0};
+    SDL_GetWindowSize(app_state->wind, &drawdst.w, &drawdst.h);
+
+    SDL_Rect outrect = {0, 0, drawdst.w, drawdst.h};
+    if (go_state->top_labels != NULL) {
+        ScoreDisplay_draw(
+            go_state->top_labels, rend,
+            &drawdst,  &outrect
+        );
+    }
+
+    drawdst.y += outrect.h;
+    if (go_state->bottom_labels != NULL) {
+        ScoreDisplay_draw(
+            go_state->bottom_labels, rend,
+            &drawdst,  &outrect
+        );
+    }
 
     int yoffset = 0;
 
 
-    int max_lbli = MIN2(
-        go_state->n_lbls,
-        (go_state->player_rank <= 10 ? 9 : 10)
-    );
-
-    bool player_drawn = false;
-    for (int lbli = 0; lbli < max_lbli; lbli++) {
-
-        int name_h, name_w, score_h, score_w, rank_w, rank_h;
-
-        if (lbli == go_state->player_rank) {
-            SDL_QueryTexture(
-                go_state->pname_lbl, NULL, NULL, &name_w, &name_h);
-            SDL_QueryTexture(
-                go_state->pscore_lbl, NULL, NULL, &score_w, &score_h);
-            SDL_QueryTexture(
-                go_state->prank_lbl, NULL, NULL, &rank_w, &rank_h);
-
-            int draw_h = MAX3(name_h, score_h, rank_h);
-
-            SDL_Rect namedst = {
-                .x=rank_w * 2, .y=yoffset, .w=name_w, .h=draw_h
-            };
-            SDL_Rect scoredst = {
-                .x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
-
-            SDL_Rect rankdst = {
-                .x=0, .y=yoffset, .w=rank_w, .h=draw_h};
-
-
-            SDL_RenderCopy(rend, go_state->pname_lbl, NULL, &namedst);
-            SDL_RenderCopy(rend, go_state->pscore_lbl, NULL, &scoredst);
-            SDL_RenderCopy(rend, go_state->prank_lbl, NULL, &rankdst);
-            yoffset += draw_h;
-            player_drawn = true;
-        }
-
-
-        SDL_Texture *name_lbl;
-        SDL_Texture *score_lbl;
-        SDL_Texture *rank_lbl;
-
-        name_lbl = go_state->name_lbls[lbli];
-        score_lbl = go_state->score_lbls[lbli];
-        rank_lbl = go_state->rank_lbls[lbli];
-
-
-        SDL_QueryTexture(name_lbl, NULL, NULL, &name_w, &name_h);
-        SDL_QueryTexture(score_lbl, NULL, NULL, &score_w, &score_h);
-        SDL_QueryTexture(rank_lbl, NULL, NULL, &rank_w, &rank_h);
-
-        int draw_h = MAX3(name_h, score_h, rank_h);
-
-
-        SDL_Rect namedst = {.x=rank_w * 2, .y=yoffset, .w=name_w, .h=draw_h};
-        SDL_Rect scoredst = {
-            .x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
-        SDL_Rect rankdst = {.x=0, .y=yoffset, .w=rank_w, .h=draw_h};
-
-        SDL_RenderCopy(rend, name_lbl, NULL, &namedst);
-        SDL_RenderCopy(rend, score_lbl, NULL, &scoredst);
-        SDL_RenderCopy(rend, rank_lbl, NULL, &rankdst);
-
-        yoffset += draw_h;
-    }
-
+    // TODO: Figure this part out 
     // Drawn at end (if not in top 10)
-    if (!player_drawn) {
-
-        int name_h, name_w, score_h, score_w, rank_w, rank_h;
-
-        SDL_QueryTexture(
-            go_state->pname_lbl, NULL, NULL, &name_w, &name_h);
-        SDL_QueryTexture(
-            go_state->pscore_lbl, NULL, NULL, &score_w, &score_h);
-        SDL_QueryTexture(
-            go_state->prank_lbl, NULL, NULL, &rank_w, &rank_h);
-
-        int draw_h = MAX3(name_h, score_h, rank_h);
-
-        SDL_Rect namedst = {
-            .x=rank_w * 2, .y=yoffset, .w=name_w, .h=draw_h
-        };
-        SDL_Rect scoredst = {
-            .x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
-
-        SDL_Rect rankdst = {
-            .x=0, .y=yoffset, .w=rank_w, .h=draw_h};
-
-
-        SDL_RenderCopy(rend, go_state->pname_lbl, NULL, &namedst);
-        SDL_RenderCopy(rend, go_state->pscore_lbl, NULL, &scoredst);
-        SDL_RenderCopy(rend, go_state->prank_lbl, NULL, &rankdst);
-        yoffset += draw_h;
-    }
+    // if (!player_drawn) {
+    //
+    //     int name_h, name_w, score_h, score_w, rank_w, rank_h;
+    //
+    //     SDL_QueryTexture(
+    //         go_state->pname_lbl, NULL, NULL, &name_w, &name_h);
+    //     SDL_QueryTexture(
+    //         go_state->pscore_lbl, NULL, NULL, &score_w, &score_h);
+    //     SDL_QueryTexture(
+    //         go_state->prank_lbl, NULL, NULL, &rank_w, &rank_h);
+    //
+    //     int draw_h = MAX3(name_h, score_h, rank_h);
+    //
+    //     SDL_Rect namedst = {
+    //         .x=rank_w * 2, .y=yoffset, .w=name_w, .h=draw_h
+    //     };
+    //     SDL_Rect scoredst = {
+    //         .x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
+    //
+    //     SDL_Rect rankdst = {
+    //         .x=0, .y=yoffset, .w=rank_w, .h=draw_h};
+    //
+    //
+    //     SDL_RenderCopy(rend, go_state->pname_lbl, NULL, &namedst);
+    //     SDL_RenderCopy(rend, go_state->pscore_lbl, NULL, &scoredst);
+    //     SDL_RenderCopy(rend, go_state->prank_lbl, NULL, &rankdst);
+    //     yoffset += draw_h;
+    // }
 
     return 0;
 }

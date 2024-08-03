@@ -113,7 +113,11 @@ int ScoreList_sort(ScoreList *self);
  * @param rank_start - First rank number to show (in labels)
  */
 ScoreDisplay *ScoreDisplay_init(
-    ScoreList *sl, int first, int last, int rank_start);
+    ScoreList *sl, 
+    int first, int last, int rank_start,
+    SDL_Renderer *rend,
+    TTF_Font *lbl_font, const SDL_Color *lbl_col
+);
 
 /**
  * @brief - Destroy a ScoreDisplay, freeing any memory it has reserved
@@ -128,7 +132,9 @@ int ScoreDisplay_deconstruct(ScoreDisplay *self);
  *                  with the final overall drawn dimensions.
  */
 int ScoreDisplay_draw(
-    ScoreList *self, const SDL_Rect *draw_window,
+    ScoreDisplay *self,
+    SDL_Renderer *rend,
+    const SDL_Rect *draw_window,
     SDL_Rect *out_dim
 
 );

@@ -20,9 +20,11 @@
 // NOTE: ScoreList *hiscores is in ApplicationState, so is not stored here
 typedef struct {
 
-    size_t n_lbls;
-    SDL_Texture **name_lbls; // array of name lbl pointers
-    SDL_Texture **score_lbls; // array of score lbl pointers
+
+    ScoreDisplay *labels;
+    // size_t n_lbls;
+    // SDL_Texture **name_lbls; // array of name lbl pointers
+    // SDL_Texture **score_lbls; // array of score lbl pointers
 
     bool *menucode_states;
     MenucodeMap *mcodes;

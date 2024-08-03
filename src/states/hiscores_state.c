@@ -31,33 +31,12 @@ HiscoresState* HiscoresState_init(
     }
 
 
+
     /*** Labels ***/
 
-    retval->n_lbls = (hiscores->len <= 10 ? hiscores->len : 10);
-    retval->name_lbls = malloc(hiscores->len * sizeof(SDL_Texture*));
-    retval->score_lbls = malloc(hiscores->len * sizeof(SDL_Texture*));
-
-    char *namebuff = calloc(hiscores->namelen + 1, sizeof(char));
-    char scorebuff[12];
-    int score;
-    for (int i = 0; i < retval->n_lbls; i++) {
-        if (ScoreList_get(hiscores, i, namebuff, &score) != 0) {
-            free(retval);
-            return NULL;
-        }
-        snprintf(scorebuff, 12, "%d", score);
-
-        SDL_Surface *namesurf = TTF_RenderText_Solid(lbl_font, namebuff, (SDL_Color){50, 50, 200, 255});
-        SDL_Surface *scoresurf = TTF_RenderText_Solid(lbl_font, scorebuff, (SDL_Color){50, 50, 200, 255});
-
-        retval->name_lbls[i] = SDL_CreateTextureFromSurface(rend, namesurf);
-        retval->score_lbls[i] = SDL_CreateTextureFromSurface(rend, scoresurf);
-
-        SDL_FreeSurface(namesurf);
-        SDL_FreeSurface(scoresurf);
-    }
-
-    free(namebuff);
+    SDL_Color lblcol = {50, 50, 200, 255};
+    retval->labels = ScoreDisplay_init(
+        hiscores, 0, hiscores->len - 1, 1, rend, lbl_font, &lblcol);
 
 
     /*** Inputs ***/
@@ -75,14 +54,7 @@ int HiscoresState_deconstruct(void *self) {
 
     HiscoresState *hs = (HiscoresState*)self;
 
-
-    for (int i = 0; i < hs->n_lbls; i++) {
-        SDL_DestroyTexture(hs->score_lbls[i]);
-        SDL_DestroyTexture(hs->name_lbls[i]);
-    }
-    free(hs->score_lbls);
-    free(hs->name_lbls);
-
+    ScoreDisplay_deconstruct(hs->labels);
 
     MenucodeMap_deconstruct(hs->mcodes);
     free(hs->menucode_states);
@@ -113,7 +85,10 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     /*** Process Inputs ***/
 
-    processMenucodes(hs_state->menucode_states, app_state->hardware_states, hs_state->mcodes);
+    processMenucodes(
+        hs_state->menucode_states, app_state->hardware_states,
+        hs_state->mcodes
+    );
 
     // should be mapped to ESC
     if (Menucode_pressed(hs_state->menucode_states, MENUCODE_EXIT)) {
@@ -125,29 +100,9 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     /*** DRAW ***/
 
-    int wind_w, wind_h;
-    SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
-
-    int yoffset = 0;
-    for (int lbli = 0; lbli < hs_state->n_lbls; lbli++) {
-        SDL_Texture *name_lbl = hs_state->name_lbls[lbli];
-        SDL_Texture *score_lbl = hs_state->score_lbls[lbli];
-
-        int name_h, name_w, score_h, score_w;
-
-        SDL_QueryTexture(name_lbl, NULL, NULL, &name_w, &name_h);
-        SDL_QueryTexture(score_lbl, NULL, NULL, &score_w, &score_h);
-
-        int draw_h = name_h > score_h ? name_h : score_h;
-
-        SDL_Rect namedst = {.x=0, .y=yoffset, .w=name_w, .h=draw_h};
-        SDL_Rect scoredst = {.x=wind_w / 2 - score_w, .y=yoffset, .w=score_w, .h=draw_h};
-
-        SDL_RenderCopy(rend, name_lbl, NULL, &namedst);
-        SDL_RenderCopy(rend, score_lbl, NULL, &scoredst);
-
-        yoffset += draw_h;
-    }
+    SDL_Rect dstwind = {.x=0, .y=0};
+    SDL_GetWindowSize(app_state->wind, &dstwind.w, &dstwind.h);
+    ScoreDisplay_draw(hs_state->labels, rend, &dstwind, NULL);
 
     return 0;
 }
