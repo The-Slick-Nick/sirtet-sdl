@@ -132,25 +132,39 @@ GameoverState* GameoverState_init(
 
     /** General Scores **/
 
+    int number_of_score_labels_to_print = MIN2(
+        (retval->player_rank < 10 ? 9 : 10),
+        hiscores->len
+    );
+
+    int top_n = MIN2(retval->player_rank, number_of_score_labels_to_print);
+    int bot_n = number_of_score_labels_to_print - top_n;
+
     retval->top_labels = NULL;
-    if (retval->player_rank > 0) {
+    if (top_n > 0) {
         retval->top_labels = ScoreDisplay_init(
-            hiscores, 0, MIN2(retval->player_rank - 1, 10), 1,
+            hiscores,
+            0,
+            top_n - 1,
+            1,
             rend, lbl_font, static_col
         );
     }
 
     retval->bottom_labels = NULL;
-    
-    int lim = MIN2(10, hiscores->len);
- 
-    if (retval->player_rank <= lim) {
+    if (bot_n > 0) {
         retval->bottom_labels = ScoreDisplay_init(
-            hiscores, retval->player_rank,
-            lim - 1, retval->player_rank + 2,
+            hiscores,
+            top_n,
+            top_n + bot_n - 1,
+            retval->player_rank + 2,
             rend, lbl_font, static_col
-
         );
+
+        if (retval->bottom_labels == NULL) {
+            printf("Error making bottom labels:\n    %s\n", Sirtet_getError());
+            exit(1);
+        }
     }
 
     /***/

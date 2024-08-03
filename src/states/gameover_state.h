@@ -26,14 +26,6 @@ typedef struct {
     ScoreDisplay *top_labels;
     ScoreDisplay *bottom_labels;
 
-
-    // TODO: Delete comment once functional
-    // size_t n_lbls;
-    //
-    // SDL_Texture **rank_lbls; // array of name lbl pointers
-    // SDL_Texture **name_lbls; // array of name lbl pointers
-    // SDL_Texture **score_lbls; // array of score lbl pointers
-    
     // store ref
     ScoreList *hiscores;
 
