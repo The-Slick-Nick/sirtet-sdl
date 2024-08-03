@@ -270,10 +270,6 @@ bool Menucode_pressed(bool *menucode_arr, Menucode menucode) {
 #define ERR_CK(func) if(func < 0) { return -1; }
 
 
-// TODO: Make these take "delay" and "interval" params to determine how
-// key repeats get handled in presets
-
-
 // Set up a MenucodeMap with common standard controls (arrow keys, enter, etc.)
 int MenucodePreset_standard(
     MenucodeMap *map, int start, int end, int interval) {

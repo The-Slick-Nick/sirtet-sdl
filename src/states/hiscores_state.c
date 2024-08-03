@@ -18,9 +18,6 @@
  * State Struct creation & destruction
 ******************************************************************************/
 
-// TODO: Generalize highscores drawing method for use in this
-// state and GameoverState
-
 HiscoresState* HiscoresState_init(
     SDL_Renderer *rend, TTF_Font *lbl_font, ScoreList *hiscores) {
 

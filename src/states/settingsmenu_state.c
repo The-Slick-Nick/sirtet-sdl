@@ -16,7 +16,7 @@
 #include "application_state.h"
 
 
-// TODO: Pull these from the same global constants file (that doesn't yet exist)
+// TODO: config.h - Pull these from the same global constants file (that doesn't yet exist)
 // as the ones pulled from GameSettings_init(...), as currently they are
 // separate macros that HAPPEN to define the same values
 #define MAX_TILE_SIZE 5

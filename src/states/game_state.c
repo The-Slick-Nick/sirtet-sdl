@@ -384,8 +384,6 @@ int updateGame(
         );
 
         // smart rotation 
-        // TODO: Research "official" srs logic - confirm this matches (or change this)
-        // TODO: Write a unit test or two for this - if more complex logic implemented
         for (
             int x_delta = 0;
             x_delta <= block_size / 2;

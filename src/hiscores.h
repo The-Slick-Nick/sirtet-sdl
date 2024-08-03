@@ -40,31 +40,6 @@ typedef struct {
 } ScoreDisplay; 
 
 
-
-
-
-/******************************************************************************
- * General Utilities
-******************************************************************************/
-
-// TODO: Perhaps move this into a general utilities file?
-
-// Populate sort order of `basis` into `indices`
-void sortByBasisDesc(size_t len, int *indices, const int *basis);
-
-
-// Sort `tosort` given the index order in `order`
-void sortByOrder(void *tosort, const int *order, size_t elem_sz, size_t elem_n);
-
-
-// Return the number of character parsed in total
-int parseInt(char* txt, int *out_num);
-
-
-// Parse a string for characters into out_str
-// Return the number of character parsed in total
-int parseName(const char* txt, char *out_str, size_t maxlen);
-
 /******************************************************************************
  * ScoreList methods
 ******************************************************************************/
@@ -100,10 +75,6 @@ int ScoreList_sort(ScoreList *self);
 /******************************************************************************
  * ScoreDisplay methods
 ******************************************************************************/
-
-// TODO: Implement ScoreDisplay in both hiscore_state and gameover_state
-// - For gameover_state, configure as TWO different ScoreDisplays's straddling
-// the player's new rank
 
 /**
  * @brief Create a ScoreDisplay from an existing ScoreList

@@ -50,12 +50,6 @@ char* Sirtet_getError() {
 /* Primary program runner */
 int run() {
 
-    // (these todos are in a general location because I didn't notice
-    // specific lines of things lol)
-    // TODO: Implement SRS (or similar) system - with dynamic "block size"
-    //       based on content needs (some "blocksize 4" blocks can be represented
-    //       in a 3x3 grid)
-    // TODO: Block prediction overlay
     // TODO: Sound effects and (maybe) music(?)
 
 
