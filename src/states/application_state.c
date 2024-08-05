@@ -142,20 +142,81 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     /***** Load images *****/
 
+    // logo
     strcpy(buffer, asset_folder);
     strcat(buffer, "/img/Logo.bmp");
     SDL_Surface *logo_surf = SDL_LoadBMP(buffer);
-    retval->images.logo = SDL_CreateTextureFromSurface(rend, logo_surf);
-    SDL_FreeSurface(logo_surf);
-
-    if (retval->images.logo == NULL) {
-        char buff[64];
-        snprintf(buff, 64, "Error loading images in ApplicationState: %s\n", TTF_GetError());
-        Sirtet_setError(buff);
-        free(retval);
+    if (logo_surf == NULL) {
+        char errbuff[STATIC_ARRMAX];
+        snprintf(
+            errbuff, STATIC_ARRMAX,
+            "Error loading logo:\n    %s\n", 
+            SDL_GetError()
+        );
+        Sirtet_setError(errbuff);
         return NULL;
     }
 
+    // bg images
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/img/BG_TopRight.bmp");
+    SDL_Surface *bg_tr_surf = SDL_LoadBMP(buffer);
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/img/BG_TopLeft.bmp");
+    SDL_Surface *bg_tl_surf = SDL_LoadBMP(buffer);
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/img/BG_BottomLeft.bmp");
+    SDL_Surface *bg_bl_surf = SDL_LoadBMP(buffer);
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/img/BG_BottomRight.bmp");
+    SDL_Surface *bg_br_surf = SDL_LoadBMP(buffer);
+
+
+    if (bg_tr_surf == NULL ||
+        bg_tl_surf == NULL ||
+        bg_bl_surf == NULL ||
+        bg_br_surf == NULL
+    ) {
+        char errbuff[STATIC_ARRMAX];
+        snprintf(
+            errbuff, STATIC_ARRMAX,
+            "Error loading menu background:\n    %s\n", 
+            SDL_GetError()
+        );
+        Sirtet_setError(errbuff);
+        return NULL;
+    }
+
+
+    // TODO: Redo logo for smoother lines & black border on letters
+    retval->images.logo = SDL_CreateTextureFromSurface(rend, logo_surf);
+
+    retval->images.bg_topright = SDL_CreateTextureFromSurface(rend, bg_tr_surf);
+    retval->images.bg_topleft = SDL_CreateTextureFromSurface(rend, bg_tl_surf);
+    retval->images.bg_bottomright = SDL_CreateTextureFromSurface(rend, bg_br_surf);
+    retval->images.bg_bottomleft = SDL_CreateTextureFromSurface(rend, bg_bl_surf);
+    if (
+        retval->images.logo == NULL ||
+        retval->images.bg_topright == NULL ||
+        retval->images.bg_topleft == NULL ||
+        retval->images.bg_bottomright == NULL ||
+        retval->images.bg_bottomleft == NULL
+    ) {
+        char errbuff[STATIC_ARRMAX];
+        snprintf(
+            errbuff, STATIC_ARRMAX,
+            "Error loading image assets:\n    %s\n", 
+            SDL_GetError()
+        );
+        Sirtet_setError(errbuff);
+        return NULL;
+    }
+
+    SDL_FreeSurface(logo_surf);
+    SDL_FreeSurface(bg_tr_surf);
 
     /***** Load saved data *****/
 

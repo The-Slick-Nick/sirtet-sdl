@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "backgrounds.h"
 #include "colorpalette.h"
 #include "hiscores_state.h"
 #include "sirtet.h"
@@ -53,14 +54,16 @@ void menufunc_openHiscores(
 ******************************************************************************/
 
 
-
 /**
  * @brief - Initialize state for the main menu
  * @param rend - SDL_Renderer pointer to render textures with
  * @param menu_font - TTF_Font pointer to render menu options with
  */
 MainMenuState* MainMenuState_init(
-    SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo) {
+    SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo,
+    SDL_Texture *bg_tl, SDL_Texture *bg_tr, SDL_Texture *bg_bl,
+    SDL_Texture *bg_br
+) {
 
     assert(INIT_TILE_SIZE >= MIN_TILE_SIZE);
     assert(INIT_TILE_SIZE <= MAX_TILE_SIZE);
@@ -119,6 +122,21 @@ MainMenuState* MainMenuState_init(
     }
 
 
+    /*** Display setup (labels/texture/bgs) ***/
+
+    menustate->background = (PanningBg) {
+        .xpos = 0,
+        .ypos = 0,
+        .xvel = 0.866,  // cos(30deg)
+        .yvel = 0.500,  // sin(30deg)
+
+        .topleft = bg_tl,
+        .topright = bg_tr,
+        .bottomleft = bg_bl,
+        .bottomright = bg_br
+    };
+
+
     /*** Settings defaults ***/
 
     GameSettings *settings = menustate->settings;
@@ -167,6 +185,7 @@ MainMenuState* MainMenuState_init(
         (SDL_Color){0,155,0, 255},
         (SDL_Color){0,0,155, 255}
     );
+
 
     /*** Menu configuration ***/
 
@@ -322,9 +341,20 @@ int MainMenuState_run(
 
 
     /***** Inputs *****/
+
     processMenucodes(menu_codes, hardware_codes, keymaps);
 
+
     /***** Process state *****/
+
+    SDL_Rect bg_dims = {.x=0, .y=0};
+    SDL_GetWindowSize(app_state->wind, &bg_dims.w, &bg_dims.h);
+
+    if (PanningBg_move(&menu_state->background, &bg_dims) != 0) {
+        printf("%s", Sirtet_getError());
+        return -1;
+    }
+
 
     if (Menucode_pressed(menu_codes, MENUCODE_EXIT)) {
         StateRunner_setPopCount(state_runner, 1);
@@ -356,6 +386,11 @@ int MainMenuState_run(
     SDL_Color bg = BACKGROUNDCOL;
     SDL_SetRenderDrawColor(rend, bg.r, bg.g, bg.b, bg.a);
     SDL_RenderClear(rend);
+
+    if (PanningBg_draw(&menu_state->background, rend, &bg_dims)) {
+        printf("%s", Sirtet_getError());
+        return -1;
+    }
 
 
     const int option_padding = 24;

@@ -13,6 +13,7 @@
 #include "state_runner.h"
 #include "menu.h"
 #include "game_state.h"
+#include "backgrounds.h"
 
 
 // State representing the main menu
@@ -33,12 +34,18 @@ typedef struct mainmenustate {
     /* Game Settings */
     GameSettings *settings;
 
-    /* Labels */
+    /* Labels & Display */
     SDL_Texture *title_banner;  // Texture with menu title showing
+    PanningBg background;
+
+
 } MainMenuState;
 
-// MainMenuState* MainMenuState_init(ApplicationState *app_state);
-MainMenuState* MainMenuState_init(SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo);
+MainMenuState* MainMenuState_init(
+    SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo,
+    SDL_Texture *bg_tl, SDL_Texture *bg_tr, SDL_Texture *bg_bl,
+    SDL_Texture *bg_br
+);
 
 // Tear down a MainMenuState, following behaviour set by state_runner
 int MainMenuState_deconstruct(void* self);

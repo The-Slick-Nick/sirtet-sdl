@@ -53,7 +53,17 @@
 // supplemental memory, that will otherwise allocate from heap 
 // baesd on size
 #define STATIC_ARRMAX 128
-// TODO: Search out examples of this being used
+
+
+/*** App Settings ***/
+
+#define DEBUG_ENABLED true
+
+#define WINDOW_WIDTH 720 
+#define WINDOW_HEIGHT 720
+
+#define TARGET_FPS 60
+#define TARGET_SPF (1.0 / TARGET_FPS)
 
 
 /******************************************************************************

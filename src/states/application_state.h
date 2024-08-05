@@ -6,11 +6,6 @@
 #ifndef APPLICATION_STATE_H
 #define APPLICATION_STATE_H
 
-#define WINDOW_WIDTH 720 
-#define WINDOW_HEIGHT 720
-
-#define TARGET_FPS 60
-#define TARGET_SPF (1.0 / TARGET_FPS)
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -27,6 +22,12 @@ struct fontlib {
 
 struct imglib {
     SDL_Texture *logo;
+
+    SDL_Texture *bg_topright;
+    SDL_Texture *bg_topleft;
+    SDL_Texture *bg_bottomleft;
+    SDL_Texture *bg_bottomright;
+
 };
     
 

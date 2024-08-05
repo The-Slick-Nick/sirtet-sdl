@@ -64,7 +64,13 @@ int run() {
 
     printf("Initializing main menu...\n");
     MainMenuState *mainmenu_state = MainMenuState_init(
-        global_state->rend, global_state->fonts.vt323_24, global_state->images.logo);
+        global_state->rend, global_state->fonts.vt323_24,
+        global_state->images.logo,
+        global_state->images.bg_topleft,
+        global_state->images.bg_topright,
+        global_state->images.bg_bottomleft,
+        global_state->images.bg_bottomright
+    );
     if (mainmenu_state == NULL) {
         printf("%s\n", Sirtet_getError());
         return -1;
