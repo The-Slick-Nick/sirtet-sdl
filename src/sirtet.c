@@ -26,9 +26,20 @@
 #include <string.h>
 #include <time.h>
 
+// TODO: Include windows version of below, conditionally based on platform
+#include <sys/stat.h>
+
 
 #define ERRMSG_SZ 128
+#define DATAPATH_SZ 256
+
 static char glob_errmsg[ERRMSG_SZ] = {0};
+static char glob_appdatapath[DATAPATH_SZ] = {0};
+
+
+/******************************************************************************
+ * Utility Functions
+******************************************************************************/
 
 void Sirtet_setError(const char *errmsg) {
 
@@ -47,6 +58,40 @@ char* Sirtet_getError() {
 }
 
 
+char* Sirtet_getAppdataPath() {
+
+    // TODO: Include windows version of below, conditionally based on platform
+    if (strlen(glob_appdatapath) == 0) {
+
+        char *env = getenv("HOME");
+        strcpy(glob_appdatapath, env);
+        strcat(glob_appdatapath, "/.sirtet");
+    }
+    return glob_appdatapath;
+
+}
+
+
+/******************************************************************************
+ * Main driver
+******************************************************************************/
+
+
+int Sirtet_setup() {
+
+    char *appdata_path = Sirtet_getAppdataPath();
+
+    // TODO: Include windows version of below, conditionally based on platform
+    struct stat st = {0};
+    if (stat(appdata_path, &st) == -1) {
+        mkdir(appdata_path, 0700);
+    }
+
+
+    return 0;
+}
+
+
 /* Primary program runner */
 int run() {
 
@@ -54,6 +99,7 @@ int run() {
 
 
     srand((int)time(NULL));
+    Sirtet_setup();
 
     printf("Initializing application state...\n");
     ApplicationState *global_state = ApplicationState_init("assets");
@@ -219,5 +265,10 @@ int run() {
     // for now.
     
     StateRunner_deconstruct(state_runner);
-    ApplicationState_deconstruct(global_state);
+    if (ApplicationState_deconstruct(global_state) != 0) {
+        printf("%s\n", Sirtet_getError());
+        return -1;
+    }
+
+    return 0;
 }

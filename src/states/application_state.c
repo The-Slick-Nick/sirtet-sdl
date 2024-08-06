@@ -225,8 +225,11 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     // TODO: Take a path to some appdata style folder and append filename to
     // path 
 
-    char *path = "hiscores.txt";
-    FILE *hiscore_file = fopen(path, "r");
+
+    char hs_path[256];
+    strcpy(hs_path, Sirtet_getAppdataPath());
+    strcat(hs_path, "/hiscores.txt");
+    FILE *hiscore_file = fopen(hs_path, "r");
     if (hiscore_file != NULL) {
         ScoreList_readFile(retval->hiscores, hiscore_file);
         fclose(hiscore_file);
@@ -248,8 +251,12 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
 
-    char *path = "hiscores.txt";
-    FILE* hiscore_file = fopen(path, "w");
+    // TODO: Get dynamically generated hiscores file
+
+    char hs_path[256];
+    strcpy(hs_path, Sirtet_getAppdataPath());
+    strcat(hs_path, "/hiscores.txt");
+    FILE* hiscore_file = fopen(hs_path, "w");
     if (hiscore_file == NULL) {
         Sirtet_setError("Error writing highscores to file\n");
         return -1;

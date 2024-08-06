@@ -70,9 +70,20 @@
  * High-level prototypes
 ******************************************************************************/
 
+// Run game
 int run();
+
+// Ensure all environment & whatnot is set up
+int Sirtet_setup();
+
+// Set current error code
 void Sirtet_setError(const char *errmsg);
+
+// Retrieve pointer to current error code
 char* Sirtet_getError();
+
+
+char* Sirtet_getAppdataPath();
 
 
 #endif
