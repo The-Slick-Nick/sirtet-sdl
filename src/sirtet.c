@@ -76,7 +76,7 @@ char* Sirtet_getAppdataPath() {
  * Main driver
 ******************************************************************************/
 
-
+// TODO: Should setup be done via a shell or python script instead?
 int Sirtet_setup() {
 
     char *appdata_path = Sirtet_getAppdataPath();
@@ -86,7 +86,6 @@ int Sirtet_setup() {
     if (stat(appdata_path, &st) == -1) {
         mkdir(appdata_path, 0700);
     }
-
 
     return 0;
 }

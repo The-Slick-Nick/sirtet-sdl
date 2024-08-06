@@ -401,15 +401,23 @@ int MainMenuState_run(
     int yoffset = 0;
 
     // title
-    // aspect ratio of logo is 3:1
-    int title_w = (3 * wind_w) / 4;
-    int title_h = title_w / 3;
+    int title_w, title_h;
+    SDL_QueryTexture(menu_state->title_logo, NULL, NULL, &title_w, &title_h);
+
     SDL_Rect title_loc = {
         .x = (wind_w / 2) - (title_w / 2),
-        .y=yoffset + title_h / 2,
-        .w=title_w,
-        .h=title_h
+        .y = yoffset + title_h / 2,
+        .w = title_w,
+        .h = title_h
     };
+
+    SDL_SetRenderDrawColor(rend, 0, 0, 0, 255);
+    SDL_RenderFillRect(rend, &title_loc);
+
+    SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
+    SDL_RenderDrawRect(rend, &title_loc);
+
+
     SDL_RenderCopy(rend, menu_state->title_logo, NULL, &title_loc);
     yoffset += title_loc.y + title_loc.h + option_padding;
 
