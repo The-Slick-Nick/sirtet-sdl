@@ -27,8 +27,14 @@ struct imglib {
     SDL_Texture *bg_topleft;
     SDL_Texture *bg_bottomleft;
     SDL_Texture *bg_bottomright;
+};
+
+
+// sounds & music
+struct soundlib {
 
 };
+
     
 
 // Higher-level status/state of hardware and such

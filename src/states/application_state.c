@@ -3,7 +3,6 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_surface.h>
 
-
 #include <limits.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -26,7 +25,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         return NULL;
     }
 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         char buff[64];
         snprintf(buff, 64, "Error starting SDL in ApplicationState: %s\n", SDL_GetError());
         Sirtet_setError(buff);
