@@ -222,9 +222,6 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     retval->hiscores = ScoreList_init(HISCORES_MAX_SIZE, HISCORES_NAME_LEN);
 
-    // TODO: Take a path to some appdata style folder and append filename to
-    // path 
-
 
     char hs_path[256];
     strcpy(hs_path, Sirtet_getAppdataPath());
@@ -250,8 +247,6 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.lekton_12);
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
-
-    // TODO: Get dynamically generated hiscores file
 
     char hs_path[256];
     strcpy(hs_path, Sirtet_getAppdataPath());

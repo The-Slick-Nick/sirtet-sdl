@@ -27,7 +27,17 @@
 #include <time.h>
 
 // TODO: Include windows version of below, conditionally based on platform
+
+
+#ifdef __linux__
 #include <sys/stat.h>
+#include <pwd.h>
+#include <unistd.h>
+#include <sys/types.h>
+#elif _WIN32
+#include <shlobj.h>
+#include <direct.h>
+#endif
 
 
 #define ERRMSG_SZ 128
@@ -62,11 +72,33 @@ char* Sirtet_getAppdataPath() {
 
     // TODO: Include windows version of below, conditionally based on platform
     if (strlen(glob_appdatapath) == 0) {
+        char *homedir = NULL;
 
-        char *env = getenv("HOME");
-        strcpy(glob_appdatapath, env);
+#ifdef __linux__
+        homedir = getenv("HOME");
+        if (homedir == NULL) {
+            homedir = getpwuid(getuid())->pw_dir;
+        }
+        strcpy(glob_appdatapath, homedir);
+#elif _WIN32
+
+        // TODO: Check/attempt to build with windows - not certain this works
+        homedir = getenv("APPDATA");
+        if (homedir == NULL) {
+
+            char adpath[STATIC_ARRMAX];
+            SHGetKnownFolderPath(
+                FOLDERID_LocalAppdata, 0,
+                NULL, adpath
+            );
+            homedir = adpath;
+        }
+#endif
+        strcpy(glob_appdatapath, homedir);
         strcat(glob_appdatapath, "/.sirtet");
     }
+
+
     return glob_appdatapath;
 
 }
@@ -82,10 +114,21 @@ int Sirtet_setup() {
     char *appdata_path = Sirtet_getAppdataPath();
 
     // TODO: Include windows version of below, conditionally based on platform
+
+#ifdef __linux__
     struct stat st = {0};
     if (stat(appdata_path, &st) == -1) {
         mkdir(appdata_path, 0700);
     }
+
+#elif _WIN32
+
+    // TODO: Attempt to build & test building with windows - can't right now myself
+    if (!_chdir(appdata_path)) {
+        _mkdir(appdata_path)
+    }
+#endif
+
 
     return 0;
 }

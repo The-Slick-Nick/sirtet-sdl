@@ -82,7 +82,8 @@ void Sirtet_setError(const char *errmsg);
 // Retrieve pointer to current error code
 char* Sirtet_getError();
 
-
+// Retrieve a path to the folder where application data for this game
+// will be stored (not the system's generic AppData folder or equivalent)
 char* Sirtet_getAppdataPath();
 
 
