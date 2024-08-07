@@ -117,8 +117,12 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         retval->fonts.lekton_12 == NULL
         || retval->fonts.lekton_24 == NULL
     ) {
-        char buff[64];
-        snprintf(buff, 64, "Error loading fonts in ApplicationState: %s\n", TTF_GetError());
+        char buff[ERRMSG_SZ];
+        snprintf(
+            buff, ERRMSG_SZ,
+            "Error loading fonts in ApplicationState: %s\n",
+            TTF_GetError()
+        );
         Sirtet_setError(buff);
         free(retval);
         return NULL;

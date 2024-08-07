@@ -40,11 +40,11 @@
 #endif
 
 
-#define ERRMSG_SZ 128
-#define DATAPATH_SZ 256
+#define PATH_SZ 256
 
 static char glob_errmsg[ERRMSG_SZ] = {0};
-static char glob_appdatapath[DATAPATH_SZ] = {0};
+static char glob_appdatapath[PATH_SZ] = {0};
+static char glob_assetpath[PATH_SZ] = {0};
 
 
 /******************************************************************************
@@ -71,8 +71,16 @@ char* Sirtet_getError() {
 char* Sirtet_getAppdataPath() {
 
     // TODO: Include windows version of below, conditionally based on platform
+
+    if (DEBUG_ENABLED) {
+        strcpy(glob_appdatapath, "dev_data");
+        return glob_appdatapath;
+    }
+
     if (strlen(glob_appdatapath) == 0) {
         char *homedir = NULL;
+
+
 
 #ifdef __linux__
         homedir = getenv("HOME");
@@ -138,13 +146,28 @@ int Sirtet_setup() {
 int run() {
 
     // TODO: Sound effects and (maybe) music(?)
-
-
     srand((int)time(NULL));
     Sirtet_setup();
 
     printf("Initializing application state...\n");
-    ApplicationState *global_state = ApplicationState_init("assets");
+
+    char asset_path[PATH_SZ];
+    strcpy(asset_path, Sirtet_getAppdataPath());
+    strcat(asset_path, "/assets");
+
+
+    // NOTE: This currently should not work - I don't have a setup script
+    // as of yet to copy stuff
+
+    ApplicationState *global_state;
+    if (DEBUG_ENABLED) { 
+        global_state = ApplicationState_init("assets");
+    }
+    else {
+        global_state = ApplicationState_init(asset_path);
+    }
+
+
     if (global_state == NULL) {
         printf("%s\n", Sirtet_getError());
         return -1;

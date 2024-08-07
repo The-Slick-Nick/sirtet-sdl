@@ -20,3 +20,4 @@ logs/*
 # local data files (that will eventually
 # be stored elsewhere)
 hiscores.txt
+dev_data/*

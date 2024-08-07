@@ -53,6 +53,7 @@
 // supplemental memory, that will otherwise allocate from heap 
 // baesd on size
 #define STATIC_ARRMAX 128
+#define ERRMSG_SZ 512
 
 
 /*** App Settings ***/
@@ -85,6 +86,7 @@ char* Sirtet_getError();
 // Retrieve a path to the folder where application data for this game
 // will be stored (not the system's generic AppData folder or equivalent)
 char* Sirtet_getAppdataPath();
+
 
 
 #endif
