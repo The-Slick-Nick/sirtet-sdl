@@ -44,6 +44,15 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         return NULL;
     }
 
+    if (Mix_Init(0) != 0) {
+        char buff[ERRMSG_SZ];
+        snprintf(
+            buff, ERRMSG_SZ,
+            "Error starting Mixer in ApplicationState: %s\n",
+            Mix_GetError()
+        );
+        return NULL;
+    }
 
     // TODO: Final: clean this up if we never end up using pngs
     // int img_flags = (IMG_INIT_PNG);
@@ -59,7 +68,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     /***** Window and Renderer *****/
 
     SDL_Window *wind = SDL_CreateWindow(
-        "Test window", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        "Sirtet", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, 0
     );
 
@@ -259,6 +268,7 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
 
+    // TODO: Have a global "filepath_sz" macro/setting
     char hs_path[256];
     strcpy(hs_path, Sirtet_getAppdataPath());
     strcat(hs_path, "/hiscores.txt");
@@ -280,5 +290,6 @@ int ApplicationState_deconstruct(ApplicationState* self) {
 
     TTF_Quit();
     SDL_Quit();
+    Mix_Quit();
     return 0;
 }
