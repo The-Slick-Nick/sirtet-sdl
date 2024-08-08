@@ -2,6 +2,8 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_mixer.h>
+// TODO: Ensure this is also included in makefile
 
 #include <limits.h>
 #include <assert.h>
@@ -33,13 +35,15 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         return NULL;
     }
 
+
     if (TTF_Init() != 0) {
-        char buff[64];
-        snprintf(buff, 64, "Error starting TTF in ApplicationState: %s\n", TTF_GetError());
+        char buff[ERRMSG_SZ];
+        snprintf(buff, ERRMSG_SZ, "Error starting TTF in ApplicationState: %s\n", TTF_GetError());
         Sirtet_setError(buff);
         free(retval);
         return NULL;
     }
+
 
     // TODO: Final: clean this up if we never end up using pngs
     // int img_flags = (IMG_INIT_PNG);
@@ -108,7 +112,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     char buffer[1000];
 
     strcpy(buffer, asset_folder);
-    strcat(buffer, "/Lekton-Bold.ttf");
+    strcat(buffer, "/fonts/Lekton-Bold.ttf");
     retval->fonts.lekton_12 = TTF_OpenFont(buffer, 12);
     retval->fonts.lekton_24 = TTF_OpenFont(buffer, 24);
 
@@ -119,7 +123,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         char buff[ERRMSG_SZ];
         snprintf(
             buff, ERRMSG_SZ,
-            "Error loading fonts in ApplicationState: %s\n",
+            "Error loading Lekton font in ApplicationState: %s\n",
             TTF_GetError()
         );
         Sirtet_setError(buff);
@@ -128,7 +132,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     }
 
     strcpy(buffer, asset_folder);
-    strcat(buffer, "/VT323.ttf");
+    strcat(buffer, "/fonts/VT323.ttf");
     retval->fonts.vt323_12 = TTF_OpenFont(buffer, 12);
     retval->fonts.vt323_24 = TTF_OpenFont(buffer, 24);
 
@@ -137,7 +141,11 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         || retval->fonts.vt323_24 == NULL
     ) {
         char buff[64];
-        snprintf(buff, 64, "Error loading fonts in ApplicationState: %s\n", TTF_GetError());
+        snprintf(
+            buff, 64,
+            "Error loading VT323 font in ApplicationState: %s\n",
+            TTF_GetError()
+        );
         Sirtet_setError(buff);
         free(retval);
         return NULL;
