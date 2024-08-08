@@ -116,12 +116,10 @@ char* Sirtet_getAppdataPath() {
  * Main driver
 ******************************************************************************/
 
-// TODO: Should setup be done via a shell or python script instead?
 int Sirtet_setup() {
 
     char *appdata_path = Sirtet_getAppdataPath();
 
-    // TODO: Include windows version of below, conditionally based on platform
 
 #ifdef __linux__
     struct stat st = {0};

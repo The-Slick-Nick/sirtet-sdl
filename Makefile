@@ -39,7 +39,7 @@ INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 # All SDL libraries/modules used
-SDL_MODULES := SDL2 SDL2_ttf
+SDL_MODULES := SDL2 SDL2_ttf SDL2_mixer
 # Lib flags for each SDL module
 SDL_FLAGS := $(addprefix -l,$(SDL_MODULES))
 
