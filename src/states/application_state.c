@@ -238,6 +238,28 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     SDL_FreeSurface(logo_surf);
     SDL_FreeSurface(bg_tr_surf);
 
+
+    /***** Load sounds *****/
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/sounds/mech_kb_click2.wav");
+
+    // clicksound = Mix_LoadWAV(path);
+    retval->sounds.short_click = Mix_LoadWAV(buffer);
+    if (retval->sounds.short_click == NULL) {
+        char errbuff[ERRMSG_SZ];
+        snprintf(
+            errbuff, ERRMSG_SZ,
+            "Error loading sounds: \n    %s\n",
+            Mix_GetError()
+        );
+        Sirtet_setError(errbuff);
+        return NULL;
+    }
+    // TODO: Free/deconstruct
+
+
+
     /***** Load saved data *****/
 
     retval->hiscores = ScoreList_init(HISCORES_MAX_SIZE, HISCORES_NAME_LEN);
@@ -259,6 +281,27 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
 int ApplicationState_deconstruct(ApplicationState* self) {
 
+
+    /*** Clean up & export any saved data ***/
+
+    char hs_path[256];
+    strcpy(hs_path, Sirtet_getAppdataPath());
+    strcat(hs_path, "/hiscores.txt");
+
+    FILE* hiscore_file = fopen(hs_path, "w");
+    if (hiscore_file == NULL) {
+        Sirtet_setError("Error writing highscores to file\n");
+        return -1;
+    }
+
+    ScoreList_sort(self->hiscores);
+    ScoreList_toFile(self->hiscores, hiscore_file);
+    fclose(hiscore_file);
+
+
+    /*** Free memory ***/
+
+    ScoreList_deconstruct(self->hiscores);
     SDL_DestroyWindow(self->wind);
     SDL_DestroyRenderer(self->rend);
     SDL_DestroyTexture(self->images.logo);
@@ -268,21 +311,9 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
 
+    Mix_FreeChunk(self->sounds.short_click);
+
     // TODO: Have a global "filepath_sz" macro/setting
-    char hs_path[256];
-    strcpy(hs_path, Sirtet_getAppdataPath());
-    strcat(hs_path, "/hiscores.txt");
-    FILE* hiscore_file = fopen(hs_path, "w");
-    if (hiscore_file == NULL) {
-        Sirtet_setError("Error writing highscores to file\n");
-        return -1;
-    }
-
-    ScoreList_sort(self->hiscores);
-    ScoreList_toFile(self->hiscores, hiscore_file);
-
-    fclose(hiscore_file);
-    ScoreList_deconstruct(self->hiscores);
 
     free(self->hardware_states);
     free(self);

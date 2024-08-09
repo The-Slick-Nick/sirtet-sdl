@@ -1,9 +1,11 @@
 #include <assert.h>
 #include <int_assertions.h>
 #include <string.h>
+
+#include "EWENIT.h"
 #include "block.h"
 #include "grid.h"
-#include "EWENIT.h"
+#include "sirtet.h"
 
 
 void testGameGridClear() {

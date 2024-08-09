@@ -1,6 +1,7 @@
 #include "block.h"
 #include "coordinates.h"
 #include "EWENIT.h"
+#include "sirtet.h"
 
 
 void testContentRotationProperties() {

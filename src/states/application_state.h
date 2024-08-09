@@ -10,6 +10,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_surface.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "hiscores.h"
 
@@ -32,6 +33,7 @@ struct imglib {
 
 // sounds & music
 struct soundlib {
+    Mix_Chunk *short_click;
     
 
 };
@@ -50,6 +52,7 @@ typedef struct {
 
     struct fontlib fonts;
     struct imglib images;
+    struct soundlib sounds;
 
 } ApplicationState;
 
