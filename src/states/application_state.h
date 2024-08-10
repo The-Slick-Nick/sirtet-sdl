@@ -37,8 +37,7 @@ struct soundlib {
     SirtetAudio_sound bump;
     SirtetAudio_sound boop;
     SirtetAudio_sound boop_scale;
-    
-
+    SirtetAudio_sound boop_scale_reverse;
 };
 
     

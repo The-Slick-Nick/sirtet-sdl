@@ -259,12 +259,16 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     strcat(buffer, "/sounds/beep_scale_success.wav");
     retval->sounds.boop_scale = SirtetAudio_loadSound(buffer);
 
-
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/sounds/beep_scale_reverse.wav");
+    retval->sounds.boop_scale_reverse = SirtetAudio_loadSound(buffer);
 
     if (
-        SirtetAudio_soundInvalid(retval->sounds.short_click)
-        ||
-        SirtetAudio_soundInvalid(retval->sounds.bump)
+        SirtetAudio_soundInvalid(retval->sounds.short_click) ||
+        SirtetAudio_soundInvalid(retval->sounds.bump) ||
+        SirtetAudio_soundInvalid(retval->sounds.boop) ||
+        SirtetAudio_soundInvalid(retval->sounds.boop_scale) ||
+        SirtetAudio_soundInvalid(retval->sounds.boop_scale_reverse)
     ) {
         return NULL;
     }

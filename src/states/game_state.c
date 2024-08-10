@@ -281,6 +281,8 @@ int updateGame(
     int score_to_inc = 0;
     bool block_set = false;  // has a block been committed?
     bool row_filled = false; // have we completed a row?
+    bool spawn_failed = false;  // did a new block fail to spawn?
+
 
 
     // Must clear first due to animation timing
@@ -324,6 +326,7 @@ int updateGame(
             db, game_state->block_size, new_contents, (Point){0, 0}, new_color
         );
 
+        // creation failed
         if (*primary_block == INVALID_BLOCK_ID
             || *queued_block == INVALID_BLOCK_ID) {
             return -1;
@@ -337,7 +340,12 @@ int updateGame(
 
         BlockDb_setBlockPosition(db, *primary_block, init_coord);
 
+        // New block can't exist
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
+            spawn_failed = true;
+
+            SirtetAudio_playSound(app_state->sounds.boop_scale_reverse);
+
 
             SDL_Color act_col = {200, 50, 50, 255};
             SDL_Color dyn_col = {50, 50, 200, 255};
@@ -520,6 +528,8 @@ int updateGame(
     // Determine which sound effect to make
     
 
+    // TODO: Can we somehow emit some kind of sound state to play instead
+    // of calling the sounds in the update function?
     if (block_set) {
 
         SirtetAudio_sound toplay = (
