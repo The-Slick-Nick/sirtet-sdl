@@ -47,22 +47,12 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     // TODO: Once I understand the audio more, store some of its config details
     // in ApplicationState
-    if (
-        ( Mix_Init(0) != 0 )
-        || 
-        ( Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 1, 512) != 0 )
-    ) {
+
+    if ( SirtetAudio_start() != 0 ) {
         char buff[ERRMSG_SZ];
-        snprintf(
-            buff, ERRMSG_SZ,
-            "Error starting Mixer in ApplicationState: %s\n",
-            Mix_GetError()
-        );
+        // NOTE: Intent is to have audio api handle any error messaging
         return NULL;
     }
-    // more audio settings
-    //
-    setenv("SDL_AUDIODRIVER", "alsa", 1);
 
 
     // TODO: Final: clean this up if we never end up using pngs
@@ -255,15 +245,8 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     strcpy(buffer, asset_folder);
     strcat(buffer, "/sounds/mech_kb_click4.wav");
 
-    retval->sounds.short_click = Mix_LoadWAV(buffer);
-    if (retval->sounds.short_click == NULL) {
-        char errbuff[ERRMSG_SZ];
-        snprintf(
-            errbuff, ERRMSG_SZ,
-            "Error loading sounds: \n    %s\n",
-            Mix_GetError()
-        );
-        Sirtet_setError(errbuff);
+    retval->sounds.short_click = SirtetAudio_loadSound(buffer);
+    if (SirtetAudio_soundInvalid(retval->sounds.short_click)) {
         return NULL;
     }
     // TODO: Free/deconstruct
@@ -321,7 +304,7 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.vt323_24);
     TTF_CloseFont(self->fonts.vt323_12);
 
-    Mix_FreeChunk(self->sounds.short_click);
+    SirtetAudio_unloadSound(self->sounds.short_click);
 
     // TODO: Have a global "filepath_sz" macro/setting
 
@@ -331,6 +314,6 @@ int ApplicationState_deconstruct(ApplicationState* self) {
 
     TTF_Quit();
     SDL_Quit();
-    Mix_Quit();
+    SirtetAudio_end();
     return 0;
 }

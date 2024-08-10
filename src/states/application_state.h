@@ -10,8 +10,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_mixer.h>
 
+#include "sirtet_audio.h"
 #include "hiscores.h"
 
 struct fontlib {
@@ -33,7 +33,7 @@ struct imglib {
 
 // sounds & music
 struct soundlib {
-    Mix_Chunk *short_click;
+    SirtetAudio_sound short_click;
     
 
 };
