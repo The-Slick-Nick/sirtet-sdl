@@ -38,8 +38,6 @@ typedef struct {
     long *block_presets;        // Array of block presets
 
     ColorPalette *palette;
-    // size_t palette_size;        // Number of colors in palette
-    // SDL_Color *palette;         // Array of colors for tiles
 
 } GameSettings;
 

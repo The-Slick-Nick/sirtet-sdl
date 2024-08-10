@@ -285,6 +285,8 @@ int MenucodePreset_standard(
 }
 
 
+// Set up a MenucodeMap with mappings for all alphabetical characters to their
+// uppercase MenuCode version
 int MenucodePreset_upperAlpha(
     MenucodeMap *map, int start, int end, int interval) {
 
