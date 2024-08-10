@@ -18,6 +18,7 @@
 #include "inputs.h"
 #include "colorpalette.h"
 
+#include "sirtet_audio.h"
 #include "state_runner.h"
 
 #define LINES_PER_LEVEL 10
@@ -66,8 +67,12 @@ typedef struct {
     int num_presets;            // Number of block content presets in *block_presets
     
     ColorPalette *palette;
-    // SDL_Color *palette;         // Array of SDL colors to use
-    // int palette_size;           // Number of colors in palette
+
+    /* Sounds */
+    SirtetAudio_sound place_sound;
+    SirtetAudio_sound success_sound;
+    SirtetAudio_sound gameover_sound;
+
 
 
     /* State/structs for display */
@@ -85,9 +90,8 @@ typedef struct {
 ******************************************************************************/
 
 
-GameSettings* GameSettings_init(
-    size_t max_preset_sz, size_t max_palette_sz
-);
+GameSettings* GameSettings_init(size_t max_preset_sz, size_t max_palette_sz);
+
 
 void GameSettings_deconstruct(GameSettings *self);
 
@@ -102,7 +106,10 @@ int GameSettings_setPalette(GameSettings *self, ColorPalette *palette);
 // Initialize and return a pointer for GameState
 GameState* GameState_init(
     SDL_Renderer *rend, TTF_Font *menu_font,
-    GameSettings *settings
+    GameSettings *settings,
+    SirtetAudio_sound place_sound,    // block placed on grid
+    SirtetAudio_sound success_sound,  // line complete
+    SirtetAudio_sound gameover_sound  // game over
 );
 // Deconstruct a GameState by pointer reference
 int GameState_deconstruct(void* self);

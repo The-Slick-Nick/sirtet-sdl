@@ -253,7 +253,10 @@ void menufunc_startGame(
 
     GameState *new_state = GameState_init(
         app_state->rend, app_state->fonts.vt323_24,
-        settings
+        settings,
+        app_state->sounds.boop,
+        app_state->sounds.boop_scale,
+        app_state->sounds.boop_scale_reverse
     );
 
     StateRunner_addState(

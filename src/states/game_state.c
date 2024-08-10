@@ -48,9 +48,7 @@
  * GameSettings
 ******************************************************************************/
 
-GameSettings* GameSettings_init(
-    size_t max_preset_sz, size_t max_palette_sz
-) {
+GameSettings* GameSettings_init(size_t max_preset_sz, size_t max_palette_sz) {
 
     GameSettings *retval = (GameSettings*)malloc(sizeof(GameSettings));
 
@@ -140,7 +138,10 @@ void GameSettings_deconstruct(GameSettings *self) {
  */
 GameState* GameState_init(
     SDL_Renderer *rend, TTF_Font *menu_font,
-    GameSettings *settings
+    GameSettings *settings,
+    SirtetAudio_sound place_sound,
+    SirtetAudio_sound success_sound,
+    SirtetAudio_sound gameover_sound
 ) {
 
     // settings extraction
@@ -200,6 +201,12 @@ GameState* GameState_init(
     retval->keymaps = GamecodeMap_initCopy(keymaps);
     retval->gamecode_states = (bool*)calloc((int)NUM_GAMECODES, sizeof(bool));
 
+
+    /*** Sounds ***/
+
+    retval->success_sound = success_sound;
+    retval->place_sound = place_sound;
+    retval->gameover_sound = gameover_sound;
 
 
     /*** Labels and such ***/
@@ -267,7 +274,8 @@ int GameState_deconstruct(void* self) {
 int updateGame(
     StateRunner *state_runner,
     ApplicationState *app_state,
-    GameState *game_state
+    GameState *game_state,
+    SirtetAudio_sound *out_sound
 ) {
 
     // relevant variable extraction - for shorthand (
@@ -279,10 +287,6 @@ int updateGame(
     long *block_presets = game_state->block_presets;
 
     int score_to_inc = 0;
-    bool block_set = false;  // has a block been committed?
-    bool row_filled = false; // have we completed a row?
-    bool spawn_failed = false;  // did a new block fail to spawn?
-
 
 
     // Must clear first due to animation timing
@@ -342,7 +346,8 @@ int updateGame(
 
         // New block can't exist
         if (!GameGrid_canBlockExist(grid, db, *primary_block)) {
-            spawn_failed = true;
+
+            *out_sound = game_state->gameover_sound;
 
             SirtetAudio_playSound(app_state->sounds.boop_scale_reverse);
 
@@ -467,8 +472,8 @@ int updateGame(
             BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
         else {
-
-            block_set = true;
+            // block placed
+            *out_sound = game_state->place_sound;
             GameGrid_commitBlock(grid, db, *primary_block);
             *primary_block = INVALID_BLOCK_ID;
         }
@@ -503,7 +508,9 @@ int updateGame(
             // extra score for hard dropping
             score_to_inc += 2 * dist;
         }
-        block_set = true;
+
+        // block placement is forced
+        *out_sound = game_state->place_sound;
     }
 
     score_to_inc += GameGrid_assessScore(grid, game_state->level);
@@ -516,30 +523,15 @@ int updateGame(
 
     GameGrid_prepareAnimation(grid, 3);
     if (grid->is_animating) {
-        row_filled = true;
-        // TODO: Make "success" sound scale a struct member
+
+        // NOTE: Overrides place sound, so no double playing
+        *out_sound = game_state->success_sound;
+
         SirtetAudio_playSound(app_state->sounds.boop_scale);
         StateRunner_addState(
             state_runner, game_state, GameState_runGridAnimation, NULL
         );
     }
-
-
-    // Determine which sound effect to make
-    
-
-    // TODO: Can we somehow emit some kind of sound state to play instead
-    // of calling the sounds in the update function?
-    if (block_set) {
-
-        SirtetAudio_sound toplay = (
-            row_filled ?
-            app_state->sounds.boop_scale :
-            app_state->sounds.boop
-        );
-        SirtetAudio_playSound(toplay);
-    }
-
 
     return 0;
 }
@@ -913,15 +905,27 @@ int GameState_run(
         return 0;
     }
 
-    int update_status = updateGame(state_runner, application_state, game_state);
+    // TODO: Give SirtetAudio a "null sound" type of constant (just in case
+    // some sound libary might not use NULL)
+    SirtetAudio_sound toplay = NULL;
+    int update_status = updateGame(
+        state_runner, application_state, game_state,
+        &toplay
+    );
+
     if (update_status == -1) {
         return -1;
     }
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_PAUSE)) {
+        toplay = application_state->sounds.bump;
         StateRunner_addState(state_runner, game_state, GameState_runPaused, NULL);
     }
 
+    /***** PLAY AUDIO *****/
+    if (toplay != NULL) {
+        SirtetAudio_playSound(toplay);
+    }
     
     /***** DRAW *****/
 
