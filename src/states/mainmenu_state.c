@@ -282,7 +282,8 @@ void menufunc_openSettings(
     SDL_Renderer *rend = app_state->rend;
 
     SettingsMenuState *new_state = SettingsMenuState_init(
-        rend, app_state->fonts.vt323_24, menu_state->settings
+        rend, app_state->fonts.vt323_24, menu_state->settings,
+        app_state->sounds.short_click
     );
 
     if (new_state == NULL) {

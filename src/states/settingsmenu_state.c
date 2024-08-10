@@ -55,7 +55,8 @@ static void menufunc_prevPalette(
 ******************************************************************************/
 
 SettingsMenuState* SettingsMenuState_init(
-    SDL_Renderer *rend, TTF_Font *menu_font, GameSettings *settings
+    SDL_Renderer *rend, TTF_Font *menu_font, GameSettings *settings,
+    SirtetAudio_sound menusound_move
 ) {
 
     assert(MIN_TILE_SIZE <= MAX_TILE_SIZE);
@@ -196,7 +197,7 @@ SettingsMenuState* SettingsMenuState_init(
 
     /*** Menu Setup ***/
 
-    retval->menu = TextMenu_init(4, 64, NULL);
+    retval->menu = TextMenu_init(4, 64, menusound_move);
     retval->menucode_states = (bool*)calloc(NUM_MENUCODES, sizeof(bool));
     retval->menucode_map = MenucodeMap_init(MAX_MENUCODE_MAPS);
 

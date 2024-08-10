@@ -11,7 +11,6 @@
  * Config macros/constants
 ******************************************************************************/
 
-// TODO: Move click sound into more of the menus
 // TODO: Add a "menu open chosen" sound effect
 // TODO: Update readme with additional dependencies
 // TODO: Dynamic movement on key hold (slow, then fast) - achieved in mapping

@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <SDL2/SDL_ttf.h>
 
+#include "sirtet_audio.h"
 #include "game_state.h"
 #include "state_runner.h"
 #include "menu.h"
@@ -35,10 +36,12 @@ typedef struct {
     size_t num_palettes;
     ColorPalette **palettes;  // Array of palette pointers
 
+
 } SettingsMenuState;
 
 SettingsMenuState* SettingsMenuState_init(
-    SDL_Renderer *rend, TTF_Font *menu_font, GameSettings *settings
+    SDL_Renderer *rend, TTF_Font *menu_font, GameSettings *settings,
+    SirtetAudio_sound menusound_move
 );
 
 // Tear down a MainMenuState, following behaviour set by state_runner
