@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "sirtet.h"
+#include "sirtet_audio.h"
 #include "application_state.h"
 
 
@@ -244,13 +245,29 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     strcpy(buffer, asset_folder);
     strcat(buffer, "/sounds/mech_kb_click4.wav");
-
     retval->sounds.short_click = SirtetAudio_loadSound(buffer);
-    if (SirtetAudio_soundInvalid(retval->sounds.short_click)) {
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/sounds/deep_bump.wav");
+    retval->sounds.bump = SirtetAudio_loadSound(buffer);
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/sounds/short_boop.wav");
+    retval->sounds.boop = SirtetAudio_loadSound(buffer);
+
+    strcpy(buffer, asset_folder);
+    strcat(buffer, "/sounds/beep_scale_success.wav");
+    retval->sounds.boop_scale = SirtetAudio_loadSound(buffer);
+
+
+
+    if (
+        SirtetAudio_soundInvalid(retval->sounds.short_click)
+        ||
+        SirtetAudio_soundInvalid(retval->sounds.bump)
+    ) {
         return NULL;
     }
-    // TODO: Free/deconstruct
-
 
 
     /***** Load saved data *****/
@@ -305,6 +322,7 @@ int ApplicationState_deconstruct(ApplicationState* self) {
     TTF_CloseFont(self->fonts.vt323_12);
 
     SirtetAudio_unloadSound(self->sounds.short_click);
+    SirtetAudio_unloadSound(self->sounds.bump);
 
     // TODO: Have a global "filepath_sz" macro/setting
 

@@ -34,6 +34,9 @@ struct imglib {
 // sounds & music
 struct soundlib {
     SirtetAudio_sound short_click;
+    SirtetAudio_sound bump;
+    SirtetAudio_sound boop;
+    SirtetAudio_sound boop_scale;
     
 
 };

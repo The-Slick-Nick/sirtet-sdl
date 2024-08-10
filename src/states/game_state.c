@@ -279,6 +279,8 @@ int updateGame(
     long *block_presets = game_state->block_presets;
 
     int score_to_inc = 0;
+    bool block_set = false;  // has a block been committed?
+    bool row_filled = false; // have we completed a row?
 
 
     // Must clear first due to animation timing
@@ -457,6 +459,8 @@ int updateGame(
             BlockDb_setBlockPosition(db, *primary_block, new_pos);
         }
         else {
+
+            block_set = true;
             GameGrid_commitBlock(grid, db, *primary_block);
             *primary_block = INVALID_BLOCK_ID;
         }
@@ -477,8 +481,8 @@ int updateGame(
 
             // TODO: See if MixChunk* can be better integrated - as a 
             // struct member?
-            SirtetAudio_playSound(app_state->sounds.short_click);
 
+            SirtetAudio_playSound(app_state->sounds.boop);
 
             BlockDb_setBlockPosition(
                 db, *primary_block,
@@ -488,8 +492,10 @@ int updateGame(
             *primary_block = INVALID_BLOCK_ID;
             game_state->move_counter = 0;
 
+            // extra score for hard dropping
             score_to_inc += 2 * dist;
         }
+        block_set = true;
     }
 
     score_to_inc += GameGrid_assessScore(grid, game_state->level);
@@ -502,10 +508,29 @@ int updateGame(
 
     GameGrid_prepareAnimation(grid, 3);
     if (grid->is_animating) {
+        row_filled = true;
+        // TODO: Make "success" sound scale a struct member
+        SirtetAudio_playSound(app_state->sounds.boop_scale);
         StateRunner_addState(
             state_runner, game_state, GameState_runGridAnimation, NULL
         );
     }
+
+
+    // Determine which sound effect to make
+    
+
+    if (block_set) {
+
+        SirtetAudio_sound toplay = (
+            row_filled ?
+            app_state->sounds.boop_scale :
+            app_state->sounds.boop
+        );
+        SirtetAudio_playSound(toplay);
+    }
+
+
     return 0;
 }
 
@@ -560,7 +585,6 @@ int drawScoreArea(
     max_w = lvl_w > max_w ? lvl_w : max_w;
     total_h += lvl_h;
 
-    // SDL_Rect bgrect = {dest->x, dest->y, max_w, total_h};
     SDL_Rect bgrect = {dest->x, dest->y, dest->w, total_h};
 
     SDL_Color bgcol = INSET_COL;
@@ -573,7 +597,6 @@ int drawScoreArea(
     SDL_Rect dstrect = {dest->x, dest->y};
 
     dstrect.w = max_w;
-    // dstrect.w = score_w;
     dstrect.h = score_h;
     SDL_RenderCopy(app_state->rend, game_state->score_label, NULL, &dstrect);
     dstrect.y += dstrect.h;

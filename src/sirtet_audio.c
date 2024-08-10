@@ -102,7 +102,7 @@ SirtetAudio_music SirtetAudio_loadMusic(const char *path) {
 
 int SirtetAudio_playSound(SirtetAudio_sound sound) {
 
-    Mix_PlayChannel(-1, sound, 1);
+    Mix_PlayChannel(-1, sound, 0);
     return 0;
 
 }
