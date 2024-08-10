@@ -13,11 +13,11 @@
  * Initialization & deconstruction
 ******************************************************************************/
 
-static size_t commandArrSize(int max_options) {
+static inline size_t commandArrSize(int max_options) {
     return sizeof(menufunc_t*) * max_options * (int)NUM_MENUCODES;
 }
 
-static size_t labelArrSize(int max_options) {
+static inline size_t labelArrSize(int max_options) {
     return sizeof(SDL_Texture*) * max_options;
 }
 

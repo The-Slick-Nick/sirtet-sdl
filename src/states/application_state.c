@@ -44,7 +44,11 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         return NULL;
     }
 
-    if (Mix_Init(0) != 0) {
+    if (
+        ( Mix_Init(0) != 0 )
+        || 
+        ( Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 2048) != 0 )
+    ) {
         char buff[ERRMSG_SZ];
         snprintf(
             buff, ERRMSG_SZ,
