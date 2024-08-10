@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_audio.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_surface.h>
@@ -44,10 +45,13 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         return NULL;
     }
 
+    // TODO: Once I understand the audio more, store some of its config details
+    // in ApplicationState
     if (
         ( Mix_Init(0) != 0 )
         || 
-        ( Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 2048) != 0 )
+        // ( Mix_OpenAudio(4 * MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 512) != 0 )
+        ( Mix_OpenAudio(96000, MIX_DEFAULT_FORMAT, 2, 64) != 0 )
     ) {
         char buff[ERRMSG_SZ];
         snprintf(
@@ -57,6 +61,10 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         );
         return NULL;
     }
+    // more audio settings
+    //
+    setenv("SDL_AUDIODRIVER", "alsa", 1);
+
 
     // TODO: Final: clean this up if we never end up using pngs
     // int img_flags = (IMG_INIT_PNG);
@@ -246,9 +254,8 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     /***** Load sounds *****/
 
     strcpy(buffer, asset_folder);
-    strcat(buffer, "/sounds/mech_kb_click2.wav");
+    strcat(buffer, "/sounds/mech_kb_click4.wav");
 
-    // clicksound = Mix_LoadWAV(path);
     retval->sounds.short_click = Mix_LoadWAV(buffer);
     if (retval->sounds.short_click == NULL) {
         char errbuff[ERRMSG_SZ];

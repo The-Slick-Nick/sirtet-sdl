@@ -62,7 +62,8 @@ void menufunc_openHiscores(
 MainMenuState* MainMenuState_init(
     SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo,
     SDL_Texture *bg_tl, SDL_Texture *bg_tr, SDL_Texture *bg_bl,
-    SDL_Texture *bg_br
+    SDL_Texture *bg_br,
+    Mix_Chunk *menusound_move
 ) {
 
     assert(INIT_TILE_SIZE >= MIN_TILE_SIZE);
@@ -106,7 +107,7 @@ MainMenuState* MainMenuState_init(
     *menustate = (MainMenuState){
 
         .settings = GameSettings_init(32, 32), 
-        .mainmenu=TextMenu_init(16, 32),
+        .mainmenu=TextMenu_init(16, 32, menusound_move),
         .menucode_states=(bool*)calloc((int)NUM_MENUCODES, sizeof(bool)),
         .menucode_map=MenucodeMap_init(MAX_MENUCODE_MAPS),
 
@@ -189,7 +190,7 @@ MainMenuState* MainMenuState_init(
 
     /*** Menu configuration ***/
 
-    menustate->mainmenu = TextMenu_init(16, 32);
+    menustate->mainmenu = TextMenu_init(16, 32, menusound_move);
     menustate->menucode_states = (bool*)calloc((int)NUM_MENUCODES, sizeof(bool));
     menustate->menucode_map = MenucodeMap_init(MAX_MENUCODE_MAPS);
 

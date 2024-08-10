@@ -1,6 +1,7 @@
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <string.h>
 
 #include "inputs.h"
@@ -22,7 +23,7 @@ static inline size_t labelArrSize(int max_options) {
 }
 
 
-Menu* Menu_init(int max_options) {
+Menu* Menu_init(int max_options, Mix_Chunk *move_sound) {
 
     if (max_options < 0)
         { return NULL; }
@@ -31,7 +32,7 @@ Menu* Menu_init(int max_options) {
     void* mem = malloc(size);
     memset(mem, 0, size);
 
-    Menu *retval = Menu_build(mem, size, max_options);
+    Menu *retval = Menu_build(mem, size, max_options, move_sound);
     return retval;
 }
 
@@ -41,7 +42,10 @@ void Menu_deconstruct(Menu* self) {
 }
 
 
-Menu* Menu_build(void *data, size_t data_size, int max_options) {
+Menu* Menu_build(
+    void *data, size_t data_size, int max_options,
+    Mix_Chunk *move_sound
+) {
 
     if (data_size < Menu_requiredBytes(max_options)) {
         return NULL;
@@ -54,8 +58,8 @@ Menu* Menu_build(void *data, size_t data_size, int max_options) {
         .max_options = max_options,
         .cur_option = 0,
         .commands = (menufunc_t*)(data + sizeof(Menu)),
-        .labels = (SDL_Texture**)(data + sizeof(Menu) + commandArrSize(max_options))
-
+        .labels = (SDL_Texture**)(data + sizeof(Menu) + commandArrSize(max_options)),
+        .move_sound = move_sound
     };
     return menu;
 }
@@ -71,11 +75,14 @@ size_t Menu_requiredBytes(int max_options) {
 }
 
 
-TextMenu* TextMenu_init(size_t max_options, size_t max_lbl_size) {
+TextMenu* TextMenu_init(
+    size_t max_options, size_t max_lbl_size,
+    Mix_Chunk *move_sound
+) {
 
     TextMenu *menu = (TextMenu*)malloc(sizeof(TextMenu));
 
-    menu->menu = Menu_init(max_options);
+    menu->menu = Menu_init(max_options, move_sound);
     menu->prev_inac_col = (SDL_Color){0, 0, 0, 0};
     menu->prev_active_col = (SDL_Color){0, 0, 0, 0};
 
@@ -107,13 +114,27 @@ int Menu_nextOption(Menu *self) {
     if (self->cur_option + 1 >= self->num_options) {
         return self->cur_option;
     }
+
+    // TODO: Do we need to pass a preferred channel?
+    if (self->move_sound != NULL) {
+        Mix_PlayChannel(-1, self->move_sound, 1);
+        int loopc = 0;
+        while (!Mix_Playing(-1) && loopc++ < 10000000) { }
+    }
     return ++self->cur_option;
 }
 
 int Menu_prevOption(Menu *self) {
     if (self->cur_option > 0) {
+
+        // TODO: Do we need to pass a preferred channel?
+        if (self->move_sound != NULL) {
+            Mix_PlayChannel(-1, self->move_sound, 1);
+        }
+
         return --self->cur_option;
     }
+
     return self->cur_option;
 }
 

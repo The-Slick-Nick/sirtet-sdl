@@ -23,7 +23,6 @@ typedef struct mainmenustate {
     bool *menucode_states;      // Bool array indicating if menu signals are active
 
     TTF_Font *label_font;
-    SDL_Texture *title_logo;
 
     /* Menu option meta info */
     TextMenu *mainmenu;
@@ -36,6 +35,7 @@ typedef struct mainmenustate {
 
     /* Labels & Display */
     SDL_Texture *title_banner;  // Texture with menu title showing
+    SDL_Texture *title_logo;
     PanningBg background;
 
 
@@ -44,7 +44,8 @@ typedef struct mainmenustate {
 MainMenuState* MainMenuState_init(
     SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo,
     SDL_Texture *bg_tl, SDL_Texture *bg_tr, SDL_Texture *bg_bl,
-    SDL_Texture *bg_br
+    SDL_Texture *bg_br,
+    Mix_Chunk *menusound_move
 );
 
 // Tear down a MainMenuState, following behaviour set by state_runner

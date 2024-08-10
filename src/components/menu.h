@@ -7,6 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 /******************************************************************************
  * Type declarations
@@ -23,6 +24,10 @@ typedef struct {
 
     menufunc_t *commands;  // 2D array of a menucode mapped to an option
     SDL_Texture **labels;
+
+    Mix_Chunk *move_sound;  // Sound effect upon moving options
+
+
 } Menu;
 
 
@@ -47,19 +52,25 @@ typedef struct {
 ******************************************************************************/
 
 // Initialize a Menu struct, returning a pointer to it
-Menu* Menu_init(int max_options);
+Menu* Menu_init(int max_options, Mix_Chunk *move_sound);
 
 // Frees all memory associated with a Menu
 void Menu_deconstruct(Menu* self);
 
 // Set up a Menu struct with a given block of memory
-Menu* Menu_build(void *data, size_t data_size, int max_options);
+Menu* Menu_build(
+    void *data, size_t data_size, int max_options,
+    Mix_Chunk *move_sound
+);
 
 // Identify the number of bytes required for a Menu struct
 size_t Menu_requiredBytes(int max_options);
 
 // Initialize a TextMenu struct, returning a pointer to it
-TextMenu* TextMenu_init(size_t max_options, size_t max_lbl_size);
+TextMenu* TextMenu_init(
+    size_t max_options, size_t max_lbl_size,
+    Mix_Chunk *move_sound
+);
 
 // Free all memory associated with a TextMenu
 void TextMenu_deconstruct(TextMenu* self);

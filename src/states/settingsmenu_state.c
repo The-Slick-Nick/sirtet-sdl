@@ -196,7 +196,7 @@ SettingsMenuState* SettingsMenuState_init(
 
     /*** Menu Setup ***/
 
-    retval->menu = TextMenu_init(4, 64);
+    retval->menu = TextMenu_init(4, 64, NULL);
     retval->menucode_states = (bool*)calloc(NUM_MENUCODES, sizeof(bool));
     retval->menucode_map = MenucodeMap_init(MAX_MENUCODE_MAPS);
 

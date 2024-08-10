@@ -28,7 +28,7 @@ void incValue2(StateRunner *runner, void *app_data, void *state_data) {
 
 void testCreation() {
 
-    Menu* menu = Menu_init(4);
+    Menu* menu = Menu_init(4, NULL);
 
 
     ASSERT_EQUAL_INT(menu->max_options, 4);
@@ -52,7 +52,7 @@ void testCreation() {
 
 void testCommands () {
 
-    Menu* menu = Menu_init(2);
+    Menu* menu = Menu_init(2, NULL);
 
     TestState state = {0, 0};
 

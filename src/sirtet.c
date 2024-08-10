@@ -153,10 +153,6 @@ int run() {
     strcpy(asset_path, Sirtet_getAppdataPath());
     strcat(asset_path, "/assets");
 
-
-    // NOTE: This currently should not work - I don't have a setup script
-    // as of yet to copy stuff
-
     ApplicationState *global_state;
     if (DEBUG_ENABLED) { 
         global_state = ApplicationState_init("assets");
@@ -178,7 +174,9 @@ int run() {
         global_state->images.bg_topleft,
         global_state->images.bg_topright,
         global_state->images.bg_bottomleft,
-        global_state->images.bg_bottomright
+        global_state->images.bg_bottomright,
+
+        global_state->sounds.short_click
     );
     if (mainmenu_state == NULL) {
         printf("%s\n", Sirtet_getError());
