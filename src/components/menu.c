@@ -118,8 +118,6 @@ int Menu_nextOption(Menu *self) {
     // TODO: Do we need to pass a preferred channel?
     if (self->move_sound != NULL) {
         Mix_PlayChannel(-1, self->move_sound, 1);
-        int loopc = 0;
-        while (!Mix_Playing(-1) && loopc++ < 10000000) { }
     }
     return ++self->cur_option;
 }

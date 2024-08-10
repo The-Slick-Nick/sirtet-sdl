@@ -473,6 +473,11 @@ int updateGame(
         );
 
         if (dist >= 0) {
+
+            // TODO: See if MixChunk* can be better integrated
+            Mix_PlayChannel(-1, app_state->sounds.short_click, 1);
+
+
             BlockDb_setBlockPosition(
                 db, *primary_block,
                 Point_translate(block_pos, (Point){0, -1 * dist})
