@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <SDL2/SDL_ttf.h>
 
+#include "sirtet_audio.h"
 #include "inputs.h"
 #include "state_runner.h"
 #include "menu.h"
@@ -45,7 +46,7 @@ MainMenuState* MainMenuState_init(
     SDL_Renderer *rend, TTF_Font *menu_font, SDL_Texture *title_logo,
     SDL_Texture *bg_tl, SDL_Texture *bg_tr, SDL_Texture *bg_bl,
     SDL_Texture *bg_br,
-    Mix_Chunk *menusound_move
+    SirtetAudio_sound menusound_move
 );
 
 // Tear down a MainMenuState, following behaviour set by state_runner

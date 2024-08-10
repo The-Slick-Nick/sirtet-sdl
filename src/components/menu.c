@@ -4,6 +4,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <string.h>
 
+#include "sirtet_audio.h"
 #include "inputs.h"
 #include "sirtet.h"
 #include "menu.h"
@@ -23,7 +24,7 @@ static inline size_t labelArrSize(int max_options) {
 }
 
 
-Menu* Menu_init(int max_options, Mix_Chunk *move_sound) {
+Menu* Menu_init(int max_options, SirtetAudio_sound move_sound) {
 
     if (max_options < 0)
         { return NULL; }
@@ -44,7 +45,7 @@ void Menu_deconstruct(Menu* self) {
 
 Menu* Menu_build(
     void *data, size_t data_size, int max_options,
-    Mix_Chunk *move_sound
+    SirtetAudio_sound move_sound
 ) {
 
     if (data_size < Menu_requiredBytes(max_options)) {
@@ -77,7 +78,7 @@ size_t Menu_requiredBytes(int max_options) {
 
 TextMenu* TextMenu_init(
     size_t max_options, size_t max_lbl_size,
-    Mix_Chunk *move_sound
+    SirtetAudio_sound move_sound
 ) {
 
     TextMenu *menu = (TextMenu*)malloc(sizeof(TextMenu));
@@ -116,8 +117,8 @@ int Menu_nextOption(Menu *self) {
     }
 
     // TODO: Do we need to pass a preferred channel?
-    if (self->move_sound != NULL) {
-        Mix_PlayChannel(-1, self->move_sound, 1);
+    if ( !SirtetAudio_soundInvalid(self->move_sound) ) {
+        SirtetAudio_playSound(self->move_sound);
     }
     return ++self->cur_option;
 }
@@ -126,8 +127,8 @@ int Menu_prevOption(Menu *self) {
     if (self->cur_option > 0) {
 
         // TODO: Do we need to pass a preferred channel?
-        if (self->move_sound != NULL) {
-            Mix_PlayChannel(-1, self->move_sound, 1);
+        if ( !SirtetAudio_soundInvalid(self->move_sound) ) {
+            SirtetAudio_playSound(self->move_sound);
         }
 
         return --self->cur_option;

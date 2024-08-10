@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "sirtet.h"
+#include "sirtet_audio.h"
 #include "colorpalette.h"
 #include "grid.h"
 #include "block.h"
@@ -26,7 +28,6 @@
 #include "gameover_state.h"
 #include "component_drawing.h"
 #include "inputs.h"
-#include "sirtet.h"
 #include "state_runner.h"
 
 
@@ -474,8 +475,9 @@ int updateGame(
 
         if (dist >= 0) {
 
-            // TODO: See if MixChunk* can be better integrated
-            Mix_PlayChannel(-1, app_state->sounds.short_click, 1);
+            // TODO: See if MixChunk* can be better integrated - as a 
+            // struct member?
+            SirtetAudio_playSound(app_state->sounds.short_click);
 
 
             BlockDb_setBlockPosition(
