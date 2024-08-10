@@ -4,7 +4,6 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_mixer.h>
-// TODO: Ensure this is also included in makefile
 
 #include <limits.h>
 #include <assert.h>
@@ -45,9 +44,6 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         free(retval);
         return NULL;
     }
-
-    // TODO: Once I understand the audio more, store some of its config details
-    // in ApplicationState
 
     if ( SirtetAudio_start() != 0 ) {
         char buff[ERRMSG_SZ];

@@ -492,11 +492,6 @@ int updateGame(
 
         if (dist >= 0) {
 
-            // TODO: See if MixChunk* can be better integrated - as a 
-            // struct member?
-
-            SirtetAudio_playSound(app_state->sounds.boop);
-
             BlockDb_setBlockPosition(
                 db, *primary_block,
                 Point_translate(block_pos, (Point){0, -1 * dist})
@@ -893,11 +888,11 @@ int GameState_run(
     BlockDb *db = game_state->block_db;
 
 
-    /***** PROCESS INPUTS *****/
+    /*** PROCESS INPUTS ***/
 
     processGamecodes(game_state->gamecode_states, hardware_states, keymaps);
 
-    /***** UPDATE *****/
+    /*** UPDATE ***/
 
     if (Gamecode_pressed(game_state->gamecode_states, GAMECODE_QUIT)) {
         printf("Quitting...\n");
@@ -922,12 +917,14 @@ int GameState_run(
         StateRunner_addState(state_runner, game_state, GameState_runPaused, NULL);
     }
 
-    /***** PLAY AUDIO *****/
+
+    /*** PLAY AUDIO ***/
+
     if (toplay != NULL) {
         SirtetAudio_playSound(toplay);
     }
     
-    /***** DRAW *****/
+    /*** DRAW ***/
 
     drawGame(application_state, game_state);
     return 0;

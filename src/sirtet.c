@@ -143,7 +143,6 @@ int Sirtet_setup() {
 /* Primary program runner */
 int run() {
 
-    // TODO: Sound effects and (maybe) music(?)
     srand((int)time(NULL));
     Sirtet_setup();
 
