@@ -10,6 +10,8 @@
 #include "application_state.h"
 #include "state_runner.h"
 
+
+
 /******************************************************************************
  * State Struct creation & destruction
 ******************************************************************************/
@@ -222,13 +224,8 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
         go_state->mcodes
     );
 
-    // should be mapped to ESC
-    if (Menucode_pressed(go_state->menucode_states, MENUCODE_EXIT)) {
-        StateRunner_setPopCount(runner, 1);
-    }
 
-
-    /*** Respond to input ***/
+    /*** Button Processing ***/
 
     Menucode mcmap[26] = {
         MENUCODE_ALPHA_UC_A, MENUCODE_ALPHA_UC_B, MENUCODE_ALPHA_UC_C,
@@ -291,16 +288,19 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
     }
 
 
-    if (Menucode_pressed(go_state->menucode_states, MENUCODE_SELECT)) {
+    if (
+        Menucode_pressed(go_state->menucode_states, MENUCODE_EXIT)
+        ||
+        Menucode_pressed(go_state->menucode_states, MENUCODE_SELECT)
+    ) {
         // submit score
-
         ScoreList_add(
             go_state->hiscores, go_state->player_name, go_state->player_score);
 
         ScoreList_sort(go_state->hiscores);
         StateRunner_setPopCount(runner, 1);
-
     }
+
 
 
     /*** DRAW ***/

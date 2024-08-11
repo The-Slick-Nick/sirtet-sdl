@@ -102,10 +102,8 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
         hs_state->mcodes
     );
 
-    // should be mapped to ESC
     if (Menucode_pressed(hs_state->menucode_states, MENUCODE_EXIT)) {
 
-        // StateRunner_setPopCount(StateRunner *self, int count)
         StateRunner_setPopCount(runner, 1);
     }
 
