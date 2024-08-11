@@ -138,7 +138,7 @@ SettingsMenuState* SettingsMenuState_init(
     size_t sz = sizeof(ColorPalette*);
     retval->palettes = (ColorPalette**)calloc(retval->num_palettes, sz);
 
-    // TODO: Figure out a way to make this a parsable config file or something
+    // TODO: STRETCH: Figure out a way to make this a parsable config file or something
     retval->palettes[0] = ColorPalette_initVa(
         "Default", 7, 
         (SDL_Color){190,83,28, 255},

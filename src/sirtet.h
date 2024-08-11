@@ -58,6 +58,7 @@
 // baesd on size
 #define STATIC_ARRMAX 128
 #define ERRMSG_SZ 512
+#define FILEPATH_SZ 512
 
 
 /*** App Settings ***/

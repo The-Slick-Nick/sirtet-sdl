@@ -29,7 +29,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     }
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
-        char buff[64];
+        char buff[ERRMSG_SZ];
         snprintf(buff, 64, "Error starting SDL in ApplicationState: %s\n", SDL_GetError());
         Sirtet_setError(buff);
         free(retval);
@@ -116,7 +116,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
 
     /***** Load fonts *****/
 
-    char buffer[1000];
+    char buffer[FILEPATH_SZ];
 
     strcpy(buffer, asset_folder);
     strcat(buffer, "/fonts/Lekton-Bold.ttf");
@@ -147,7 +147,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         retval->fonts.vt323_12 == NULL
         || retval->fonts.vt323_24 == NULL
     ) {
-        char buff[64];
+        char buff[ERRMSG_SZ];
         snprintf(
             buff, 64,
             "Error loading VT323 font in ApplicationState: %s\n",
@@ -198,7 +198,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         bg_bl_surf == NULL ||
         bg_br_surf == NULL
     ) {
-        char errbuff[STATIC_ARRMAX];
+        char errbuff[ERRMSG_SZ];
         snprintf(
             errbuff, STATIC_ARRMAX,
             "Error loading menu background:\n    %s\n", 
@@ -223,7 +223,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
         retval->images.bg_bottomright == NULL ||
         retval->images.bg_bottomleft == NULL
     ) {
-        char errbuff[STATIC_ARRMAX];
+        char errbuff[ERRMSG_SZ];
         snprintf(
             errbuff, STATIC_ARRMAX,
             "Error loading image assets:\n    %s\n", 
@@ -275,7 +275,7 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     retval->hiscores = ScoreList_init(HISCORES_MAX_SIZE, HISCORES_NAME_LEN);
 
 
-    char hs_path[256];
+    char hs_path[FILEPATH_SZ];
     strcpy(hs_path, Sirtet_getAppdataPath());
     strcat(hs_path, "/hiscores.txt");
     FILE *hiscore_file = fopen(hs_path, "r");
@@ -294,7 +294,7 @@ int ApplicationState_deconstruct(ApplicationState* self) {
 
     /*** Clean up & export any saved data ***/
 
-    char hs_path[256];
+    char hs_path[FILEPATH_SZ];
     strcpy(hs_path, Sirtet_getAppdataPath());
     strcat(hs_path, "/hiscores.txt");
 
@@ -323,8 +323,6 @@ int ApplicationState_deconstruct(ApplicationState* self) {
 
     SirtetAudio_unloadSound(self->sounds.short_click);
     SirtetAudio_unloadSound(self->sounds.bump);
-
-    // TODO: Have a global "filepath_sz" macro/setting
 
     free(self->hardware_states);
     free(self);

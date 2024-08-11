@@ -919,13 +919,11 @@ int GameState_run(
 
     /*** PLAY AUDIO ***/
 
-    // TODO: In unit tests for SirtetAudio, have one ensuring that
-    // SirtetAudio_soundInvalid(NULLSOUND) is always true
-
     if (!SirtetAudio_soundInvalid(toplay)) {
         SirtetAudio_playSound(toplay);
     }
-    
+
+
     /*** DRAW ***/
 
     drawGame(application_state, game_state);
