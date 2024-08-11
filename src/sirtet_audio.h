@@ -19,6 +19,11 @@
 #include <stdbool.h>
 
 
+
+#define NULLSOUND NULL
+#define NULLMUSIC NULL
+
+
 typedef Mix_Chunk* SirtetAudio_sound;
 typedef Mix_Music* SirtetAudio_music;
 

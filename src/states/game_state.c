@@ -901,9 +901,7 @@ int GameState_run(
         return 0;
     }
 
-    // TODO: Give SirtetAudio a "null sound" type of constant (just in case
-    // some sound libary might not use NULL)
-    SirtetAudio_sound toplay = NULL;
+    SirtetAudio_sound toplay = NULLSOUND;
     int update_status = updateGame(
         state_runner, application_state, game_state,
         &toplay
@@ -921,7 +919,10 @@ int GameState_run(
 
     /*** PLAY AUDIO ***/
 
-    if (toplay != NULL) {
+    // TODO: In unit tests for SirtetAudio, have one ensuring that
+    // SirtetAudio_soundInvalid(NULLSOUND) is always true
+
+    if (!SirtetAudio_soundInvalid(toplay)) {
         SirtetAudio_playSound(toplay);
     }
     
