@@ -402,13 +402,19 @@ int ScoreDisplay_deconstruct(ScoreDisplay *self) {
 
 int ScoreDisplay_draw(
     ScoreDisplay *self,
+    int n,
     SDL_Renderer *rend,
     const SDL_Rect *draw_window,
     SDL_Rect *out_dim
 ) {
 
     int yoffset = 0;
-    for (int lbl_i = 0; lbl_i < self->n_lbls; lbl_i++) {
+
+    if (n <= 0 || n > self->n_lbls) {
+        n = self->n_lbls;
+    }
+
+    for (int lbl_i = 0; lbl_i < n; lbl_i++) {
 
         SDL_Rect rankdst = {
             .x=draw_window->x,

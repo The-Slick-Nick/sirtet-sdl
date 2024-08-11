@@ -312,8 +312,8 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
 
     if (go_state->top_labels != NULL) {
         ScoreDisplay_draw(
-            go_state->top_labels, rend,
-            &drawdst,  &outrect
+            go_state->top_labels, 0,
+            rend, &drawdst,  &outrect
         );
     }
     drawdst.y += outrect.h;
@@ -346,8 +346,8 @@ int GameoverState_run(StateRunner *runner, void *app_data, void *state_data) {
     // bottom
     if (go_state->bottom_labels != NULL) {
         ScoreDisplay_draw(
-            go_state->bottom_labels, rend,
-            &drawdst,  &outrect
+            go_state->bottom_labels, 0,
+            rend, &drawdst, &outrect
         );
     }
 

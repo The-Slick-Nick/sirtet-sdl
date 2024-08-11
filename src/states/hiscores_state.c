@@ -115,7 +115,7 @@ int HiscoresState_run(StateRunner *runner, void *app_data, void *state_data) {
     if (hs_state->labels != NULL && hs_state->labels->n_lbls > 0) {
         SDL_Rect dstwind = {.x=0, .y=0};
         SDL_GetWindowSize(app_state->wind, &dstwind.w, &dstwind.h);
-        ScoreDisplay_draw(hs_state->labels, rend, &dstwind, NULL);
+        ScoreDisplay_draw(hs_state->labels, 10, rend, &dstwind, NULL);
     }
 
     return 0;

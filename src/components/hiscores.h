@@ -97,13 +97,15 @@ int ScoreDisplay_deconstruct(ScoreDisplay *self);
 
 /**
  * @param self - ScoreDisplay to draw
+ * @param n - Number of labels to draw. 0 or negative to draw all
+ * @param rend - SDL Renderer pointer to draw with
  * @param draw_window - Pointer to dimensions to draw within
- * @param n - Number of labels to draw
  * @param out_dim - Pointer to rectangle that will be written into
  *                  with the final overall drawn dimensions.
  */
 int ScoreDisplay_draw(
     ScoreDisplay *self,
+    int n,
     SDL_Renderer *rend,
     const SDL_Rect *draw_window,
     SDL_Rect *out_dim

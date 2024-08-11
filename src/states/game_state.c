@@ -452,11 +452,12 @@ int updateGame(
         }
     }
 
-
     game_state->move_counter++;
     if (
         Gamecode_pressed(game_state->gamecode_states, GAMECODE_MOVE_UP)
-        || game_state->move_counter > (TARGET_FPS / (1 + game_state->level))
+        ||
+        // TODO: Include some kind of scaling function for difficulty
+        game_state->move_counter > (TARGET_FPS / (1 + game_state->level))
     ) {
         game_state->move_counter = 0;
 
