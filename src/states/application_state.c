@@ -52,17 +52,6 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     }
 
 
-    // TODO: Final: clean this up if we never end up using pngs
-    // int img_flags = (IMG_INIT_PNG);
-    // if (!(IMG_Init(img_flags) & img_flags)) {
-        // char buff[64];
-        // snprintf(buff, 64, "Error starting SDL_image in ApplicationState: %s\n", IMG_GetError());
-        // Sirtet_setError(buff);
-        // free(retval);
-        // return NULL;
-    // }
-
-
     /***** Window and Renderer *****/
 
     SDL_Window *wind = SDL_CreateWindow(
@@ -209,7 +198,6 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     }
 
 
-    // TODO: Redo logo for smoother lines & black border on letters
     retval->images.logo = SDL_CreateTextureFromSurface(rend, logo_surf);
 
     retval->images.bg_topright = SDL_CreateTextureFromSurface(rend, bg_tr_surf);

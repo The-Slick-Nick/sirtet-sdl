@@ -4,9 +4,6 @@
 * General purpose utilities and such
 ******************************************************************************/
 
-// TODO: Separate these out into specific `utilities_xxx.h` files, when there
-// are enough here
-
 #include <stdint.h>
 #include <stdlib.h>
 

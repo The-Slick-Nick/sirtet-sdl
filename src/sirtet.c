@@ -26,8 +26,6 @@
 #include <string.h>
 #include <time.h>
 
-// TODO: Include windows version of below, conditionally based on platform
-
 
 #ifdef __linux__
 #include <sys/stat.h>
@@ -40,11 +38,9 @@
 #endif
 
 
-#define PATH_SZ 256
-
 static char glob_errmsg[ERRMSG_SZ] = {0};
-static char glob_appdatapath[PATH_SZ] = {0};
-static char glob_assetpath[PATH_SZ] = {0};
+static char glob_appdatapath[FILEPATH_SZ] = {0};
+static char glob_assetpath[FILEPATH_SZ] = {0};
 
 
 /******************************************************************************
@@ -69,8 +65,6 @@ char* Sirtet_getError() {
 
 
 char* Sirtet_getAppdataPath() {
-
-    // TODO: Include windows version of below, conditionally based on platform
 
     if (DEBUG_ENABLED) {
         strcpy(glob_appdatapath, "dev_data");
@@ -148,7 +142,7 @@ int run() {
 
     printf("Initializing application state...\n");
 
-    char asset_path[PATH_SZ];
+    char asset_path[FILEPATH_SZ];
     strcpy(asset_path, Sirtet_getAppdataPath());
     strcat(asset_path, "/assets");
 

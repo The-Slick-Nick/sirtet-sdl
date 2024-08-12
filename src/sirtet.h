@@ -12,7 +12,7 @@
 ******************************************************************************/
 
 // TODO: Add a "menu open chosen" sound effect
-// TODO: Update readme with additional dependencies
+// TODO: Update readme with additional dependencies (SDL_Mixer, SDL_ttf, etc.)
 // TODO: Difficulty balancing (level 0 -> level 1 shouldn't be a 2x speed 
 // increase)
 
