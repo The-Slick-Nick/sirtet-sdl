@@ -1,3 +1,8 @@
+#ifdef _WIN32
+#define SDL_MAIN_HANDLED
+#endif
+
+
 #include "sirtet.h"
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL.h>

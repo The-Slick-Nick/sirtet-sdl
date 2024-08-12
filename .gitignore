@@ -4,6 +4,7 @@ sandbox/*
 *.d
 *.bin
 *.cache
+test.txt
 
 # Binaries
 build/*
@@ -21,3 +22,8 @@ logs/*
 # be stored elsewhere)
 hiscores.txt
 dev_data/*
+
+
+# windows/vscode build environment shenanigans
+*.vs
+compile_commands.json

@@ -2,7 +2,14 @@
 A simple block dropping game created with SDL2
 
 
+### Building from source
+#### Linux
+
+#### Windows
+
 ### Build Requirements
+
+
 * SDL
 ```bash
 $ sudo apt install libsdl2-2.0-0
