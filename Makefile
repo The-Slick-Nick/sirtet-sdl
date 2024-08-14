@@ -68,7 +68,7 @@ $(BUILD_DIR)/lib.a: $(OBJS)
 	ar rvs $@ $^	
 
 ./main.bin: $(BUILD_DIR)/lib.a
-	gcc main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a $(SDL_FLAGS)
+	gcc -Wall main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a $(SDL_FLAGS)
 
 ##################
 ### HIGH LEVEL ###

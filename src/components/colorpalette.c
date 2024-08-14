@@ -1,8 +1,9 @@
-
-#include "sirtet.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
 #include "colorpalette.h"
+#include "sirtet.h"
 
 ColorPalette* ColorPalette_init(
     const char *name, size_t size, SDL_Color *src) {

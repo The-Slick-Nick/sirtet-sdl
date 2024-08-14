@@ -24,6 +24,6 @@ hiscores.txt
 dev_data/*
 
 
-# windows/vscode build environment shenanigans
+# local build environment stuff
 *.vs
 compile_commands.json
