@@ -3,6 +3,7 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
+#include <stdio.h>
 
 #include "hiscores_state.h"
 #include "application_state.h"

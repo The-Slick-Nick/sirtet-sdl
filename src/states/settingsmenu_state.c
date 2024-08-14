@@ -3,6 +3,7 @@
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_video.h>
+#include <stdio.h>
 
 #include "colorpalette.h"
 #include "sirtet.h"

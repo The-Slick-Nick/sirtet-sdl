@@ -48,7 +48,7 @@ SDL_FLAGS := $(addprefix -l,$(SDL_MODULES))
 # The -MMD and -MP flags together generate Makefiles for us!
 # These files will have .d instead of .o as the output.
 # Note to self: look in /usr/include for proper lib names
-CPPFLAGS := $(INC_FLAGS) -g -MMD -MP $(SDL_FLAGS)
+CPPFLAGS := -Wall $(INC_FLAGS) -g -MMD -MP $(SDL_FLAGS)
 
 ######################
 ### Build Commands ###
