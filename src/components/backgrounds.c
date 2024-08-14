@@ -1,6 +1,7 @@
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
 #include <assert.h>
+#include <stdio.h>
 
 #include "sirtet.h"
 #include "backgrounds.h"
@@ -146,6 +147,8 @@ int PanningBg_draw(
     if (DEBUG_ENABLED) {
 
         SDL_Rect dbg_rect = {.x=orig_x - 2, .y=orig_y - 2, .w = 4, .h = 4};
+        // SDL_RenderDrawRect(SDL_Renderer *renderer, const SDL_Rect *rect)
+        // SDL_SetRenderDrawColor(SDL_Renderer *renderer, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
         SDL_SetRenderDrawColor(rend, 255, 0, 0, 255);
         SDL_RenderDrawRect(rend, &dbg_rect);
     }
