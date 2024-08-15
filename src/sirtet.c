@@ -101,7 +101,7 @@ char* Sirtet_getAppdataPath() {
         }
 #endif
         strcpy(glob_appdatapath, homedir);
-        strcat(glob_appdatapath, "/.sirtet");
+        strcat(glob_appdatapath, "/sirtet");
     }
 
 
@@ -127,8 +127,7 @@ int Sirtet_setup() {
 
 #elif _WIN32
 
-    // TODO: Attempt to build & test building with windows - can't right now myself
-    if (!_chdir(appdata_path)) {
+    if (_chdir(appdata_path)) {
         _mkdir(appdata_path);
     }
 #endif

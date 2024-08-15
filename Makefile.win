@@ -10,8 +10,6 @@ BUILD_DIR := ./build
 SRC_DIR := ./src
 
 
-
-
 # Find all .c files to be built as part of project
 # NOTE: I'm not sure what versions of GNU Make support the **/* syntax.
 # perhaps I will later identify an alternative just in case, but for now this

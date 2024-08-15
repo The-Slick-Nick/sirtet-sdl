@@ -1,5 +1,5 @@
-#ifndef RUN_GAME_H
-#define RUN_GAME_H
+#ifndef SIRTET_H
+#define SIRTET_H
 
 #include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
@@ -63,7 +63,8 @@
 
 /*** App Settings ***/
 
-#define DEBUG_ENABLED true
+// #define DEBUG_ENABLED true
+#define DEBUG_ENABLED false
 
 #define WINDOW_WIDTH 720 
 #define WINDOW_HEIGHT 720
