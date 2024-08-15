@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #elif _WIN32
+#include <windows.h>
 #include <shlobj.h>
 #include <direct.h>
 #endif
@@ -88,11 +89,14 @@ char* Sirtet_getAppdataPath() {
         homedir = getenv("APPDATA");
         if (homedir == NULL) {
 
+
             char adpath[STATIC_ARRMAX];
-            SHGetKnownFolderPath(
-                FOLDERID_LocalAppdata, 0,
-                NULL, adpath
-            );
+            SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, adpath);
+
+            // SHGetKnownFolderPath(
+            //     FOLDERID_LocalAppData, 0,
+            //     NULL, adpath
+            // );
             homedir = adpath;
         }
 #endif
@@ -125,7 +129,7 @@ int Sirtet_setup() {
 
     // TODO: Attempt to build & test building with windows - can't right now myself
     if (!_chdir(appdata_path)) {
-        _mkdir(appdata_path)
+        _mkdir(appdata_path);
     }
 #endif
 
@@ -144,15 +148,12 @@ int run() {
 
     char asset_path[FILEPATH_SZ];
     strcpy(asset_path, Sirtet_getAppdataPath());
+    
+    strcpy(asset_path, "");
+    strcat(asset_path, SDL_GetBasePath());
     strcat(asset_path, "/assets");
 
-    ApplicationState *global_state;
-    if (DEBUG_ENABLED) { 
-        global_state = ApplicationState_init("assets");
-    }
-    else {
-        global_state = ApplicationState_init(asset_path);
-    }
+    ApplicationState *global_state = ApplicationState_init(asset_path);
 
 
     if (global_state == NULL) {

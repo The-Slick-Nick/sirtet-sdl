@@ -3,6 +3,7 @@ sandbox/*
 *.a
 *.d
 *.bin
+main.exe
 *.cache
 test.txt
 
@@ -27,3 +28,4 @@ dev_data/*
 # local build environment stuff
 *.vs
 compile_commands.json
+.vscode

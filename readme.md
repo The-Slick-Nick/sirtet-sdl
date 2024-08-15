@@ -7,6 +7,17 @@ A simple block dropping game created with SDL2
 
 #### Windows
 
+* Ensure msys32 & gcc installed
+* Ensure SDL libraries are downloaded, and headers are saved to
+  C:/msys64/mingw32/include
+  (or if different, copy/modify makefile and tweak to your own setup)
+
+```powershell
+
+mingw32-make -f Makefile.win
+
+```
+
 ### Build Requirements
 
 
@@ -25,3 +36,6 @@ $ sudo apt install libsdl2-ttf-dev
 ```bash
 $ sudo apt install valgrind
 ```
+
+
+

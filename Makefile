@@ -11,6 +11,9 @@
 # > make_lib
 #	Builds library file
 
+# TODO: Replace $(shell find ...) with $(wildcard)
+# TODO: potentially make use of $(patsubst %.c,%.o,$(variable...))
+
 all: build_exe run_exe clean
 
 #############################

@@ -1,0 +1,88 @@
+# This file is meant to provide a set of build commands
+# for this project in windows, using mingw-make and gcc compiler
+
+
+###############################################################################
+# Files and directories
+###############################################################################
+
+BUILD_DIR := ./build
+SRC_DIR := ./src
+
+
+
+
+# Find all .c files to be built as part of project
+# NOTE: I'm not sure what versions of GNU Make support the **/* syntax.
+# perhaps I will later identify an alternative just in case, but for now this
+# works so eh
+SRCS := $(wildcard $(SRC_DIR)/**/*.c)
+SRCS += $(wildcard $(SRC_DIR)/*.c)
+
+OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
+
+# Flags NOTE: requires SDL headers to exist in msys64/mingw32/include folder
+INC_DIRS := $(sort $(dir $(wildcard $(SRC_DIR)/*/)))
+INC_DIRS += C:/msys64/mingw32/include/
+
+INC_FLAGS := $(addprefix -I,$(INC_DIRS))
+
+SDL_MODULES := SDL2 SDL2_ttf SDL2_mixer
+SDL_LOC := C:/msys64/mingw32/
+
+SDL_FLAGS := $(addprefix -l,$(SDL_MODULES))
+
+# .exe for windows, no need for an extension on linux
+EXE_FILE := main.exe
+LIB_FILE := $(BUILD_DIR)/libsirtet.a
+
+
+###############################################################################
+# Makefile entry points
+###############################################################################
+
+
+# default list of tasks
+all: debug_print
+
+# clear out everything compiled/built from Makefile(s)
+reset:
+	if exist "$(BUILD_DIR)" rmdir /s /q "$(BUILD_DIR)"
+	if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+
+
+debug_print:
+	@echo $(SDL_FLAGS)
+
+build_lib: $(LIB_FILE)
+
+build_exe: $(EXE_FILE)
+
+run_exe: $(EXE_FILE)
+	./$(EXE_FILE)
+
+###############################################################################
+# Builds
+###############################################################################
+
+
+$(EXE_FILE): main.c $(LIB_FILE)
+	gcc main.c -o $@ $(INC_FLAGS) -L$(BUILD_DIR) -LC:/msys64/mingw32/bin -lsirtet $(SDL_FLAGS) 
+
+# I've gotten this to compile by directly calling the following. For some reason
+# make is not doing this correctly, but here's the example that worked:
+# gcc main.c -o build/main.exe -I./src/ -I./src/component/ -I./src/drawing/ -I./src/states -IC:/msys64/mingw32/include/ -L./build -lsirtet -LC:/msys64/mingw32/bin -lSDL2 -lSDL2_ttf -lSDL2_mixer
+
+
+# build static library
+$(LIB_FILE): $(OBJS)
+	ar rcs $@ $(OBJS)
+
+
+# any *.o pattern match in build dir requires equivalent *.c file, routed from
+# root folder - this will create a mirror of source directory structure in
+# build
+$(BUILD_DIR)/%.o: %.c
+# NOTE: windows uses `if not exist` syntax, linux can use -p flag
+	if not exist $(dir $@) mkdir "$(dir $@)"
+	gcc -Wall -c $< -o $@ $(INC_FLAGS) -L$(BUILD_DIR) $(SDL_FLAGS)
