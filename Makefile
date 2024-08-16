@@ -14,75 +14,46 @@
 # TODO: Replace $(shell find ...) with $(wildcard)
 # TODO: potentially make use of $(patsubst %.c,%.o,$(variable...))
 
-all: build_exe run_exe clean
 
-#############################
-### Files and directories ###
-#############################
+###############################################################################
+# Files and directories
+###############################################################################
+BUILD_DIR := ./build
+SRC_DIR := ./src
+
 TARGET_EXEC := final_program
 
-BUILD_DIR := ./build
-SRC_DIRS := ./src
 
-# Find all the C and C++ files we want to compile
-# Note the single quotes around the * expressions. The shell will incorrectly expand these otherwise, but we want to send the * directly to the find command.
-SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -or -name '*.c' -or -name '*.s')
+SRCS := $(wildcard $(SRC_DIR)/**/*.c)
+SRCS += $(wildcard $(SRC_DIR)/*.c)
 
-# Prepends BUILD_DIR and appends .o to every src file
-# As an example, ./your_dir/hello.cpp turns into ./build/./your_dir/hello.cpp.o
-OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 
-# String substitution (suffix version without %).
-# As an example, ./build/hello.cpp.o turns into ./build/hello.cpp.d
-DEPS := $(OBJS:.o=.d)
-
-# Every folder in ./src will need to be passed to GCC so that it can find header files
-INC_DIRS := $(shell find $(SRC_DIRS) -type d)
-# Add a prefix to INC_DIRS. So moduleA would become -ImoduleA. GCC understands this -I flag
+INC_DIRS := $(sort $(dir $(wildcard $(SRC_DIR)/*/)))
+INC_DIRS += $(SRC_DIR)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-# All SDL libraries/modules used
 SDL_MODULES := SDL2 SDL2_ttf SDL2_mixer
-# Lib flags for each SDL module
 SDL_FLAGS := $(addprefix -l,$(SDL_MODULES))
 
+EXE_FILE := main.bin
+LIB_FILE := $(BUILD_DIR)/libsirtet.a
+
+COMPILER := gcc
+COMP_FLAGS := -Wall -Werror -g
+
+###############################################################################
+# Makefile entry points
+###############################################################################
 
 
-# The -MMD and -MP flags together generate Makefiles for us!
-# These files will have .d instead of .o as the output.
-# Note to self: look in /usr/include for proper lib names
-CPPFLAGS := -Wall $(INC_FLAGS) -g -MMD -MP $(SDL_FLAGS)
+run_exe: build_exe
+	./main.bin
 
-######################
-### Build Commands ###
-######################
-
-# The final build step.
-$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
-
-# Build step for C source
-$(BUILD_DIR)/%.c.o: %.c
-	mkdir -p $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-
-
-$(BUILD_DIR)/lib.a: $(OBJS)
-	ar rvs $@ $^	
-
-./main.bin: $(BUILD_DIR)/lib.a
-	gcc -Wall main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a $(SDL_FLAGS)
-
-##################
-### HIGH LEVEL ###
-##################
 
 build_exe: ./main.bin
 
 build_lib: $(BUILD_DIR)/lib.a
-
-run_exe: build_exe
-	./main.bin
 
 run_profile_summary: build_exe
 	mkdir -p logs
@@ -96,8 +67,30 @@ run_profile_full: build_exe
 clean:
 	rm main.bin
 
+###############################################################################
+# Builds
+###############################################################################
 
-# Include the .d makefiles. The - at the front suppresses the errors of missing
-# Makefiles. Initially, all the .d files will be missing, and we don't want those
-# errors to show up.
--include $(DEPS)
+$(EXE_FILE): main.c $(LIB_FILE)
+	$(COMPILER) $(COMP_FLAGS) main.c -o $@ $(INC_FLAGS) -L$(BUILD_DIR) -lsirtet $(SDL_FLAGS)
+
+
+# static library
+$(LIB_FILE): $(OBJS)
+	ar rcs $@ $^
+
+# The final build step.
+$(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
+	$(CXX) $(OBJS) -o $@ $(LDFLAGS)
+
+$(BUILD_DIR)/%.o: %.c
+	mkdir -p $(dir $@)
+	$(COMPILER) $(COMP_FLAGS) -c $< -o $@ $(INC_FLAGS) -L$(BUILD_DIR) $(SDL_FLAGS)
+
+
+# $(BUILD_DIR)/lib.a: $(OBJS)
+# 	ar rvs $@ $^
+#
+# ./main.bin: $(BUILD_DIR)/lib.a
+# 	gcc -Wall main.c -g -o main.bin $(INC_FLAGS) -L $(BUILD_DIR) -l:lib.a $(SDL_FLAGS)
+#
