@@ -81,8 +81,8 @@ int GameSettings_setPresets(GameSettings *self, int block_size, size_t src_len, 
         char buff[128];
         snprintf(
             buff, 128,
-            "Provided preset length %llu exceeds max length of %llu\n",
-            src_len, self->max_preset_size
+            "Provided preset length %lu exceeds max length of %lu\n",
+            (ulong)src_len, (ulong)self->max_preset_size
         );
         Sirtet_setError(buff);
         return -1;

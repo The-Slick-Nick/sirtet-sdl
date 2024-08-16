@@ -118,7 +118,9 @@ int ColorPalette_getColor(ColorPalette *self, size_t idx, SDL_Color *outcol) {
 
     if (idx >= self->size) {
         char buff[64];
-        snprintf(buff, 64, "ColorPalette index %llu out of bounds\n", idx);
+        snprintf(
+            buff, 64,
+            "ColorPalette index %lu out of bounds\n", (ulong)idx);
         Sirtet_setError(buff);
         return -1;
     }
@@ -136,7 +138,9 @@ SDL_Color* ColorPalette_getColorPtr(ColorPalette *self, size_t idx) {
 
     if (idx >= self->size) {
         char buff[64];
-        snprintf(buff, 64, "ColorPalette index %llu out of bounds\n", idx);
+        snprintf(
+            buff, 64,
+            "ColorPalette index %lu out of bounds\n", (ulong)idx);
         Sirtet_setError(buff);
         return NULL;
     }

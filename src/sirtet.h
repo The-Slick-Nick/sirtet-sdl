@@ -10,6 +10,7 @@
 /******************************************************************************
  * Config macros/constants
 ******************************************************************************/
+typedef unsigned long ulong;
 
 // TODO: Add a "menu open chosen" sound effect
 // TODO: Update readme with additional dependencies (SDL_Mixer, SDL_ttf, etc.)

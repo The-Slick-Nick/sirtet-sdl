@@ -313,7 +313,6 @@ int SettingsMenuState_run(
     /*** Unpacking ***/
 
     SDL_Renderer *rend = app_state->rend;
-    SDL_Window *wind = app_state->wind;
     ColorPalette *palette = settings_state->palettes[settings_state->palette_selection];
 
 
@@ -447,7 +446,7 @@ void menufunc_incTileSize(
 
     /*** Recasting ***/
     SettingsMenuState *menu_state = (SettingsMenuState*)menu_data;
-    ApplicationState *app_state = (ApplicationState*)app_data;
+
 
 
     /*** Unpacking ***/
@@ -472,7 +471,7 @@ void menufunc_decTileSize(
 ) {
     /*** Recasting ***/
     SettingsMenuState *menu_state = (SettingsMenuState*)menu_data;
-    ApplicationState *app_state = (ApplicationState*)app_data;
+
 
 
     /*** Unpacking ***/

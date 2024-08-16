@@ -41,7 +41,6 @@
 
 static char glob_errmsg[ERRMSG_SZ] = {0};
 static char glob_appdatapath[FILEPATH_SZ] = {0};
-static char glob_assetpath[FILEPATH_SZ] = {0};
 
 
 /******************************************************************************

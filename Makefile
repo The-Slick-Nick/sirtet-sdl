@@ -11,9 +11,6 @@
 # > make_lib
 #	Builds library file
 
-# TODO: Replace $(shell find ...) with $(wildcard)
-# TODO: potentially make use of $(patsubst %.c,%.o,$(variable...))
-
 
 ###############################################################################
 # Files and directories
@@ -53,7 +50,7 @@ run_exe: build_exe
 
 build_exe: ./main.bin
 
-build_lib: $(BUILD_DIR)/lib.a
+build_lib: $(LIB_FILE)
 
 run_profile_summary: build_exe
 	mkdir -p logs
@@ -66,6 +63,7 @@ run_profile_full: build_exe
 
 clean:
 	rm main.bin
+	rm -rf $(BUILD_DIR)/*
 
 ###############################################################################
 # Builds
