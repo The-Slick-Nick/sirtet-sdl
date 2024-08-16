@@ -81,7 +81,7 @@ int GameSettings_setPresets(GameSettings *self, int block_size, size_t src_len, 
         char buff[128];
         snprintf(
             buff, 128,
-            "Provided preset length %ld exceeds max length of %ld\n",
+            "Provided preset length %llu exceeds max length of %llu\n",
             src_len, self->max_preset_size
         );
         Sirtet_setError(buff);
@@ -148,13 +148,6 @@ GameState* GameState_init(
     int init_level = settings->init_level;
     int block_size = settings->block_size;
 
-    size_t preset_size = settings->preset_size;
-    long *block_presets = settings->block_presets;
-
-    size_t palette_size = settings->preset_size;
-
-
-    ColorPalette *palette = ColorPalette_initCopy(settings->palette);
     GamecodeMap *keymaps = settings->keymaps;
 
 
@@ -299,8 +292,8 @@ int updateGame(
         game_state->lines_this_level -= (level_ups * LINES_PER_LEVEL);
     }
 
-    int rand_idx;
-    long new_contents;
+
+
 
     if (*queued_block == INVALID_BLOCK_ID) {
 
@@ -590,7 +583,7 @@ int drawScoreArea(
     SDL_RenderFillRect(app_state->rend, &bgrect);
 
     // now actually draw the labels
-    int yoffset = 0;
+
 
     SDL_Rect dstrect = {dest->x, dest->y};
 
@@ -619,7 +612,6 @@ int drawInterface(
 
     int score = game_state->score;
     int level = game_state->level;
-    BlockDb *block_db = game_state->block_db;
 
     // helper vars
     char score_buffer[32];  // 32 is overkill but just in case...
@@ -628,17 +620,8 @@ int drawInterface(
     SDL_Color bgcol = INSET_COL;
     SDL_SetRenderDrawColor(rend, bgcol.r, bgcol.g, bgcol.b, bgcol.a);
 
-    const int padding = 24;
-
     int wind_w, wind_h;
     SDL_GetWindowSize(app_state->wind, &wind_w, &wind_h);
-
-    const int sidebar_w = (SIDEBAR_WEIGHT_W * (wind_w - 2 * BORDER_SIZE)) / TOTAL_WEIGHT_W;
-    const int sidebar_h = wind_h;
-    const Point sidebar_origin = {
-        .x=((GAMEAREA_WEIGHT_W * wind_w) / TOTAL_WEIGHT_W),
-        .y=0
-    };
 
 
     /***** Score + Level *****/
@@ -671,7 +654,6 @@ int drawInterface(
             Sirtet_setError(buff);
             return -1;
         }
-
 
         game_state->level_label = SDL_CreateTextureFromSurface(rend, lvl_surf);
         if (game_state->level_label == NULL) {
@@ -883,10 +865,10 @@ int GameState_run(
     ApplicationState *application_state = (ApplicationState*)application_data;
 
     /* Relevant variable extraction */
-    SDL_Renderer *rend = application_state->rend;
+
     int *hardware_states = application_state->hardware_states;
     GamecodeMap *keymaps = game_state->keymaps;
-    BlockDb *db = game_state->block_db;
+
 
 
     /*** PROCESS INPUTS ***/
@@ -943,7 +925,7 @@ int GameState_runPaused(StateRunner *state_runner, void *application_data, void 
     SDL_Renderer *rend = application_state->rend;
     int *hardware_states = application_state->hardware_states;
     GamecodeMap *keymaps = game_state->keymaps;
-    BlockDb *db = game_state->block_db;
+
 
 
 
@@ -978,7 +960,6 @@ int GameState_runGridAnimation(
     ApplicationState *app_state = (ApplicationState*)app_data;
 
     // extraction
-    SDL_Renderer *rend = app_state->rend;
     GameGrid *grid = game_state->game_grid;
     int *hardware_states = app_state->hardware_states;
     GamecodeMap *keymaps = game_state->keymaps;

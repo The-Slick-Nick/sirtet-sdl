@@ -71,13 +71,7 @@ MainMenuState* MainMenuState_init(
     assert(INIT_TILE_SIZE <= MAX_TILE_SIZE);
     assert(MIN_LEVEL >= 0);
     assert(MIN_LEVEL <= MAX_LEVEL);
-
-    SDL_Color col_active = {255, 255, 255};
-    SDL_Color col_inactive = {155, 155, 155};
-
-    // General purpose buffer to use for strings
-    char strbuffer[32];
-
+    
     // return value
     MainMenuState *menustate = (MainMenuState*)malloc(sizeof(MainMenuState));
     if (menustate == NULL) {
@@ -98,9 +92,6 @@ MainMenuState* MainMenuState_init(
         free(menustate);
         return NULL;
     }
-
-    SDL_Color activecol = MENUCOL_ACTIVE;
-    SDL_Color inaccol = MENUCOL_INACTIVE;
 
 
     /*** Initialization ***/
@@ -351,11 +342,6 @@ int MainMenuState_run(
     int *hardware_codes = app_state->hardware_states;
     MenucodeMap *keymaps = menu_state->menucode_map;
     TextMenu *menu = menu_state->mainmenu;
-
-    char strbuffer[32];  // A general-purpose string buffer
-    SDL_Color col_active = {255, 255, 255};
-    SDL_Color col_inactive = {155, 155, 155};
-
 
     /***** Inputs *****/
 

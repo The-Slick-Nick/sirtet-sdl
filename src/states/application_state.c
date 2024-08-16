@@ -47,7 +47,6 @@ ApplicationState* ApplicationState_init(char *asset_folder) {
     }
 
     if ( SirtetAudio_start() != 0 ) {
-        char buff[ERRMSG_SZ];
         // NOTE: Intent is to have audio api handle any error messaging
         return NULL;
     }

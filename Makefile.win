@@ -35,6 +35,10 @@ EXE_FILE := main.exe
 LIB_FILE := $(BUILD_DIR)/libsirtet.a
 
 
+COMPILER := gcc
+COMP_FLAGS := -Wall -Werror
+
+
 ###############################################################################
 # Makefile entry points
 ###############################################################################
@@ -65,7 +69,7 @@ run_exe: $(EXE_FILE)
 
 
 $(EXE_FILE): main.c $(LIB_FILE)
-	gcc main.c -o $@ $(INC_FLAGS) -L$(BUILD_DIR) -LC:/msys64/mingw32/bin -lsirtet $(SDL_FLAGS) 
+	$(COMPILER) $(COMP_FLAGS) main.c -o $@ $(INC_FLAGS) -L$(BUILD_DIR) -LC:/msys64/mingw32/bin -lsirtet $(SDL_FLAGS) 
 
 # I've gotten this to compile by directly calling the following. For some reason
 # make is not doing this correctly, but here's the example that worked:
@@ -84,3 +88,4 @@ $(BUILD_DIR)/%.o: %.c
 # NOTE: windows uses `if not exist` syntax, linux can use -p flag
 	if not exist $(dir $@) mkdir "$(dir $@)"
 	gcc -Wall -c $< -o $@ $(INC_FLAGS) -L$(BUILD_DIR) $(SDL_FLAGS)
+	$(COMPILER) $(COMP_FLAGS) -c $< -o $@ $(INC_FLAGS) -L$(BUILD_DIR) $(SDL_FLAGS)

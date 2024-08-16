@@ -119,7 +119,6 @@ int ScoreList_get(ScoreList *self, size_t idx, char *out_name, int *out_score) {
 // Sort scoreList in descending order by score
 int ScoreList_sort(ScoreList *self) {
 
-    int *scores = self->scores;
     int *indices = self->intbuff;
 
     sortByBasisDesc(self->len, indices, self->scores);
