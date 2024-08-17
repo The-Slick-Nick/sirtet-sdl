@@ -230,7 +230,7 @@ SettingsMenuState* SettingsMenuState_init(
 
 int SettingsMenuState_deconstruct(void *self) {
 
-    /* The deconstruction function for this menu state is twofold -
+    /* The deconstruction function for this menu state is twofolu -
      * (1) Copy the settings picked by the user during this state into
      *     the linked settings struct
      * (2) Free all memory
@@ -460,7 +460,10 @@ void menufunc_incTileSize(
     (*block_size)++;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %ld\n", *block_size);
+    snprintf(
+        buff, 32,
+        "Tile Size %lu\n", (ulong)*block_size
+    );
 
     TextMenu_updateText(menu, *menuopt, buff);
 }
@@ -485,7 +488,7 @@ void menufunc_decTileSize(
     (*block_size)--;
 
     char buff[32];
-    snprintf(buff, 32, "Tile Size %ld\n", *block_size);
+    snprintf(buff, 32, "Tile Size %lu\n", (ulong)*block_size);
 
     TextMenu_updateText(menu, *menuopt, buff);
 }

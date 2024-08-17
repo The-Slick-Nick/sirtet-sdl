@@ -66,42 +66,39 @@ char* Sirtet_getError() {
 
 char* Sirtet_getAppdataPath() {
 
+    if (strlen(glob_appdatapath) > 0) {
+        return glob_appdatapath;
+    }
+
     if (DEBUG_ENABLED) {
         strcpy(glob_appdatapath, "dev_data");
         return glob_appdatapath;
     }
 
-    if (strlen(glob_appdatapath) == 0) {
-        char *homedir = NULL;
-
-
+    char *homedir = NULL;
 
 #ifdef __linux__
-        homedir = getenv("HOME");
-        if (homedir == NULL) {
-            homedir = getpwuid(getuid())->pw_dir;
-        }
-        strcpy(glob_appdatapath, homedir);
+    homedir = getenv("HOME");
+    if (homedir == NULL) {
+        homedir = getpwuid(getuid())->pw_dir;
+    }
+    strcpy(glob_appdatapath, homedir);
 #elif _WIN32
 
-        // TODO: Check/attempt to build with windows - not certain this works
-        homedir = getenv("APPDATA");
-        if (homedir == NULL) {
+    // TODO: Check/attempt to build with windows - not certain this works
+    homedir = getenv("APPDATA");
+    if (homedir == NULL) {
 
+        char adpath[STATIC_ARRMAX];
+        SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, adpath);
 
-            char adpath[STATIC_ARRMAX];
-            SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, adpath);
-
-            // SHGetKnownFolderPath(
-            //     FOLDERID_LocalAppData, 0,
-            //     NULL, adpath
-            // );
-            homedir = adpath;
-        }
-#endif
-        strcpy(glob_appdatapath, homedir);
-        strcat(glob_appdatapath, "/sirtet");
+        strcpy(glob_appdatapath, adpath);
     }
+    else {
+        strcpy(glob_appdatapath, homedir);
+    }
+#endif
+    strcat(glob_appdatapath, "/sirtet");
 
 
     return glob_appdatapath;
