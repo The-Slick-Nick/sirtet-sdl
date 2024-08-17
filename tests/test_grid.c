@@ -319,7 +319,7 @@ void testGameGridAssessScore() {
     // Assess scoring of game grid based on states
     
 
-    // Tests will perform on a standard 10w x 24h tetris grid,
+    // Tests will perform on a standard 10w x 24h grid,
     // but the logic used should apply
     GameGrid *grid = GameGrid_init(10, 24);
 
