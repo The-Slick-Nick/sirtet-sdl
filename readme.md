@@ -1,6 +1,7 @@
 # Sirtet
 A simple block dropping game created with SDL2
 
+![Mid Game]("/docs/midgame.png")
 
 ## Controls
 
