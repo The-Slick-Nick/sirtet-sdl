@@ -377,8 +377,10 @@ int updateGame(
             return 0;
         }
 
-        printf("New block id is %d\n", game_state->primary_block);
-        printf("New contents representation is %ld\n", new_contents);
+        if (DEBUG_ENABLED) {
+            printf("New block id is %d\n", game_state->primary_block);
+            printf("New contents representation is %ld\n", new_contents);
+        }
     }
 
 

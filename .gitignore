@@ -7,8 +7,9 @@ main.exe
 *.cache
 test.txt
 
-# Binaries
+# Binaries/compiled stuff
 build/*
+release/*
 
 # Local working copies
 assets/wip/*

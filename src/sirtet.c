@@ -223,68 +223,75 @@ int run() {
 
         /* Draw FPS overlay */
 
-        TTF_Font *fps_font = global_state->fonts.vt323_12;
+        if (DEBUG_ENABLED) {
 
-        snprintf(buffer, 128, "%.2f ACTUAL FPS", actual_fps);
-        SDL_Surface *fps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
-        if (fps_surf == NULL) {
-            printf("%s\n", TTF_GetError());
-            return -1;
-        }
+            TTF_Font *fps_font = global_state->fonts.vt323_12;
 
-        SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
-        if (fps_texture == NULL) {
-            printf("%s\n", SDL_GetError());
-            return -1;
-        }
+            snprintf(buffer, 128, "%.2f ACTUAL FPS", actual_fps);
+            SDL_Surface *fps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
+            if (fps_surf == NULL) {
+                printf("%s\n", TTF_GetError());
+                return -1;
+            }
 
-        // NOTE: We want to optimize this later to not free every frame
-        SDL_FreeSurface(fps_surf);
+            SDL_Texture *fps_texture = SDL_CreateTextureFromSurface(global_state->rend, fps_surf);
+            if (fps_texture == NULL) {
+                printf("%s\n", SDL_GetError());
+                return -1;
+            }
 
-        snprintf(buffer, 128, "%.2f UNBOUNDED FPS", raw_fps);
+            // NOTE: We want to optimize this later to not free every frame
+            SDL_FreeSurface(fps_surf);
 
-        SDL_Surface *rawfps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
-        if (rawfps_surf == NULL) {
-            printf("%s\n", TTF_GetError());
-            return -1;
-        }
+            snprintf(buffer, 128, "%.2f UNBOUNDED FPS", raw_fps);
 
-        SDL_Texture *rawfps_texture = SDL_CreateTextureFromSurface(global_state->rend, rawfps_surf);
-        if (rawfps_texture == NULL) {
-            printf("%s\n", SDL_GetError());
-            return -1;
-        }
+            SDL_Surface *rawfps_surf = TTF_RenderText_Solid(fps_font, buffer, (SDL_Color){.r=255});
+            if (rawfps_surf == NULL) {
+                printf("%s\n", TTF_GetError());
+                return -1;
+            }
 
-        // NOTE: We want to optimize this later to not free every frame
-        SDL_FreeSurface(rawfps_surf);
+            SDL_Texture *rawfps_texture = SDL_CreateTextureFromSurface(global_state->rend, rawfps_surf);
+            if (rawfps_texture == NULL) {
+                printf("%s\n", SDL_GetError());
+                return -1;
+            }
 
-        int txt_h, txt_w;
-        SDL_QueryTexture(fps_texture, NULL, NULL, &txt_w, &txt_h);
-        SDL_Rect fps_dest = (SDL_Rect){
+            // NOTE: We want to optimize this later to not free every frame
+            SDL_FreeSurface(rawfps_surf);
+
+            int txt_h, txt_w;
+            SDL_QueryTexture(fps_texture, NULL, NULL, &txt_w, &txt_h);
+            SDL_Rect fps_dest = (SDL_Rect){
+                    .x=WINDOW_WIDTH - txt_w,
+                    .y=WINDOW_HEIGHT - txt_h,
+                    .w=txt_w,
+                    .h=txt_h
+            };
+            SDL_RenderCopy(global_state->rend, fps_texture, NULL, &fps_dest);
+            int yoffset = fps_dest.h;
+
+            SDL_QueryTexture(rawfps_texture, NULL, NULL, &txt_w, &txt_h);
+            SDL_Rect rawfps_dest = {
                 .x=WINDOW_WIDTH - txt_w,
-                .y=WINDOW_HEIGHT - txt_h,
+                .y=WINDOW_HEIGHT - yoffset - txt_h,
                 .w=txt_w,
                 .h=txt_h
-        };
-        SDL_RenderCopy(global_state->rend, fps_texture, NULL, &fps_dest);
-        int yoffset = fps_dest.h;
+            };
+            SDL_RenderCopy(global_state->rend, rawfps_texture, NULL, &rawfps_dest);
 
-        SDL_QueryTexture(rawfps_texture, NULL, NULL, &txt_w, &txt_h);
-        SDL_Rect rawfps_dest = {
-            .x=WINDOW_WIDTH - txt_w,
-            .y=WINDOW_HEIGHT - yoffset - txt_h,
-            .w=txt_w,
-            .h=txt_h
-        };
-        SDL_RenderCopy(global_state->rend, rawfps_texture, NULL, &rawfps_dest);
+
+            SDL_DestroyTexture(fps_texture);
+            SDL_DestroyTexture(rawfps_texture);
+
+            fps_texture = NULL;
+            rawfps_texture = NULL;
+        }
+
+
+        /*** Draw ***/
 
         SDL_RenderPresent(global_state->rend);
-
-        SDL_DestroyTexture(fps_texture);
-        SDL_DestroyTexture(rawfps_texture);
-
-        fps_texture = NULL;
-        rawfps_texture = NULL;
 
         /*********************************************************************
          * Maintenance calculations
