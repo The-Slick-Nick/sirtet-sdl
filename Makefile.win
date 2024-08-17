@@ -42,7 +42,7 @@ LIB_FILE := $(BUILD_DIR)/libsirtet.a
 
 COMPILER := gcc
 COMP_FLAGS := -Wall -Werror -g
-RELEASE_FLAGS := -Wall -Werror
+RELEASE_FLAGS := -Wall -Werror -mwindows
 
 
 ###############################################################################
