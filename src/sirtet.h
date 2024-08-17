@@ -10,6 +10,7 @@
 /******************************************************************************
  * Config macros/constants
 ******************************************************************************/
+
 typedef unsigned long ulong;
 
 // TODO: Add a "menu open chosen" sound effect
@@ -64,7 +65,7 @@ typedef unsigned long ulong;
 
 /*** App Settings ***/
 
-// #define DEBUG_ENABLED true
+#define SIRTET_VERSION "1.0.0"
 #define DEBUG_ENABLED false
 
 #define WINDOW_WIDTH 720 
