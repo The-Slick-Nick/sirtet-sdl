@@ -8,6 +8,7 @@
 
 BUILD_DIR := ./build
 SRC_DIR := ./src
+MINGW_LOC := C:/msys64/mingw64
 
 
 # Find all .c files to be built as part of project
@@ -21,12 +22,12 @@ OBJS := $(patsubst %.c,$(BUILD_DIR)/%.o,$(SRCS))
 
 # Flags NOTE: requires SDL headers to exist in msys64/mingw32/include folder
 INC_DIRS := $(sort $(dir $(wildcard $(SRC_DIR)/*/)))
-INC_DIRS += C:/msys64/mingw32/include/
+INC_DIRS += $(MINGW_LOC)/include/
 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 SDL_MODULES := SDL2 SDL2_ttf SDL2_mixer
-SDL_LOC := C:/msys64/mingw32/
+SDL_LOC := $(MINGW_LOC)/lib
 
 SDL_FLAGS := $(addprefix -l,$(SDL_MODULES))
 
@@ -69,11 +70,7 @@ run_exe: $(EXE_FILE)
 
 
 $(EXE_FILE): main.c $(LIB_FILE)
-	$(COMPILER) $(COMP_FLAGS) main.c -o $@ $(INC_FLAGS) -L$(BUILD_DIR) -LC:/msys64/mingw32/bin -lsirtet $(SDL_FLAGS) 
-
-# I've gotten this to compile by directly calling the following. For some reason
-# make is not doing this correctly, but here's the example that worked:
-# gcc main.c -o build/main.exe -I./src/ -I./src/component/ -I./src/drawing/ -I./src/states -IC:/msys64/mingw32/include/ -L./build -lsirtet -LC:/msys64/mingw32/bin -lSDL2 -lSDL2_ttf -lSDL2_mixer
+	$(COMPILER) $(COMP_FLAGS) main.c -o $@ $(INC_FLAGS) -L$(BUILD_DIR) -L$(SDL_LOC) -lsirtet $(SDL_FLAGS) 
 
 
 # build static library
