@@ -51,14 +51,12 @@ RELEASE_FLAGS := -Wall -Werror
 run_exe: build_exe
 	./main.bin
 
-
 build_exe: ./main.bin
 
 build_lib: $(LIB_FILE)
 
 build_release: reset $(RELEASE_EXE_FILE)
 	cp -r $(ASSET_DIR) $(RELEASE_DIR)
-
 
 run_profile_summary: build_exe
 	mkdir -p logs
